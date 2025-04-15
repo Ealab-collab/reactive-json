@@ -1,0 +1,72 @@
+{
+  "name": "@ea-lab/reactive-json",
+  "version": "0.0.0",
+  "type": "module",
+  "files": [
+    "dist",
+    "lib"
+  ],
+  "main": "./dist/reactive-json.umd.cjs",
+  "module": "./dist/reactive-json.js",
+  "exports": {
+    ".": {
+      "require": "./dist/reactive-json.umd.cjs",
+      "import": "./dist/reactive-json.js"
+    }
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://bitbucket.org/ea-lab/reactive-json.git"
+  },
+  "keywords": [
+    "build",
+    "config",
+    "data",
+    "dynamic",
+    "interactive",
+    "json",
+    "react",
+    "structure",
+    "yaml"
+  ],
+  "author": "Quang-Minh DANG <quang-minh@ea-lab.io> (https://ea-lab.io/)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://bitbucket.org/ea-lab/reactive-json/issues"
+  },
+  "homepage": "https://bitbucket.org/ea-lab/reactive-json#readme",
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "@types/node": "^22.14.1",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@vitejs/plugin-react": "^4.3.4",
+    "bootstrap": "^5.3.5",
+    "eslint": "^9.21.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^15.15.0",
+    "react-router-dom": "^7.5.0",
+    "vite": "^6.2.0"
+  },
+  "peerDependencies": {
+    "axios": "^1.8.4",
+    "chart.js": "^4.4.8",
+    "clsx": "^2.1.1",
+    "dnd-kit-sortable-tree": "^0.1.73",
+    "html-react-parser": "^5.2.3",
+    "js-yaml": "^4.1.0",
+    "jsonpath": "^1.1.1",
+    "lodash": "^4.17.21",
+    "react": ">=18",
+    "react-bootstrap": "^2.10.9",
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": ">=18"
+  }
+}

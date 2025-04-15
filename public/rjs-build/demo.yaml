@@ -1,0 +1,287 @@
+renderView:
+  - type: h1
+    content: ~~.page_title
+
+  - type: p
+    content: This is a demo page with some components.
+
+  - type: h2
+    content: Static content
+
+  - type: BsAccordion
+    attributes:
+      defaultActiveKey: [0]
+    content:
+      - type: AccordionItem
+        header:
+          type: div
+          content: First accordion item
+        body:
+          type: div
+          content: Content of the first accordion item.
+      - type: AccordionItem
+        header:
+          type: div
+          content: Second accordion item
+        body:
+          - type: div
+            attributes:
+              class: p-2 text-center
+            content: Content of the second accordion item.
+          - type: div
+            attributes:
+              class: row
+            content:
+              - type: div
+                attributes:
+                  class: col
+                content: Of course, you can put any component you want in it. This is a column...
+              - type: div
+                attributes:
+                  class: col
+                content:
+                  ...and this is another column, made with bootstrap's columns. Please note we have the bootstrap CSS
+                  used here, but our tool is compatible with any CSS system.
+      - type: AccordionItem
+        header:
+          type: div
+          content:
+            - "Third "
+            - type: span
+              attributes:
+                class: fw-bold
+              content: accordion
+            - " item "
+        body:
+          type: div
+          content: Demonstrates that you can customize in the accordion item heading, as you could in any other place.
+
+  - type: DataFilter
+    context: global
+    filters:
+      - subjectsWithProperty: dynamicContentRow
+        andConditions:
+          - orConditions:
+              - when: ~~._search
+                isEmpty:
+              - whenFilterableData: dynamicContentRow.title
+                contains: ~~._search
+
+    content:
+      load: mainContent
+
+  - type: div
+    attributes:
+      style:
+        paddingTop: 10em
+
+templates:
+
+  mainContent:
+    - type: h2
+      content: Dynamic content
+    - type: div
+      content: We will now demonstrate how to build dynamic interfaces.
+
+
+    - type: TextField
+      placeholder: Insert some text to search here...
+      dataLocation: ~~._search
+
+    - type: BsButton
+      attributes:
+        class: btn btn-link
+      content: Select All
+      actions:
+        - what: postMessage
+          on: click
+          message:
+            actor: select_all
+
+    - type: BsButton
+      attributes:
+        class: btn btn-link
+      content: Unselect All
+      actions:
+        - what: postMessage
+          on: click
+          message:
+            actor: unselect_all
+
+    - type: BsButton
+      content: Bulk delete
+      actions:
+        - what: hide
+          whenDataCountOf: $.rows[*][?(@.selected == true)]
+          inContext: global
+          is: 0
+        - what: postMessage
+          on: click
+          message:
+            actor: bulk_delete_selected
+
+
+    - type: table
+      attributes:
+        class: table
+      content:
+        type: tbody
+        content:
+          - type: Switch
+            content: ~~.rows
+            paginated: true
+            paginationProps:
+              maxPageButtonsCount: 5
+              pageMaxItemCount: 7
+            options:
+              dynamicContentRow:
+                load: dynamicContentRow
+            after:
+              type: tr
+              content:
+                type: td
+                attributes:
+                  colspan: 3
+                content:
+                  type: PageControls
+
+    - type: BsButton
+      content: Add a row
+      actions:
+        - what: addData
+          on: click
+          path: ~~.rows
+          value:
+            dynamicContentRow:
+              selected: false
+              title: Please edit the title
+
+  dynamicContentRow:
+    type: tr
+    actions:
+      - what: removeData
+        on: message
+        whenMessageIs:
+          actor: bulk_delete_selected
+        when: ~.selected
+        is: true
+        target: currentTemplateData
+        parentLevel: 1
+    content:
+      select:
+        type: td
+        content:
+          type: CheckBoxField
+          dataLocation: ~.selected
+          options:
+            - value: true
+          actions:
+            - what: setData
+              path: ~.selected
+              value: true
+              on: message
+              whenMessageIs:
+                actor: select_all
+            - what: setData
+              path: ~.selected
+              value: false
+              on: message
+              whenMessageIs:
+                actor: unselect_all
+      title:
+        type: td
+        content:
+          type: div
+          content: ~.title
+      actions:
+        type: td
+        content:
+          - type: BsButton
+            content: Edit
+            actions:
+              - what: setData
+                on: click
+                path: ~._openEditModal
+                value: true
+          - type: Modal
+            showBoolPath: ~._openEditModal
+            headerTitle:
+              - "Edit the content "
+              - type: em
+                content: ~.title
+            body:
+              - type: TextField
+                dataLocation: ~.title
+                label: Content title
+              - type: BsButton
+                content: OK
+                actions:
+                  - what: setData
+                    on: click
+                    path: ~._openEditModal
+
+
+
+data:
+  page_title: 'Hello !'
+  rows:
+    - dynamicContentRow:
+        selected: false
+        title: Content name A
+    - dynamicContentRow:
+        selected: false
+        title: Content name B
+    - dynamicContentRow:
+        selected: false
+        title: Content name C
+    - dynamicContentRow:
+        selected: false
+        title: Content name D
+    - dynamicContentRow:
+        selected: false
+        title: Content name E
+    - dynamicContentRow:
+        selected: false
+        title: Content name F
+    - dynamicContentRow:
+        selected: false
+        title: Content name G
+    - dynamicContentRow:
+        selected: false
+        title: Content name H
+    - dynamicContentRow:
+        selected: false
+        title: Content name I
+    - dynamicContentRow:
+        selected: false
+        title: Content name J
+    - dynamicContentRow:
+        selected: false
+        title: Content name K
+    - dynamicContentRow:
+        selected: false
+        title: Content name L
+    - dynamicContentRow:
+        selected: false
+        title: Content name M
+    - dynamicContentRow:
+        selected: false
+        title: Content name N
+    - dynamicContentRow:
+        selected: false
+        title: Content name O
+    - dynamicContentRow:
+        selected: false
+        title: Content name P
+    - dynamicContentRow:
+        selected: false
+        title: Content name Q
+    - dynamicContentRow:
+        selected: false
+        title: Content name R
+    - dynamicContentRow:
+        selected: false
+        title: Content name S
+    - dynamicContentRow:
+        selected: false
+        title: Content name T

@@ -1,0 +1,9 @@
+renderView:
+  - type: p
+    content: Thank you for using this app!
+  - type: p
+    content: Please select one of the links in the header to discover features.
+
+templates:
+
+data: []
