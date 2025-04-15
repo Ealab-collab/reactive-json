@@ -7,18 +7,22 @@ This lib lessens the need to write JS code for building frontend apps.
 With *reactive-json*, build your apps and forms frontend, embed them into your websites,
 and make them interactive with your backend.
 
-## Content
+TODO: make and insert a descriptive image.
 
-Library and demo app for *reactive-json*.
+## How to use *reactive-json*
 
 The library can be:
 
-- included in your React project: use the provided `<ReactiveJsonRoot>` component
-  in your React app. This is the way to go if you want to use reactive-json plugins.
 - used as a standalone lib: simply load the dist files in your web page
   and it will work on the `<reactive-json>` HTML tags.
+- included in your React project: use the provided `<ReactiveJsonRoot>` component
+  in your React app. This is the way to go if you want to use reactive-json plugins.
 
-The app shows how to use *reactive-json*.
+If you retrieved the source code of *reactive-json*, a demo app is available for use.
+
+```shell
+npm run dev
+```
 
 ## How to install *reactive-json*
 
@@ -45,11 +49,24 @@ First, install the lib:
 npm install @ea-lab/reactive-json
 ```
 
-And that's all! The lib files are already included in the `/lib`, ready for use
-in your React components.
+And that's all!
 
 You will have to use the `<ReactiveJsonRoot>` component, with the appropriate
 options.
+
+```js
+import {ReactiveJsonRoot} from "@ea-lab/reactive-json";
+
+//...
+
+const YourComponent = () => {
+    return (
+        <div>
+          <ReactiveJsonRoot dataUrl={"/path/to/build.json"}/>
+        </div>
+    );
+};
+```
 
 ## How to extend *reactive-json*
 
