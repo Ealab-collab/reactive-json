@@ -127,7 +127,7 @@ Generic reusable code.
 
 Contains the core functionality of *reactive-json*.
 
-This is where `ReactiveJsonRoot.jsx` is.
+This is where `ReactiveJsonRoot.tsx` is.
 
 Usually, you won't need to edit its content. (But feel free to inspect it if you
 want to contribute!)
