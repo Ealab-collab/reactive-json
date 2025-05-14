@@ -11,7 +11,6 @@ export const Layout = ({children}) => {
                     <Nav className="mr-auto">
                         <Nav.Link href="/">Home</Nav.Link>
                         <Nav.Link href="/demo">Demo</Nav.Link>
-                        <Nav.Link href="/charts">Charts</Nav.Link>
                     </Nav>
                 </Navbar.Collapse>
             </Navbar>

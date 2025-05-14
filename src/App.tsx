@@ -15,8 +15,6 @@ function App() {
                             element={<Page/>}/>
                         <Route path={"demo"}
                             element={<Page buildSourcePath={"/rjs-build/demo.yaml"}/>}/>
-                        <Route path={"charts"}
-                            element={<Page buildSourcePath={"/rjs-build/charts.yaml"}/>}/>
                     </Route>
                     <Route path={"/src-web/rjs-build"}>
 

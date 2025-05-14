@@ -18,14 +18,14 @@ export default defineConfig({
     ],
     build: {
         lib: {
-            entry: resolve(__dirname, 'lib/main.tsx'),
+            entry: resolve(__dirname, 'lib/main.jsx'),
             formats: ['es']
         },
         copyPublicDir: false,
         rollupOptions: {
             external: ['react', 'react/jsx-runtime'],
             input: Object.fromEntries(
-                glob.sync('lib/**/*.{ts,tsx}', {
+                glob.sync('lib/**/*.{ts,tsx,js,jsx}', {
                     ignore: [
                         'lib/**/*.d.ts',
                         // This will ignore storybook files in case you have them in the lib directory.

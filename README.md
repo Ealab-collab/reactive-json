@@ -119,15 +119,11 @@ but they **do** something **in response** to an **event**.
 
 The reaction components must be registered in the `ReactOnEvent` component.
 
-### Utilities `/lib/component/utility`
-
-Generic reusable code.
-
 ### Engine `/lib/engine`
 
 Contains the core functionality of *reactive-json*.
 
-This is where `ReactiveJsonRoot.tsx` is.
+This is where `ReactiveJsonRoot.jsx` is.
 
 Usually, you won't need to edit its content. (But feel free to inspect it if you
 want to contribute!)
