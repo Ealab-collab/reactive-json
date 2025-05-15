@@ -20,6 +20,7 @@ import {DataFilter} from "../component/element/special/DataFilter.jsx";
 import {DelayedActions} from "../component/element/special/DelayedActions.jsx";
 import {PageControls} from "../component/element/special/PageControls.jsx";
 import {Phantom} from "../component/element/special/Phantom.jsx";
+import {ReactiveJsonSubroot} from "../component/element/special/ReactiveJsonSubroot.jsx";
 import {Switch} from "../component/element/special/Switch.jsx";
 import {GlobalDataContext} from "./GlobalDataContext.jsx";
 import {TemplateContext} from "./TemplateContext.jsx";
@@ -35,17 +36,7 @@ export function View({props, currentData, datafield, path}) {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
 
-    const plugins = globalDataContext.plugins ?? {
-        "element": {
-            "Azerty": Html,
-        }
-    };
-
-    const test = {
-        "element": {
-            "Qsdfgh": Html,
-        }
-    }
+    const plugins = globalDataContext.plugins ?? {};
 
     const components = {
         AccordionItem,
@@ -63,6 +54,7 @@ export function View({props, currentData, datafield, path}) {
         PageControls,
         Phantom,
         PreformattedMarkup,
+        ReactiveJsonSubroot,
         SelectField,
         SortableTreeItemCollapseButton,
         Switch,
@@ -70,8 +62,6 @@ export function View({props, currentData, datafield, path}) {
         TextAreaField,
         TextField,
         ...plugins?.element,
-        ...test?.element,
-        "Ijiji": TextAreaField,
     };
 
     /**

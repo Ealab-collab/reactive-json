@@ -6,6 +6,15 @@ renderView:
     content: This is a demo page with some components.
 
   - type: h2
+    content: Home content
+
+  - type: div
+    content:
+      type: ReactiveJsonSubroot
+      rjOptions:
+        dataUrl: /rjs-build/home.yaml
+
+  - type: h2
     content: Static content
 
   - type: BsAccordion
