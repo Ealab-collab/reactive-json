@@ -106,6 +106,11 @@ export const ReactiveJsonRoot = ({
             }
         }
 
+        if (!parsedData?.renderView) {
+            // There is no renderView set.
+            return;
+        }
+
         // Dev note: listForms is deprecated; will be removed later.
         setTemplates(parsedData.templates ?? parsedData.listForms);
 
