@@ -22,6 +22,7 @@ import {useEffect, useReducer, useState} from 'react';
  * @param {React.Element|null} DebugModeContentWrapper Wrapper around the main reactive-json content when in debug mode.
  * @param {React.Element|null} DebugModeDataWrapper Wrapper around the reactive-json debug data when in debug mode.
  * @param {React.Element|null} DebugModeMainWrapper Wrapper around the reactive-json root when in debug mode.
+ * @param {string} maybeRawAppData A serialized RjBuild to initialize this root with.
  *
  * @returns {JSX.Element}
  *
@@ -36,6 +37,7 @@ export const ReactiveJsonRoot = ({
                                      DebugModeContentWrapper,
                                      DebugModeDataWrapper,
                                      DebugModeRootWrapper,
+                                     maybeRawAppData,
                                  }) => {
     // Dev note: on PhpStorm, disregard the Function signatures inspection errors of reducers.
     // See: https://youtrack.jetbrains.com/issue/WEB-53963.
@@ -57,7 +59,7 @@ export const ReactiveJsonRoot = ({
     const [templates, setTemplates] = useState({});
     const [renderView, setRenderView] = useState({});
     const [items, setItems] = useState([]);
-    const [rawAppData, setRawAppData] = useState();
+    const [rawAppData, setRawAppData] = useState(maybeRawAppData || undefined);
 
     useEffect(() => {
         if (!dataUrl) {
