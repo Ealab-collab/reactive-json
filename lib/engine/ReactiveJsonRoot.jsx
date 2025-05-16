@@ -3,11 +3,12 @@ import {EventDispatcherProvider} from "./EventDispatcherProvider.jsx";
 import {GlobalDataContextProvider} from "./GlobalDataContextProvider.jsx";
 import {TemplateContext} from "./TemplateContext.jsx";
 import {View} from "./View.jsx";
+import {parseRjBuild} from "./utility/parseRjBuild.jsx";
+import {stringToBoolean} from "./utility/stringToBoolean.jsx";
 import axios from "axios";
 import {load} from 'js-yaml';
 import {isEqual} from "lodash";
 import {useEffect, useReducer, useState} from 'react';
-import {stringToBoolean} from "./utility/stringToBoolean.jsx";
 
 /**
  * Production ready app root.
@@ -89,25 +90,11 @@ export const ReactiveJsonRoot = ({
             return;
         }
 
-        let parsedData = rawAppData;
-
-        if (typeof parsedData !== "object") {
-            try {
-                // Parse as JSON.
-                parsedData = JSON.parse(rawAppData);
-            } catch {
-                try {
-                    // Parse as YAML.
-                    parsedData = load(rawAppData);
-                } catch {
-                    console.log("Tried to load app data but the content could not be parsed as JSON nor YAML.");
-                    return;
-                }
-            }
-        }
+        let parsedData = parseRjBuild(rawAppData);
 
         if (!parsedData?.renderView) {
             // There is no renderView set.
+            console.log("Tried to load app data but the content could not be parsed as JSON nor YAML.");
             return;
         }
 
@@ -253,7 +240,7 @@ export const ReactiveJsonRoot = ({
             key={view}
             props={renderView[view]}
             path={"data." + view}
-            currentData={currentData.realCurrentData[view]}/>)
+            currentData={currentData.realCurrentData?.[view]}/>)
     });
 
     const debugMode_bool = stringToBoolean(debugMode);
