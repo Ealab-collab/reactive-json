@@ -1,4 +1,5 @@
 import {
+    ActionDependant,
     evaluateTemplateValue,
     GlobalDataContext,
     ReactiveJsonRoot,
@@ -29,5 +30,7 @@ export const ReactiveJsonSubroot = ({props}) => {
     // We use the same plugins as the parent ReactiveJsonRoot.
     const plugins = globalDataContext.plugins ?? {};
 
-    return <ReactiveJsonRoot {...rjOptions} plugins={plugins}/>;
+    return <ActionDependant {...props}>
+        <ReactiveJsonRoot {...rjOptions} plugins={plugins}/>
+    </ActionDependant>;
 };
