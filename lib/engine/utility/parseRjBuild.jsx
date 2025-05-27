@@ -14,4 +14,7 @@ export const parseRjBuild = (rjBuild) => {
             }
         }
     }
+
+    // The value may already be parsed. Return it as-is.
+    return rjBuild;
 }

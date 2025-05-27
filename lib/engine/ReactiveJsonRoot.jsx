@@ -83,17 +83,21 @@ export const ReactiveJsonRoot = ({
                 dataUrl,
                 {
                     headers: headersForData,
-                }).then((res) => {
-                setRawAppData(res.data);
-            });
+                })
+                .then((res) => {
+                    // Note: the data may be already deserialized by axios. It happens when data is JSON.
+                    setRawAppData(res.data);
+                });
         } else {
             axios.get(
                 dataUrl,
                 {
                     headers: headersForData,
-                }).then((res) => {
-                setRawAppData(res.data);
-            });
+                })
+                .then((res) => {
+                    // Note: the data may be already deserialized by axios. It happens when data is JSON.
+                    setRawAppData(res.data);
+                });
         }
     }, [dataUrl, headersForData]);
 
