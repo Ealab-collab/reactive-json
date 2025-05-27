@@ -22,7 +22,7 @@ import {useEffect, useReducer, useState} from 'react';
  * @param {React.Element|null} DebugModeContentWrapper Wrapper around the main reactive-json content when in debug mode.
  * @param {React.Element|null} DebugModeDataWrapper Wrapper around the reactive-json debug data when in debug mode.
  * @param {React.Element|null} DebugModeMainWrapper Wrapper around the reactive-json root when in debug mode.
- * @param {string} maybeRawAppData A serialized RjBuild to initialize this root with.
+ * @param {string|object} maybeRawAppData A RjBuild to initialize this root with. Can be a string or an object.
  *
  * @returns {JSX.Element}
  *
@@ -59,7 +59,18 @@ export const ReactiveJsonRoot = ({
     const [templates, setTemplates] = useState({});
     const [renderView, setRenderView] = useState({});
     const [items, setItems] = useState([]);
-    const [rawAppData, setRawAppData] = useState(maybeRawAppData || undefined);
+    const [rawAppData, setRawAppData] = useState(() => {
+        if (!maybeRawAppData) {
+            return undefined;
+        }
+
+        if (typeof maybeRawAppData === "string") {
+            return maybeRawAppData;
+        }
+
+        // Serialize it.
+        return JSON.stringify(maybeRawAppData);
+    });
 
     useEffect(() => {
         if (!dataUrl) {
