@@ -98,12 +98,20 @@ export const ReactiveJsonRoot = ({
     }, [dataUrl, headersForData]);
 
     useEffect(() => {
+        // TODO: debug to remove.
+        console.log("rawAppData");
+        console.log(rawAppData);
+
         if (!rawAppData) {
             // Not yet initialized.
             return;
         }
 
         let parsedData = parseRjBuild(rawAppData);
+
+        // TODO: debug to remove.
+        console.log("parseRjBuild(rawAppData)");
+        console.log(parsedData);
 
         if (!parsedData?.renderView) {
             // There is no renderView set.
