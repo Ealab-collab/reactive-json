@@ -102,7 +102,11 @@ export const SelectField = ({props, data, path, datafield}) => {
                 break;
 
             default:
-                valueToSet = e.currentTarget.value;
+                // Find the option that matches the value.
+                // This is necessary because <select> elements only support string values,
+                // and the real value may be of a different type (e.g., number).
+                const selectedOption = options.find(opt => String(opt.value) === e.currentTarget.value);
+                valueToSet = selectedOption ? selectedOption.value : e.currentTarget.value;
                 break;
         }
 
