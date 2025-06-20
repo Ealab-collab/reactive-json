@@ -13,29 +13,43 @@ export const FormatNumeral = ({props}) => {
 
     let formatted = false;
 
+    let evaluated = undefined;
+    let evaluatedFormat = undefined;
+
     if (props.content !== undefined) {
-        const evaluated = evaluateTemplateValue({valueToEvaluate: props.content, globalDataContext, templateContext});
+        evaluated = evaluateTemplateValue({valueToEvaluate: props.content, globalDataContext, templateContext});
+    }
 
-        switch (props.format) {
-            case "roman-upper":
-                formatted = convertArabicToRoman(evaluated);
-                break;
+    if (evaluated === undefined || evaluated === null || evaluated === "") {
+        // No value to format.
+        return null;
+    }
 
-            case "roman-lower":
-                formatted = convertArabicToRoman(evaluated, true);
-                break;
+    if (props.format !== undefined) {
+        evaluatedFormat = evaluateTemplateValue({valueToEvaluate: props.format, globalDataContext, templateContext});
+    }
 
-            case "latin-upper":
-                formatted = convertArabicToLatinLetters(evaluated);
-                break;
+    switch (evaluatedFormat) {
+        case "roman-upper":
+            formatted = convertArabicToRoman(evaluated);
+            break;
 
-            case "latin-lower":
-                formatted = convertArabicToLatinLetters(evaluated, true);
-                break;
+        case "roman-lower":
+            formatted = convertArabicToRoman(evaluated, true);
+            break;
 
-            default:
-                break;
-        }
+        case "latin-upper":
+            formatted = convertArabicToLatinLetters(evaluated);
+            break;
+
+        case "latin-lower":
+            formatted = convertArabicToLatinLetters(evaluated, true);
+            break;
+
+        default:
+            // Provide the original value if no valid format is specified.
+            formatted = evaluated;
+            break;
     }
 
     return (
