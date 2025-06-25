@@ -1,4 +1,8 @@
-import {dataLocationToPath, evaluateTemplateValue} from "../../engine/TemplateSystem.jsx";
+import {
+    dataLocationToPath,
+    evaluateTemplateValue,
+    evaluateTemplateValueCollection
+} from "../../engine/TemplateSystem.jsx";
 import {cloneDeep} from "lodash";
 
 /**
@@ -16,7 +20,7 @@ export const addData = (props) => {
 
     const dataAbsolutePath = dataLocationToPath({currentPath: templateContext.templatePath, dataLocation: path, globalDataContext, templateContext});
 
-    const evaluatedValue = evaluateTemplateValue({valueToEvaluate: value, globalDataContext, templateContext});
+    const evaluatedValue = evaluateTemplateValueCollection({valueToEvaluate: value, globalDataContext, templateContext});
 
     // We clone the value to have distinct instances when the value is an object.
     globalDataContext?.updateData(typeof evaluatedValue !== "object" ? evaluatedValue : cloneDeep(evaluatedValue), dataAbsolutePath, "add");

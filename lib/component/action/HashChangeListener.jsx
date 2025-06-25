@@ -43,7 +43,7 @@ export const HashChangeListener = (props) => {
                 return;
             }
 
-            if (typeof whenHashWas_evaluated === "string" && ((new URL(event.oldUrl)).hash !== whenHashIs_evaluated)) {
+            if (typeof whenHashWas_evaluated === "string" && ((new URL(event.oldUrl)).hash !== whenHashWas_evaluated)) {
                 return;
             }
 
