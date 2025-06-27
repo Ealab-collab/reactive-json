@@ -4,9 +4,10 @@ import {GlobalDataContext} from "../../../engine/GlobalDataContext.jsx";
 import {ActionDependant} from "../../../engine/Actions.jsx";
 import {TemplateContext} from "../../../engine/TemplateContext.jsx";
 import {evaluateTemplateValue, useEvaluatedAttributes} from "../../../engine/TemplateSystem.jsx";
+import {View} from "../../../engine/View.jsx";
 import {propsDataLocationToPathAndValue} from "./formElementsCommon.jsx";
 
-export const TextField = ({props, datafield, path}) => {
+export const TextField = ({props, datafield, path, currentData}) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
 
@@ -29,12 +30,6 @@ export const TextField = ({props, datafield, path}) => {
         globalDataContext.updateData(e.currentTarget.value, formDataPath);
     };
 
-    const maybeLabel = evaluateTemplateValue({
-        valueToEvaluate: props.label,
-        globalDataContext,
-        templateContext
-    });
-
     const maybePlaceholder = evaluateTemplateValue({
         valueToEvaluate: props.placeholder,
         globalDataContext,
@@ -50,7 +45,13 @@ export const TextField = ({props, datafield, path}) => {
     return (
         <ActionDependant {...props}>
             <Form.Group {...attributes} controlId={Math.random().toString()}>
-                {maybeLabel && <Form.Label>{maybeLabel}</Form.Label>}
+                {props.label && <Form.Label>
+                    <View
+                        currentData={currentData?.["label"] ?? undefined}
+                        datafield={"label"}
+                        path={path + ".label"}
+                        props={props.label}/>
+                </Form.Label>}
                 <Form.Control
                     onChange={onChange}
                     placeholder={maybePlaceholder}
