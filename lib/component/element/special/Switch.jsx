@@ -1,9 +1,14 @@
-import {useContext} from 'react';
+import {createElement, useContext} from 'react';
 import {ActionDependant} from "../../../engine/Actions.jsx";
 import {GlobalDataContext} from "../../../engine/GlobalDataContext.jsx";
 import {PaginationContext} from "../../../engine/PaginationContext.jsx";
 import {TemplateContext} from "../../../engine/TemplateContext.jsx";
-import {dataLocationToPath, evaluateTemplateValue, isTemplateValue} from "../../../engine/TemplateSystem.jsx";
+import {
+    dataLocationToPath,
+    evaluateAttributes,
+    evaluateTemplateValue,
+    isTemplateValue
+} from "../../../engine/TemplateSystem.jsx";
 import {View} from "../../../engine/View.jsx";
 import {usePagination} from "../../hook/usePagination.jsx";
 
@@ -105,13 +110,24 @@ export const Switch = ({props, currentData, path}) => {
         ? limitedContent.slice(pagination.firstShownItemIndex, pagination.maxShownItemIndexExcluded)
         : limitedContent;
 
+    // Wrap the content if specified.
+    const maybeWrappedContent = props?.contentWrapper
+        ? createElement(
+            props.contentWrapper.tag ?? "div",
+            evaluateAttributes({
+                attrs: props.contentWrapper.attributes ?? {},
+                globalDataContext,
+                templateContext
+            }), contentAsViews)
+        : contentAsViews;
+
     const toRender = <>
         {props?.before && <View
             currentData={currentData?.["before"] ?? undefined}
             path={path + ".before"}
             datafield={"before"}
             props={props?.before}/>}
-        {contentAsViews}
+        {maybeWrappedContent}
         {props?.after && <View
             currentData={currentData?.["after"] ?? undefined}
             path={path + ".after"}
