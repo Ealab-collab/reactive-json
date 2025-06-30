@@ -117,6 +117,7 @@ export const Switch = ({props, currentData, path}) => {
             evaluateAttributes({
                 attrs: props.contentWrapper.attributes ?? {},
                 globalDataContext,
+                options: {normalizeBeforeEvaluation: true},
                 templateContext
             }), contentAsViews)
         : contentAsViews;
