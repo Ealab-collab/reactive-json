@@ -84,7 +84,7 @@ export const evaluateAttributes = ({attrs, globalDataContext, templateContext, o
     for (const attrName of Object.keys(normalized)) {
         // This will replace the value by the template value if it's a valid reference.
         // We call directly the TemplateValue component as a function to evaluate the attribute value.
-        const evaluatedAttr = evaluateTemplateValue({
+        const evaluatedAttr = evaluateTemplateValueCollection({
             globalDataContext: globalDataContext,
             templateContext: templateContext,
             valueToEvaluate: normalized[attrName]
