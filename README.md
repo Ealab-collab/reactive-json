@@ -7,6 +7,8 @@ This lib lessens the need to write JS code for building frontend apps.
 With *reactive-json*, build your apps and forms frontend, embed them into your websites,
 and make them interactive with your backend.
 
+> **🤖 AI Guide**: If you're using an AI assistant (like Cursor, ChatGPT, Claude, etc.) to work with reactive-json, start by reading [`README_LLM.md`](./README_LLM.md) - it contains comprehensive patterns, examples, and best practices specifically designed for AI-assisted development.
+
 ## How to use *reactive-json*
 
 Reactive-json must be included as an npm dependency in your React project. There are two main ways to use it:

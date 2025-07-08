@@ -16,7 +16,12 @@
     "json",
     "react",
     "structure",
-    "yaml"
+    "yaml",
+    "llm",
+    "ai-assistant",
+    "cursor",
+    "chatgpt",
+    "claude"
   ],
   "author": "Quang-Minh DANG <quang-minh@ea-lab.io> (https://ea-lab.io/)",
   "license": "ISC",
@@ -76,9 +81,16 @@
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "README_LLM.md",
+    ".cursorrules"
   ],
   "sideEffects": [
     "**/*.css"
-  ]
+  ],
+  "llm": {
+    "entrypoint": "README_LLM.md",
+    "description": "AI/LLM guide for reactive-json development",
+    "purpose": "Component creation and reactive-json usage patterns for AI assistants"
+  }
 }

@@ -1,5 +1,8 @@
 # Instructions for Cursor AI - Reactive-JSON
 
+## 🚀 Quick Start for AI Assistants
+**FIRST STEP**: Read `README_LLM.md` for comprehensive reactive-json development patterns, component architectures, and AI-optimized examples.
+
 ## Reference Documentation
 - Installation: `npm install --save-dev @ea-lab/reactive-json-docs`
 - Main documentation entry point with demos: `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/index.yaml`
