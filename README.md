@@ -1,85 +1,141 @@
 # Reactive-JSON
 
-A REACT-based lib that transforms JSON (or YAML) into HTML markup.
+A REACT-based lib that transforms JSON (or YAML) into interactive HTML markup.
 
 This lib lessens the need to write JS code for building frontend apps.
 
 With *reactive-json*, build your apps and forms frontend, embed them into your websites,
 and make them interactive with your backend.
 
-TODO: make and insert a descriptive image.
-
 ## How to use *reactive-json*
 
-The library can be:
+Reactive-json must be included as an npm dependency in your React project. There are two main ways to use it:
 
-- used as a standalone lib: simply load the dist files in your web page
-  and it will work on the `<reactive-json>` HTML tags.
-- included in your React project: use the provided `<ReactiveJsonRoot>` component
-  in your React app. This is the way to go if you want to use reactive-json plugins.
+### 1. Direct Integration in a React Application
 
-If you retrieved the source code of *reactive-json*, a demo app is available for use.
+Use the `<ReactiveJsonRoot>` component directly in your React application. This is the recommended method if you're developing a complete React application.
 
-```shell
-npm run dev
-```
+### 2. Automatic Association with HTML Tags
+
+To integrate reactive-json into an existing web page, you can use `<reactive-json>` tags and create an automatic association via ReactDOM. This approach is ideal for integrating interactive components into existing websites.
 
 ## How to install *reactive-json*
 
-### Standalone mode
-
-This mode only needs you to download the `/dist` folder and load the JS and CSS assets
-in your web pages.
-
-If the `/dist` is not available (probably because you pulled the library from
-the source code repository), you will have to generate it:
-
-```shell
-npm install && npm run build
-```
-
-### Library mode
-
-This mode is when you have a React project, and you want to include *reactive-json*
-as a part of your project.
-
-First, install the lib:
+Install the library in your React project:
 
 ```shell
 npm install @ea-lab/reactive-json
 ```
 
-And that's all!
-
-You will have to use the `<ReactiveJsonRoot>` component, with the appropriate
-options.
+### Method 1: Direct Usage in React
 
 ```js
 import {ReactiveJsonRoot} from "@ea-lab/reactive-json";
 
-//...
-
 const YourComponent = () => {
     return (
         <div>
-          <ReactiveJsonRoot dataUrl={"/path/to/build.json"}/>
+          <ReactiveJsonRoot 
+            dataUrl={"/path/to/build.json"}
+            dataFetchMethod="GET" />
         </div>
     );
 };
 ```
 
+### Method 2: Automatic Association with HTML Tags
+
+Create an initialization script that searches for `<reactive-json>` tags and automatically associates them:
+
+```js
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import {ReactiveJsonRoot} from "@ea-lab/reactive-json";
+
+// Find all <reactive-json> tags in the page
+const appRootElements = document.querySelectorAll("reactive-json");
+
+appRootElements.forEach(element => {
+    // Get the fetch method from data attribute
+    const maybeMethod = element.dataset?.method;
+
+    // Get headers for data requests
+    const headersForData_asElements = element.querySelectorAll("data-source-request-header");
+    const headersForData = headersForData_asElements.length ? {} : undefined;
+
+    headersForData_asElements.forEach((headerElement) => {
+        const headerField = headerElement?.dataset?.headerField;
+        const headerValue = headerElement?.dataset?.headerValue;
+
+        if (headerField && headerValue) {
+            headersForData[headerField] = headerValue;
+        }
+    });
+
+    // Create React root and mount the component
+    const root = ReactDOM.createRoot(element);
+
+    root.render(
+        <React.StrictMode>
+            <ReactiveJsonRoot
+                dataFetchMethod={maybeMethod}
+                dataUrl={element.dataset.url}
+                headersForData={headersForData}
+            />
+        </React.StrictMode>
+    );
+});
+```
+
+Then in your HTML:
+
+```html
+<reactive-json data-url="/api/my-config.json" data-method="GET">
+    <!-- Optional headers for authentication -->
+    <data-source-request-header 
+        data-header-field="Authorization" 
+        data-header-value="Bearer your-token">
+    </data-source-request-header>
+</reactive-json>
+```
+
+## ReactiveJsonRoot Properties
+
+The `ReactiveJsonRoot` component accepts the following properties:
+
+- `dataUrl`: The URL of the document containing the build data (JSON or YAML)
+- `dataFetchMethod`: The fetch method for the data ("GET" or "POST", case-insensitive)
+- `headersForData`: Headers for the data request (e.g., authentication info)
+- `plugins`: Reactive-JSON plugins to extend functionality
+- `debugMode`: Debug mode to show the data structure and debug info
+- `maybeRawAppData`: A RjBuild configuration to initialize directly (string or object)
+
 ## How to extend *reactive-json*
 
-To add new components, you must be in library mode. Indeed, the
-standalone mode is a fixed set of functionality. This can be changed later if
-a plugin system can be implemented; do not hesitate to contribute in this
-project if you know how to make it, it would be really appreciated!
+To add new components, consult the complete documentation:
+
+**Online Documentation**: https://reactive-json.ea-lab.io
+
+**Local Documentation** (install the docs package):
+```shell
+npm install --save-dev @ea-lab/reactive-json-docs
+```
+
+Documentation is available at:
+- `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/extend/component-development.md`
+- Main entry point: `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/index.yaml`
+
+## Demo Application
+
+If you retrieved the source code of *reactive-json*, a demo app is available for use:
+
+```shell
+npm run dev
+```
 
 ## Project structure
 
 This project was bootstrapped with [Vite](https://vite.dev/).
-
-The following is the specific documentation for the *reactive-json* project.
 
 ### Components `/lib/component`
 
