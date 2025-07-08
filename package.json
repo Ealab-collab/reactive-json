@@ -5,7 +5,7 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://bitbucket.org/ea-lab/reactive-json.git"
+    "url": "git+https://github.com/Ealab-collab/reactive-json.git"
   },
   "keywords": [
     "build",
@@ -21,9 +21,9 @@
   "author": "Quang-Minh DANG <quang-minh@ea-lab.io> (https://ea-lab.io/)",
   "license": "ISC",
   "bugs": {
-    "url": "https://bitbucket.org/ea-lab/reactive-json/issues"
+    "url": "https://github.com/Ealab-collab/reactive-json/issues"
   },
-  "homepage": "https://bitbucket.org/ea-lab/reactive-json#readme",
+  "homepage": "https://github.com/Ealab-collab/reactive-json#readme",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b ./tsconfig.lib.json && vite build",
