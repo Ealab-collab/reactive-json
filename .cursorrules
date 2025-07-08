@@ -30,6 +30,17 @@
 - For **creating/developing** React components → use `extend/component-development.md`
 - For **using/configuring** components in JSON/YAML → use `core/[category]/`
 
+## Plugin System Requirements
+
+**⚠️ CRITICAL**: When using custom components as plugins, `mergeComponentCollections([...])` is **MANDATORY** - even for a single plugin collection. The reactive-json plugin system will NOT work without it.
+
+```js
+import {ReactiveJsonRoot, mergeComponentCollections} from "@ea-lab/reactive-json";
+
+const plugins = mergeComponentCollections([customPlugins]); // REQUIRED
+return <ReactiveJsonRoot {...props} plugins={plugins} />;
+```
+
 ## Component Validation Rules
 
 1. For each component, STRICTLY verify:

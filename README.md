@@ -108,7 +108,7 @@ The `ReactiveJsonRoot` component accepts the following properties:
 - `dataUrl`: The URL of the document containing the build data (JSON or YAML)
 - `dataFetchMethod`: The fetch method for the data ("GET" or "POST", case-insensitive)
 - `headersForData`: Headers for the data request (e.g., authentication info)
-- `plugins`: Reactive-JSON plugins to extend functionality
+- `plugins`: Reactive-JSON plugins to extend functionality (**must** use `mergeComponentCollections`)
 - `debugMode`: Debug mode to show the data structure and debug info
 - `maybeRawAppData`: A RjBuild configuration to initialize directly (string or object)
 

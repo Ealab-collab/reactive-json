@@ -316,6 +316,8 @@ export const CustomRoot = (props) => {
 };
 ```
 
+**⚠️ CRITICAL**: `mergeComponentCollections([...])` is **mandatory** even when you have only a single plugin collection. The reactive-json plugin system will not work without it.
+
 ### Plugin Structure
 ```js
 {
