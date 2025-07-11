@@ -73,14 +73,28 @@ export const ReactOnEvent = (props) => {
     const extractEventNewValue = (event) => {
         if (!event) return undefined;
 
-        // Priority: checkbox.checked, generic .value, fallback to undefined.
+        // Priority: derive the most relevant "new value" depending on the field type.
         if (event.target) {
             const t = event.target;
-            if (typeof t.checked !== "undefined") {
+
+            // Special case: checkbox → return the boolean "checked".
+            if (t.type === "checkbox") {
                 return t.checked;
             }
+
+            // Special case: radio → return the value only if selected.
+            if (t.type === "radio") {
+                return t.checked ? t.value : undefined;
+            }
+
+            // Text field / number / select, etc. → return the value.
             if (typeof t.value !== "undefined") {
                 return t.value;
+            }
+
+            // Fallback: return checked if it exists.
+            if (typeof t.checked !== "undefined") {
+                return t.checked;
             }
         }
 
