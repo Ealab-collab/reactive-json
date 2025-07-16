@@ -38,8 +38,8 @@ const YourComponent = () => {
     return (
         <div>
           <ReactiveJsonRoot 
-            dataUrl={"/path/to/build.json"}
-            dataFetchMethod="GET" />
+            rjBuildUrl={"/path/to/build.json"}
+            rjBuildFetchMethod="GET" />
         </div>
     );
 };
@@ -62,15 +62,15 @@ appRootElements.forEach(element => {
     const maybeMethod = element.dataset?.method;
 
     // Get headers for data requests
-    const headersForData_asElements = element.querySelectorAll("data-source-request-header");
-    const headersForData = headersForData_asElements.length ? {} : undefined;
+    const headersForRjBuild_asElements = element.querySelectorAll("data-source-request-header");
+    const headersForRjBuild = headersForRjBuild_asElements.length ? {} : undefined;
 
-    headersForData_asElements.forEach((headerElement) => {
+    headersForRjBuild_asElements.forEach((headerElement) => {
         const headerField = headerElement?.dataset?.headerField;
         const headerValue = headerElement?.dataset?.headerValue;
 
         if (headerField && headerValue) {
-            headersForData[headerField] = headerValue;
+            headersForRjBuild[headerField] = headerValue;
         }
     });
 
@@ -80,9 +80,9 @@ appRootElements.forEach(element => {
     root.render(
         <React.StrictMode>
             <ReactiveJsonRoot
-                dataFetchMethod={maybeMethod}
-                dataUrl={element.dataset.url}
-                headersForData={headersForData}
+                rjBuildFetchMethod={maybeMethod}
+                rjBuildUrl={element.dataset.url}
+                headersForRjBuild={headersForRjBuild}
             />
         </React.StrictMode>
     );
@@ -105,12 +105,12 @@ Then in your HTML:
 
 The `ReactiveJsonRoot` component accepts the following properties:
 
-- `dataUrl`: The URL of the document containing the build data (JSON or YAML)
-- `dataFetchMethod`: The fetch method for the data ("GET" or "POST", case-insensitive)
-- `headersForData`: Headers for the data request (e.g., authentication info)
+- `rjBuildUrl`: The URL of the document containing the build data (JSON or YAML)
+- `rjBuildFetchMethod`: The fetch method for the data ("GET" or "POST", case-insensitive)
+- `headersForRjBuild`: Headers for the data request (e.g., authentication info)
 - `plugins`: Reactive-JSON plugins to extend functionality (**must** use `mergeComponentCollections`)
 - `debugMode`: Debug mode to show the data structure and debug info
-- `maybeRawAppData`: A RjBuild configuration to initialize directly (string or object)
+- `maybeRawAppRjBuild`: A RjBuild configuration to initialize directly (string or object)
 
 ## How to extend *reactive-json*
 

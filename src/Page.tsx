@@ -3,7 +3,7 @@ import {Layout} from "./Layout.tsx";
 import {ReactiveJsonRoot} from "../lib/engine/ReactiveJsonRoot.jsx";
 import {stringToBoolean} from "../lib/engine/utility/stringToBoolean.jsx";
 
-export function Page({buildSourcePath, dataFetchMethod}) {
+export function Page({buildSourcePath, rjBuildFetchMethod}) {
     const filePath = buildSourcePath ?? new URL(window.location).searchParams.get("file_path") ?? "/rjs-build/home.yaml";
     const debugModeRaw = new URL(window.location).searchParams.get("debug");
     const debugMode = debugModeRaw === null ? true : stringToBoolean(debugModeRaw);
@@ -22,6 +22,6 @@ export function Page({buildSourcePath, dataFetchMethod}) {
         },
     };
 
-    return <ReactiveJsonRoot dataFetchMethod={dataFetchMethod} dataUrl={filePath}
+    return <ReactiveJsonRoot rjBuildFetchMethod={"GET"} rjBuildUrl={filePath}
         debugMode={debugMode} {...additionalProps}/>;
 }

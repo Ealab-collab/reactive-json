@@ -52,7 +52,7 @@ export const fetchData = (props) => {
         return;
     }
 
-    const headers = globalDataContext.headersForData ?? {};
+    const headers = globalDataContext.headersForRjBuild ?? {};
 
     const {setRawAppData} = globalDataContext;
 

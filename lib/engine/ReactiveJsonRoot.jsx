@@ -13,32 +13,71 @@ import {useEffect, useReducer, useState} from 'react';
 /**
  * Production ready app root.
  *
- * @param {string} dataFetchMethod The fetch method for the init data. Case-insensitive.
+ * @param {string} rjBuildFetchMethod The fetch method for the init data. Case-insensitive.
  *     Use "POST" for post. Other values mean "GET".
- * @param {string} dataUrl The URL of the document containing the build data. Either JSON or YAML.
- * @param {{}} headersForData Headers for the data request, such as authentication info.
+ * @param {string} rjBuildUrl The URL of the document containing the build data. Either JSON or YAML.
+ * @param {{}} headersForRjBuild Headers for the data request, such as authentication info.
  * @param {{}} plugins Reactive-JSON plugins.
  * @param {boolean} debugMode Set to true to show the data structure and debug info.
  * @param {React.Element|null} DebugModeContentWrapper Wrapper around the main reactive-json content when in debug mode.
  * @param {React.Element|null} DebugModeDataWrapper Wrapper around the reactive-json debug data when in debug mode.
  * @param {React.Element|null} DebugModeMainWrapper Wrapper around the reactive-json root when in debug mode.
- * @param {string|object} maybeRawAppData A RjBuild to initialize this root with. Can be a string or an object.
+ * @param {string|object} maybeRawAppRjBuild A RjBuild to initialize this root with. Can be a string or an object.
+ * @param {string} dataFetchMethod Deprecated. Use rjBuildFetchMethod instead.
+ * @param {string} dataUrl Deprecated. Use rjBuildUrl instead.
+ * @param {{}} headersForData Deprecated. Use headersForRjBuild instead.
+ * @param {string|object} maybeRawAppData Deprecated. Use maybeRawAppRjBuild instead.
  *
  * @returns {JSX.Element}
  *
  * @constructor
  */
 export const ReactiveJsonRoot = ({
-                                     dataFetchMethod,
-                                     dataUrl,
-                                     headersForData,
+                                     rjBuildFetchMethod,
+                                     rjBuildUrl,
+                                     headersForRjBuild,
                                      plugins,
                                      debugMode,
                                      DebugModeContentWrapper,
                                      DebugModeDataWrapper,
                                      DebugModeRootWrapper,
+                                     maybeRawAppRjBuild,
+                                     dataFetchMethod,
+                                     dataUrl,
+                                     headersForData,
                                      maybeRawAppData,
                                  }) => {
+    // Deprecated properties.
+    // TODO: remove these in the next major version.
+    const deprecatedProperties = [];
+
+    if (dataFetchMethod) {
+        deprecatedProperties.push({deprecatedProperty: "dataFetchMethod", newProperty: "rjBuildFetchMethod"});
+        rjBuildFetchMethod = dataFetchMethod;
+    }
+
+    if (dataUrl) {
+        deprecatedProperties.push({deprecatedProperty: "dataUrl", newProperty: "rjBuildUrl"});
+        rjBuildUrl = dataUrl;
+    }
+
+    if (headersForData) {
+        deprecatedProperties.push({deprecatedProperty: "headersForData", newProperty: "headersForRjBuild"});
+        headersForRjBuild = headersForData;
+    }
+
+    if (maybeRawAppData) {
+        deprecatedProperties.push({deprecatedProperty: "maybeRawAppData", newProperty: "maybeRawAppRjBuild"});
+        maybeRawAppRjBuild = maybeRawAppData;
+    }
+
+    if (deprecatedProperties.length > 0) {
+        // Show a warning in this format: oldValue -> newValue, oldValue -> newValue, ...
+        console.warn("A ReactiveJsonRoot component got the following deprecated properties that must be replaced: " + deprecatedProperties.map(p => p.deprecatedProperty + " -> " + p.newProperty).join(", "));
+    }
+
+    // End of deprecated properties.
+
     // Dev note: on PhpStorm, disregard the Function signatures inspection errors of reducers.
     // See: https://youtrack.jetbrains.com/issue/WEB-53963.
     // noinspection JSCheckFunctionSignatures
@@ -60,29 +99,29 @@ export const ReactiveJsonRoot = ({
     const [renderView, setRenderView] = useState({});
     const [items, setItems] = useState([]);
     const [rawAppData, setRawAppData] = useState(() => {
-        if (!maybeRawAppData) {
+        if (!maybeRawAppRjBuild) {
             return undefined;
         }
 
-        if (typeof maybeRawAppData === "string") {
-            return maybeRawAppData;
+        if (typeof maybeRawAppRjBuild === "string") {
+            return maybeRawAppRjBuild;
         }
 
         // Serialize it.
-        return JSON.stringify(maybeRawAppData);
+        return JSON.stringify(maybeRawAppRjBuild);
     });
 
     useEffect(() => {
-        if (!dataUrl) {
+        if (!rjBuildUrl) {
             return;
         }
 
-        if (typeof dataFetchMethod === "string" && dataFetchMethod.toLowerCase() === "post") {
+        if (typeof rjBuildFetchMethod === "string" && rjBuildFetchMethod.toLowerCase() === "post") {
             // TODO: support form data.
             axios.post(
-                dataUrl,
+                rjBuildUrl,
                 {
-                    headers: headersForData,
+                    headers: headersForRjBuild,
                 })
                 .then((res) => {
                     // Note: the data may be already deserialized by axios. It happens when data is JSON.
@@ -90,16 +129,16 @@ export const ReactiveJsonRoot = ({
                 });
         } else {
             axios.get(
-                dataUrl,
+                rjBuildUrl,
                 {
-                    headers: headersForData,
+                    headers: headersForRjBuild,
                 })
                 .then((res) => {
                     // Note: the data may be already deserialized by axios. It happens when data is JSON.
                     setRawAppData(res.data);
                 });
         }
-    }, [dataUrl, headersForData]);
+    }, [rjBuildUrl, headersForRjBuild]);
 
     useEffect(() => {
         if (!rawAppData) {
@@ -267,7 +306,7 @@ export const ReactiveJsonRoot = ({
             <GlobalDataContextProvider
                 value={{
                     element: templates,
-                    headersForData,
+                    headersForRjBuild,
                     plugins,
                     setRawAppData,
                     templateData: currentData.realCurrentData,

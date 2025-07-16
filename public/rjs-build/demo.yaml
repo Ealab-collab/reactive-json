@@ -12,7 +12,7 @@ renderView:
     content:
       type: ReactiveJsonSubroot
       rjOptions:
-        dataUrl: /rjs-build/home.yaml
+        rjBuildUrl: /rjs-build/home.yaml
 
   - type: h2
     content: Static content
