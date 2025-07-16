@@ -1,6 +1,6 @@
 import {
     ActionDependant,
-    evaluateTemplateValue,
+    evaluateTemplateValueCollection,
     GlobalDataContext,
     ReactiveJsonRoot,
     TemplateContext
@@ -16,7 +16,7 @@ export const ReactiveJsonSubroot = ({props}) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
 
-    const rjOptions = evaluateTemplateValue({
+    const rjOptions = evaluateTemplateValueCollection({
         valueToEvaluate: props?.rjOptions,
         globalDataContext,
         templateContext,

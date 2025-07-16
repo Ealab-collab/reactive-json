@@ -23,6 +23,7 @@ import {useEffect, useReducer, useState} from 'react';
  * @param {React.Element|null} DebugModeDataWrapper Wrapper around the reactive-json debug data when in debug mode.
  * @param {React.Element|null} DebugModeMainWrapper Wrapper around the reactive-json root when in debug mode.
  * @param {string|object} maybeRawAppRjBuild A RjBuild to initialize this root with. Can be a string or an object.
+ * @param {{}|undefined} dataOverride Override the data of the retrieved RjBuild with this object.
  * @param {string} dataFetchMethod Deprecated. Use rjBuildFetchMethod instead.
  * @param {string} dataUrl Deprecated. Use rjBuildUrl instead.
  * @param {{}} headersForData Deprecated. Use headersForRjBuild instead.
@@ -42,6 +43,7 @@ export const ReactiveJsonRoot = ({
                                      DebugModeDataWrapper,
                                      DebugModeRootWrapper,
                                      maybeRawAppRjBuild,
+                                     dataOverride,
                                      dataFetchMethod,
                                      dataUrl,
                                      headersForData,
@@ -98,7 +100,7 @@ export const ReactiveJsonRoot = ({
     const [templates, setTemplates] = useState({});
     const [renderView, setRenderView] = useState({});
     const [items, setItems] = useState([]);
-    const [rawAppData, setRawAppData] = useState(() => {
+    const [rawAppRjBuild, setRawAppRjBuild] = useState(() => {
         if (!maybeRawAppRjBuild) {
             return undefined;
         }
@@ -125,7 +127,7 @@ export const ReactiveJsonRoot = ({
                 })
                 .then((res) => {
                     // Note: the data may be already deserialized by axios. It happens when data is JSON.
-                    setRawAppData(res.data);
+                    setRawAppRjBuild(res.data);
                 });
         } else {
             axios.get(
@@ -135,18 +137,18 @@ export const ReactiveJsonRoot = ({
                 })
                 .then((res) => {
                     // Note: the data may be already deserialized by axios. It happens when data is JSON.
-                    setRawAppData(res.data);
+                    setRawAppRjBuild(res.data);
                 });
         }
     }, [rjBuildUrl, headersForRjBuild]);
 
     useEffect(() => {
-        if (!rawAppData) {
+        if (!rawAppRjBuild) {
             // Not yet initialized.
             return;
         }
 
-        let parsedData = parseRjBuild(rawAppData);
+        let parsedData = parseRjBuild(rawAppRjBuild);
 
         if (!parsedData?.renderView) {
             // There is no renderView set.
@@ -162,10 +164,10 @@ export const ReactiveJsonRoot = ({
         }
 
         // noinspection JSCheckFunctionSignatures
-        dispatchCurrentData({type: "setData", "data": parsedData.data});
+        dispatchCurrentData({type: "setData", "data": dataOverride === undefined ? parsedData.data : dataOverride});
         setRenderView(parsedData.renderView);
         setItems(Object.keys(parsedData.renderView));
-    }, [rawAppData]);
+    }, [rawAppRjBuild]);
 
     const updateData = (newValue, pathInData, updateMode = undefined) => {
         let path = pathInData.replace('data.', '');
@@ -286,7 +288,7 @@ export const ReactiveJsonRoot = ({
         throw new Error("Could not update data.");
     }
 
-    if (!rawAppData) {
+    if (!rawAppRjBuild) {
         return null;
     }
 
@@ -308,7 +310,7 @@ export const ReactiveJsonRoot = ({
                     element: templates,
                     headersForRjBuild,
                     plugins,
-                    setRawAppData,
+                    setRawAppRjBuild,
                     templateData: currentData.realCurrentData,
                     templatePath: "data",
                     updateData

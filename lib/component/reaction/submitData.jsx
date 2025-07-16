@@ -100,7 +100,7 @@ export const submitData = (props) => {
 
     const headers = globalDataContext.headersForRjBuild ?? {};
 
-    const {setRawAppData} = globalDataContext;
+    const {setRawAppRjBuild} = globalDataContext;
 
     const config = {
         method: props?.args?.httpMethod ?? "post",
@@ -120,7 +120,7 @@ export const submitData = (props) => {
             }
 
             // This will trigger a complete re-render.
-            setRawAppData(value.data);
+            setRawAppRjBuild(value.data);
         })
         .catch((reason) => {
             console.log("reactionFunction:submitData : Could not submit. Reason: " + reason.message);

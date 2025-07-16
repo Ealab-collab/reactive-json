@@ -54,7 +54,7 @@ export const fetchData = (props) => {
 
     const headers = globalDataContext.headersForRjBuild ?? {};
 
-    const {setRawAppData} = globalDataContext;
+    const {setRawAppRjBuild} = globalDataContext;
 
     axios
         .get(
@@ -68,7 +68,7 @@ export const fetchData = (props) => {
             }
 
             // This will trigger a complete re-render.
-            setRawAppData(value.data);
+            setRawAppRjBuild(value.data);
         })
         .catch((reason) => {
             console.log("reactionFunction:fetchData : Could not fetch. Reason: " + reason.message);
