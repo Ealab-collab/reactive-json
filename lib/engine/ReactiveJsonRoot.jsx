@@ -5,8 +5,8 @@ import {TemplateContext} from "./TemplateContext.jsx";
 import {View} from "./View.jsx";
 import {parseRjBuild} from "./utility/parseRjBuild.jsx";
 import {stringToBoolean} from "./utility/stringToBoolean.jsx";
+import {dataLocationToPath} from "./TemplateSystem.jsx";
 import axios from "axios";
-import {load} from 'js-yaml';
 import {isEqual} from "lodash";
 import {useEffect, useReducer, useState} from 'react';
 
@@ -34,20 +34,20 @@ import {useEffect, useReducer, useState} from 'react';
  * @constructor
  */
 export const ReactiveJsonRoot = ({
-                                     rjBuildFetchMethod,
-                                     rjBuildUrl,
-                                     headersForRjBuild,
-                                     plugins,
+                                     dataOverride,
+                                     dataFetchMethod,
+                                     dataUrl,
                                      debugMode,
                                      DebugModeContentWrapper,
                                      DebugModeDataWrapper,
                                      DebugModeRootWrapper,
-                                     maybeRawAppRjBuild,
-                                     dataOverride,
-                                     dataFetchMethod,
-                                     dataUrl,
                                      headersForData,
+                                     headersForRjBuild,
                                      maybeRawAppData,
+                                     maybeRawAppRjBuild,
+                                     plugins,
+                                     rjBuildFetchMethod,
+                                     rjBuildUrl,
                                  }) => {
     // Deprecated properties.
     // TODO: remove these in the next major version.
@@ -96,7 +96,6 @@ export const ReactiveJsonRoot = ({
                 return prevState;
         }
     }, {updateId: 0, realCurrentData: {}});
-    const [updatable, setUpdatable] = useState(0);
     const [templates, setTemplates] = useState({});
     const [renderView, setRenderView] = useState({});
     const [items, setItems] = useState([]);
@@ -163,11 +162,151 @@ export const ReactiveJsonRoot = ({
             console.log("'listForms' needs to be renamed to 'templates'. The support for 'listForms' will be removed in the next releases of reactive-json.");
         }
 
+        // Apply dataOverride if provided.
+        let finalData = dataOverride === undefined ? parsedData.data : dataOverride;
+
+        // Process additionalDataSource if present.
+        const additionalDataSource = parsedData.additionalDataSource;
+
+        if (!Array.isArray(additionalDataSource) || additionalDataSource.length === 0) {
+            // No additionalDataSource, use data as-is.
+            // noinspection JSCheckFunctionSignatures
+            dispatchCurrentData({type: "setData", "data": finalData});
+            setRenderView(parsedData.renderView);
+            setItems(Object.keys(parsedData.renderView));
+            return;
+        }
+
+        // There are additional data sources to fetch.
+        // Create fake temporary contexts for template evaluation.
+        // Do not worry too much about these contexts, because each source will use the
+        // dispatcher that works with the real final data.
+        const globalDataContext = {
+            templateData: finalData,
+            templatePath: "data",
+            headersForRjBuild
+        };
+
+        const templateContext = {
+            templateData: finalData,
+            templatePath: "data"
+        };
+
+        // Separate blocking and non-blocking sources.
+        const blockingSources = additionalDataSource.filter(source => source.blocking === true);
+        const nonBlockingSources = additionalDataSource.filter(source => source.blocking !== true);
+
+        // Fetches a single data source and merges it into the current data.
+        const fetchDataSource = async (source, index) => {
+            try {
+                if (!source.src) {
+                    // Ignore this source.
+                    console.warn("additionalDataSource item number " + index + " missing 'src' property.", source);
+                    return;
+                }
+
+                const method = source.method?.toUpperCase() || 'GET';
+                const config = {
+                    method,
+                    url: source.src,
+                };
+
+                // Add headers if available.
+                if (headersForRjBuild && Object.keys(headersForRjBuild).length > 0) {
+                    config.headers = headersForRjBuild;
+                }
+
+                const response = await axios(config);
+                const fetchedData = response.data;
+
+                // Merge data immediately when this source completes.
+                if (!source.path) {
+                    // No path specified, merge at root level.
+                    if (typeof fetchedData !== 'object' || Array.isArray(fetchedData)) {
+                        console.warn("additionalDataSource data cannot be merged at root - must be an object:", fetchedData);
+                        return;
+                    }
+
+                    // For root level merge, we need to update each property individually
+                    // as updateObject does not allow replacing the root object itself.
+                    Object.entries(fetchedData).forEach(([key, value]) => {
+                        // noinspection JSCheckFunctionSignatures
+                        dispatchCurrentData({
+                            type: "updateData",
+                            path: key,
+                            value: value
+                        });
+                    });
+
+                    return;
+                }
+
+                try {
+                    // Evaluate the path using template system.
+                    const evaluatedPath = dataLocationToPath({
+                        dataLocation: source.path,
+                        currentPath: "data",
+                        globalDataContext,
+                        templateContext
+                    });
+
+                    if (typeof evaluatedPath !== 'string') {
+                        console.warn("additionalDataSource path evaluation did not result in a string:", source.path, "->", evaluatedPath);
+                        return;
+                    }
+
+                    // Use existing updateObject via updateData.
+                    // Remove the "data." prefix from the evaluated path.
+                    const dataPath = evaluatedPath.substring("data.".length);
+
+                    // noinspection JSCheckFunctionSignatures
+                    dispatchCurrentData({
+                        type: "updateData",
+                        path: dataPath,
+                        value: fetchedData
+                    });
+                } catch (error) {
+                    console.error("Error evaluating additionalDataSource path:", source.path, error);
+                }
+            } catch (error) {
+                // Fail silently but log the error.
+                console.error("Error fetching additional data source:", source.src, error);
+            }
+        };
+
+        // Dispatch initial data immediately.
+        // Subsequent fetches using the additionalDataSource will update the data with updateData.
         // noinspection JSCheckFunctionSignatures
-        dispatchCurrentData({type: "setData", "data": dataOverride === undefined ? parsedData.data : dataOverride});
-        setRenderView(parsedData.renderView);
-        setItems(Object.keys(parsedData.renderView));
-    }, [rawAppRjBuild]);
+        dispatchCurrentData({type: "setData", "data": finalData});
+
+        const processSources = async () => {
+            if (blockingSources.length > 0) {
+                // Process blocking sources first - use allSettled for robustness.
+                const blockingPromises = blockingSources.map((source, index) => fetchDataSource(source, index));
+
+                await Promise.allSettled(blockingPromises).catch((error) => {
+                    // Even if some blocking sources fail, we should still render the view.
+                    console.error("Error processing blocking additionalDataSource:", error);
+                });
+            }
+
+            // Now that blocking sources are processed, we can render the view.
+            setRenderView(parsedData.renderView);
+            setItems(Object.keys(parsedData.renderView));
+
+            if (nonBlockingSources.length > 0) {
+                // Process non-blocking sources in background.
+                const nonBlockingPromises = nonBlockingSources.map((source, index) => 
+                    fetchDataSource(source, blockingSources.length + index)
+                );
+
+                // Non-blocking sources don't need to be awaited.
+                Promise.allSettled(nonBlockingPromises);
+            }
+        };
+
+        processSources();
+    }, [rawAppRjBuild, dataOverride, headersForRjBuild]);
 
     const updateData = (newValue, pathInData, updateMode = undefined) => {
         let path = pathInData.replace('data.', '');

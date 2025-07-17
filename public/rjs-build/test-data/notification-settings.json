@@ -1,0 +1,13 @@
+{
+  "emailNotifications": true,
+  "pushNotifications": false,
+  "smsNotifications": true,
+  "marketingEmails": false,
+  "weeklyDigest": true,
+  "frequency": "daily",
+  "reminderSettings": {
+    "tasks": true,
+    "meetings": true,
+    "deadlines": false
+  }
+} 

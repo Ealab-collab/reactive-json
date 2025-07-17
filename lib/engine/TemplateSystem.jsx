@@ -12,6 +12,7 @@ import {normalizeAttributesForReactJsx} from "../component/element/html/Html.jsx
  * @param templateContext
  * @returns {string|*}
  * @constructor
+ * @throws {Error} The path cannot be determined.
  */
 export const dataLocationToPath = ({dataLocation, currentPath, globalDataContext, templateContext}) => {
     if (!(typeof dataLocation === "string") || !(dataLocation.startsWith("~.") || dataLocation.startsWith("~~.") || dataLocation.startsWith("~>"))) {
@@ -44,7 +45,7 @@ export const dataLocationToPath = ({dataLocation, currentPath, globalDataContext
         const keyToFind = dataLocation.substring(2, dataLocation.indexOf("."));
 
         if (!templateContext.templatePath.includes(keyToFind)) {
-            throw new Error(keyToFind + " not found in the current template path.");
+            throw new Error(keyToFind + " not found in the current template path. The current template path is: " + templateContext.templatePath);
         }
 
         const keyToFindIndex = templateContext.templatePath.indexOf(keyToFind);

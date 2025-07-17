@@ -65,6 +65,247 @@ renderView:
           type: div
           content: Demonstrates that you can customize in the accordion item heading, as you could in any other place.
 
+  - type: hr
+
+  - type: h2
+    content: Additional Data (additionalDataSource)
+
+  - type: p
+    content: This section demonstrates the use of additionalDataSource to load data from external sources with blocking and non-blocking modes.
+
+  - type: div
+    attributes:
+      class: alert alert-warning mb-3
+    content:
+      - type: strong
+        content: "Blocking vs Non-blocking loading: "
+      - "User profile data is loaded with "
+      - type: code
+        content: "blocking: true"
+      - " (page waits), while system config and notifications load with "
+      - type: code
+        content: "blocking: false"
+      - " (page renders immediately, data updates when ready). (Note: you may need to limit the bandwidth of the server or the browser to see the difference.)"
+
+  - type: div
+    attributes:
+      class: row
+    content:
+      - type: div
+        attributes:
+          class: col-md-4
+        content:
+          - type: h3
+            content: 
+              - "User Profile "
+              - type: span
+                attributes:
+                  class: badge bg-danger ms-2
+                content: BLOCKING
+          - type: div
+            attributes:
+              class: card
+            content:
+              - type: div
+                attributes:
+                  class: card-body
+                content:
+                  - type: div
+                    attributes:
+                      class: mb-3
+                    content:
+                      - type: h5
+                        attributes:
+                          class: mb-1
+                        content: ~~.currentUser.name
+                      - type: span
+                        attributes:
+                          class: badge bg-primary
+                        content: ~~.currentUser.role
+                  - type: p
+                    content:
+                      - "Email: "
+                      - type: strong
+                        content: ~~.currentUser.email
+                  - type: p
+                    content:
+                      - "Last login: "
+                      - type: em
+                        content: ~~.currentUser.lastLogin
+
+      - type: div
+        attributes:
+          class: col-md-4
+        content:
+          - type: h3
+            content:
+              - "System Config "
+              - type: span
+                attributes:
+                  class: badge bg-success ms-2
+                content: NON-BLOCKING
+          - type: div
+            attributes:
+              class: card
+            content:
+              - type: div
+                attributes:
+                  class: card-body
+                content:
+                  - type: div
+                    attributes:
+                      class: text-muted fst-italic
+                    content: "Loading system configuration..."
+                    actions:
+                      - what: hide
+                        when: ~~.systemConfig.version
+                        isEmpty: not
+                  - type: div
+                    actions:
+                      - what: hide
+                        when: ~~.systemConfig.version
+                        isEmpty:
+                    content:
+                      - type: p
+                        content:
+                          - "Version: "
+                          - type: code
+                            content: ~~.systemConfig.version
+                      - type: p
+                        content:
+                          - "Environment: "
+                          - type: span
+                            attributes:
+                              class: badge bg-info
+                            content: ~~.systemConfig.environment
+                      - type: h6
+                        content: Features
+                      - type: ul
+                        content:
+                          - type: li
+                            content:
+                              - "Dark mode: "
+                              - type: span
+                                attributes:
+                                  class: text-success
+                                content: "✓ Enabled"
+                                actions:
+                                  - what: hide
+                                    when: ~~.systemConfig.features.darkMode
+                                    isNot: true
+                              - type: span
+                                attributes:
+                                  class: text-danger
+                                content: "✗ Disabled"
+                                actions:
+                                  - what: hide
+                                    when: ~~.systemConfig.features.darkMode
+                                    is: true
+                          - type: li
+                            content:
+                              - "Beta: "
+                              - type: span
+                                attributes:
+                                  class: text-success
+                                content: "✓ Enabled"
+                                actions:
+                                  - what: hide
+                                    when: ~~.systemConfig.features.beta
+                                    isNot: true
+                              - type: span
+                                attributes:
+                                  class: text-danger
+                                content: "✗ Disabled"
+                                actions:
+                                  - what: hide
+                                    when: ~~.systemConfig.features.beta
+                                    is: true
+
+      - type: div
+        attributes:
+          class: col-md-4
+        content:
+          - type: h3
+            content:
+              - "Notifications "
+              - type: span
+                attributes:
+                  class: badge bg-success ms-2
+                content: NON-BLOCKING
+          - type: div
+            attributes:
+              class: card
+            content:
+              - type: div
+                attributes:
+                  class: card-body
+                content:
+                  - type: div
+                    attributes:
+                      class: text-muted fst-italic
+                    content: "Loading notification settings..."
+                    actions:
+                      - what: hide
+                        when: ~~.notifications.frequency
+                        isEmpty: not
+                  - type: div
+                    actions:
+                      - what: hide
+                        when: ~~.notifications.frequency
+                        isEmpty:
+                    content:
+                      - type: p
+                        content:
+                          - "Frequency: "
+                          - type: span
+                            attributes:
+                              class: badge bg-secondary
+                            content: ~~.notifications.frequency
+                      - type: h6
+                        content: Notification Types
+                      - type: ul
+                        content:
+                          - type: li
+                            content:
+                              - "Email: "
+                              - type: span
+                                attributes:
+                                  class: text-success
+                                content: "✓ Enabled"
+                                actions:
+                                  - what: hide
+                                    when: ~~.notifications.emailNotifications
+                                    isNot: true
+                              - type: span
+                                attributes:
+                                  class: text-danger
+                                content: "✗ Disabled"
+                                actions:
+                                  - what: hide
+                                    when: ~~.notifications.emailNotifications
+                                    is: true
+                          - type: li
+                            content:
+                              - "Push: "
+                              - type: span
+                                attributes:
+                                  class: text-success
+                                content: "✓ Enabled"
+                                actions:
+                                  - what: hide
+                                    when: ~~.notifications.pushNotifications
+                                    isNot: true
+                              - type: span
+                                attributes:
+                                  class: text-danger
+                                content: "✗ Disabled"
+                                actions:
+                                  - what: hide
+                                    when: ~~.notifications.pushNotifications
+                                    is: true
+
+  - type: hr
+
   - type: DataFilter
     context: global
     filters:
@@ -233,6 +474,17 @@ templates:
 
 data:
   page_title: 'Hello !'
+  # Temporary loading states for non-blocking data sources
+  systemConfig:
+    version: "" # Will be populated by additionalDataSource
+    environment: "" # Will be populated by additionalDataSource
+    features:
+      darkMode: null # Will be populated by additionalDataSource
+      beta: null # Will be populated by additionalDataSource
+  notifications:
+    frequency: "" # Will be populated by additionalDataSource
+    emailNotifications: null # Will be populated by additionalDataSource
+    pushNotifications: null # Will be populated by additionalDataSource
   rows:
     - dynamicContentRow:
         selected: false
@@ -294,3 +546,17 @@ data:
     - dynamicContentRow:
         selected: false
         title: Content name T
+
+additionalDataSource:
+  - src: /rjs-build/test-data/user-profile.json
+    path: ~~.currentUser
+    method: GET
+    blocking: true
+  - src: /rjs-build/test-data/system-config.json
+    path: ~~.systemConfig
+    method: GET
+    blocking: false
+  - src: /rjs-build/test-data/notification-settings.json
+    path: ~~.notifications
+    method: GET
+    blocking: false

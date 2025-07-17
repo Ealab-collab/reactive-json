@@ -22,6 +22,6 @@ export function Page({buildSourcePath, rjBuildFetchMethod}) {
         },
     };
 
-    return <ReactiveJsonRoot rjBuildFetchMethod={"GET"} rjBuildUrl={filePath}
+    return <ReactiveJsonRoot rjBuildFetchMethod={rjBuildFetchMethod} rjBuildUrl={filePath}
         debugMode={debugMode} {...additionalProps}/>;
 }
