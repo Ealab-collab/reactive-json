@@ -210,24 +210,49 @@ export const evaluateTemplateValue = ({valueToEvaluate, globalDataContext, templ
  * @param {Array|object|*} valueToEvaluate The value to evaluate. Usually a string, an array, or an object.
  * @param {{}} globalDataContext The global data context values.
  * @param {{}} templateContext The current template context values.
+ * @param {number} evaluationDepth The depth of evaluation. 0 = no evaluation, 1 = first level only (default), >1 = recursive evaluation, <0 = unlimited recursive evaluation with safety limit.
  *
  * @returns {*} The evaluated value. It tries to keep the same structure (array, object, single) as the given value.
  */
-export const evaluateTemplateValueCollection = ({valueToEvaluate, globalDataContext, templateContext}) => {
+export const evaluateTemplateValueCollection = ({valueToEvaluate, globalDataContext, templateContext, evaluationDepth = 1}) => {
+    // If evaluationDepth is 0, return the value as-is without any evaluation.
+    if (evaluationDepth === 0) {
+        return valueToEvaluate;
+    }
+
+    // Safety limit for unlimited recursion to prevent infinite loops when the evaluationDepth is negative.
+    const SAFETY_LIMIT = -20;
+
+    if (evaluationDepth <= SAFETY_LIMIT) {
+        // We've reached the safety limit, stop recursion.
+        return valueToEvaluate;
+    }
+
     let evaluated;
 
     if (typeof valueToEvaluate === "object") {
-        // Evaluate any first level values.
-        // Deep (recursive) evaluation is technically possible,
-        // but we are not doing this yet for performance and usefulness reasons.
+        // Evaluate values at the current level.
         evaluated = Array.isArray(valueToEvaluate) ? [] : {};
 
         for (const [key, itemContent] of Object.entries(valueToEvaluate)) {
-            evaluated[key] = evaluateTemplateValue({
+            // First, evaluate the template value at the current level.
+            const evaluatedItem = evaluateTemplateValue({
                 globalDataContext,
                 templateContext,
                 valueToEvaluate: itemContent
-            })
+            });
+
+            if ((evaluationDepth > 1 || evaluationDepth < 0) && typeof evaluatedItem === "object" && evaluatedItem !== null) {
+                // We still have depth to evaluate.
+                evaluated[key] = evaluateTemplateValueCollection({
+                    valueToEvaluate: evaluatedItem,
+                    globalDataContext,
+                    templateContext,
+                    evaluationDepth: evaluationDepth - 1
+                });
+            } else {
+                evaluated[key] = evaluatedItem;
+            }
         }
     } else {
         // Single value.
@@ -236,6 +261,17 @@ export const evaluateTemplateValueCollection = ({valueToEvaluate, globalDataCont
             templateContext,
             valueToEvaluate
         });
+
+        if ((evaluationDepth > 1 || evaluationDepth < 0) && typeof evaluated === "object" && evaluated !== null) {
+            // The evaluated value may have expanded to an object or an array.
+            // Evaluate it again as long as we have depth to evaluate.
+            evaluated = evaluateTemplateValueCollection({
+                valueToEvaluate: evaluated,
+                globalDataContext,
+                templateContext,
+                evaluationDepth: evaluationDepth - 1
+            });
+        }
     }
 
     return evaluated;

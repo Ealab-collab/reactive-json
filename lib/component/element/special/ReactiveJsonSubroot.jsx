@@ -27,6 +27,20 @@ export const ReactiveJsonSubroot = ({props}) => {
         return;
     }
 
+    const parsedInt = parseInt(props?.dataOverrideEvaluationDepth);
+
+    if (rjOptions?.dataOverride && Number.isInteger(parsedInt) && parsedInt !== 0) {
+        // The dataOverride property has a special evaluation depth.
+        // Note: by default, we do not evaluate the dataOverride property,
+        // as it was already evaluated once earlier.
+        rjOptions.dataOverride = evaluateTemplateValueCollection({
+            valueToEvaluate: rjOptions?.dataOverride,
+            globalDataContext,
+            templateContext,
+            evaluationDepth: parseInt(props?.dataOverrideEvaluationDepth),
+        }) || {};
+    }
+
     // We use the same plugins as the parent ReactiveJsonRoot.
     const plugins = globalDataContext.plugins ?? {};
 

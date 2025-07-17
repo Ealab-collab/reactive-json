@@ -1,18 +1,14 @@
 renderView:
-  - type: h1
-    content: ~~.page_title
-
-  - type: p
-    content: This is a demo page with some components.
-
-  - type: h2
-    content: Home content
-
   - type: div
     content:
       type: ReactiveJsonSubroot
+      dataOverrideEvaluationDepth: -1
       rjOptions:
+        # We reuse the home.yaml file to demonstrate the dataOverride property.
         rjBuildUrl: /rjs-build/home.yaml
+        dataOverride:
+          page_title: ~~.page_title
+          body_content: This is a demo page with some components.
 
   - type: h2
     content: Static content
@@ -473,7 +469,7 @@ templates:
 
 
 data:
-  page_title: 'Hello !'
+  page_title: Demo page!
   # Temporary loading states for non-blocking data sources
   systemConfig:
     version: "" # Will be populated by additionalDataSource
