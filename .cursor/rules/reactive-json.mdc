@@ -433,6 +433,124 @@ renderView:
 
 > 📚 **More details**: See `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/core/` for usage examples.
 
+### Data Override System
+The **dataOverride** system allows replacing or merging data from a loaded RjBuild with new data. This is particularly useful with `ReactiveJsonSubroot` for:
+
+- **Data isolation**: Provide a subset of data to the subroot
+- **Data remapping**: Reorganize data structure for the sub-component  
+- **Dynamic data injection**: Use template references (`~~.`, `~.`, `~>`) to pass data from parent
+
+**Principle**: The `dataOverride` data completely replaces the data from the loaded RjBuild.
+
+```yaml
+# Parent data
+data:
+  user: { name: "John", email: "john@example.com" }
+  config: { theme: "dark" }
+
+# Usage with ReactiveJsonSubroot
+- type: ReactiveJsonSubroot
+  rjOptions:
+    dataOverride: ~~.user  # Subroot receives only user data
+    # OR restructuring:
+    # dataOverride:
+    #   userInfo: ~~.user
+    #   appConfig: ~~.config
+```
+
+### Data Override Patterns
+```yaml
+# 1. Direct override - complete data
+dataOverride: ~~.userData
+
+# 2. Override with remapping
+dataOverride:
+  profile: ~~.user.profile
+  settings: ~~.user.settings
+
+# 3. Override with mixed data
+dataOverride:
+  userInfo: ~~.currentUser
+  staticConfig: 
+    theme: "light"
+    version: "1.0"
+
+# 4. Override with arrays
+dataOverride:
+  - ~~.items.0
+  - ~~.items.1
+
+# 5. Override with dynamic evaluation  
+dataOverride:
+  currentSection: ~~.navigation.currentPage
+  userData: ~.localUserData
+```
+
+### ReactiveJsonSubroot Patterns
+```yaml
+# 1. Basic subroot from URL
+- type: ReactiveJsonSubroot
+  rjOptions:
+    rjBuildUrl: "/forms/user-form.yaml"
+    dataOverride: ~~.currentUser
+
+# 2. Inline subroot with shared data
+- type: ReactiveJsonSubroot
+  sharedUpdates: true  # Enable bidirectional synchronization
+  rjOptions:
+    dataOverride: ~~.formData
+    maybeRawAppRjBuild:
+      renderView:
+        - type: TextField
+          label: "Name"
+          dataLocation: ~.name
+
+# 3. Subroot with authentication
+- type: ReactiveJsonSubroot
+  rjOptions:
+    rjBuildUrl: "/secure/admin-panel.yaml"
+    dataOverride: ~~.adminData
+    headersForRjBuild:
+      Authorization: ["Bearer ", ~~.authToken]
+
+# 4. Subroot with complex remapping
+- type: ReactiveJsonSubroot
+  sharedUpdates: true
+  rjOptions:
+    dataOverride:
+      profile: ~~.user.personalInfo
+      preferences: ~~.user.settings
+      permissions: ~~.user.roles
+    maybeRawAppRjBuild:
+      renderView:
+        - type: TextField
+          dataLocation: ~.profile.name
+        - type: SelectField
+          dataLocation: ~.preferences.theme
+```
+
+### SharedUpdates Feature
+The **sharedUpdates** system enables automatic synchronization of data changes between a subroot and its parent:
+
+```yaml
+- type: ReactiveJsonSubroot
+  sharedUpdates: true  # Enable propagation to parent
+  rjOptions:
+    dataOverride: ~~.editableData
+    maybeRawAppRjBuild:
+      renderView:
+        - type: TextField
+          dataLocation: ~.name  # Changes propagate to ~~.editableData.name
+```
+
+**How it works**:
+1. **Automatic analysis**: The system detects template references in `dataOverride`
+2. **Callback creation**: Update callbacks are created for each reference
+3. **Interception**: Modifications in the subroot are intercepted
+4. **Propagation**: If they correspond to a parent reference, they are propagated
+
+**⚠️ Limitation**: Local modifications not covered by `dataOverride` may be lost when the parent re-renders.
+
 ---
 
 **Remember**: Always prioritize simplicity, follow existing patterns, and make components fail gracefully. When in doubt, check the documentation in `@ea-lab/reactive-json-docs` package first. 

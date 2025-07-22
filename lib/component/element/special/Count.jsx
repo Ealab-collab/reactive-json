@@ -2,7 +2,7 @@ import JSONPath from "jsonpath";
 import {useContext} from "react";
 import {GlobalDataContext} from "../../../engine/GlobalDataContext.jsx";
 import {TemplateContext} from "../../../engine/TemplateContext.jsx";
-import {maybeFormatString} from "../../../engine/utility/formatString.jsx";
+import {maybeFormatString} from "../../../engine/utility";
 
 /**
  * Returns a count for something to count.

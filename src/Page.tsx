@@ -1,7 +1,7 @@
 import {Col, Row} from "react-bootstrap";
 import {Layout} from "./Layout.tsx";
 import {ReactiveJsonRoot} from "../lib/engine/ReactiveJsonRoot.jsx";
-import {stringToBoolean} from "../lib/engine/utility/stringToBoolean.jsx";
+import {stringToBoolean} from "../lib/engine/utility";
 
 export function Page({buildSourcePath, rjBuildFetchMethod}) {
     const filePath = buildSourcePath ?? new URL(window.location).searchParams.get("file_path") ?? "/rjs-build/home.yaml";

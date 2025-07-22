@@ -3,8 +3,7 @@ import {EventDispatcherProvider} from "./EventDispatcherProvider.jsx";
 import {GlobalDataContextProvider} from "./GlobalDataContextProvider.jsx";
 import {TemplateContext} from "./TemplateContext.jsx";
 import {View} from "./View.jsx";
-import {parseRjBuild} from "./utility/parseRjBuild.jsx";
-import {stringToBoolean} from "./utility/stringToBoolean.jsx";
+import {parseRjBuild, stringToBoolean} from "./utility";
 import {dataLocationToPath} from "./TemplateSystem.jsx";
 import axios from "axios";
 import {isEqual} from "lodash";
@@ -28,6 +27,7 @@ import {useEffect, useReducer, useState} from 'react';
  * @param {string} dataUrl Deprecated. Use rjBuildUrl instead.
  * @param {{}} headersForData Deprecated. Use headersForRjBuild instead.
  * @param {string|object} maybeRawAppData Deprecated. Use maybeRawAppRjBuild instead.
+ * @param {Map<string, function>} upstreamUpdateCallbacks Update callbacks to propagate changes to the parent.
  *
  * @returns {JSX.Element}
  *
@@ -48,6 +48,7 @@ export const ReactiveJsonRoot = ({
                                      plugins,
                                      rjBuildFetchMethod,
                                      rjBuildUrl,
+                                     upstreamUpdateCallbacks,
                                  }) => {
     // Deprecated properties.
     // TODO: remove these in the next major version.
@@ -311,6 +312,31 @@ export const ReactiveJsonRoot = ({
     const updateData = (newValue, pathInData, updateMode = undefined) => {
         let path = pathInData.replace('data.', '');
 
+        if (upstreamUpdateCallbacks && upstreamUpdateCallbacks.size > 0) {
+            // Upstream update callbacks have been set. Let's check if there is one
+            // that matches the path to update.
+            for (const [pathInDataOverride, upstreamCallback] of upstreamUpdateCallbacks) {
+                // Check if the updated path matches or is a sub-path of pathInDataOverride.
+                // "pathInDataOverride" does not contain the "data." prefix.
+                if (path === pathInDataOverride || path.startsWith(pathInDataOverride + ".") || pathInDataOverride === "") {
+                    // The value to update is located in a template reference of the parent rjBuild.
+                    // Calculate the relative path from pathInDataOverride.
+                    const relativePath = pathInDataOverride === "" ? path : path.substring(pathInDataOverride.length + 1);
+                    
+                    try {
+                        // Use the upstream callback instead of updating locally.
+                        upstreamCallback(newValue, relativePath, updateMode);
+                        return; // Do not perform the local update.
+                    } catch (error) {
+                        console.warn("Error during upstream update:", error);
+                        // Continue with local update in case of error.
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Standard local update if no upstream callback applies.
         // noinspection JSCheckFunctionSignatures
         dispatchCurrentData({
             type: "updateData",
