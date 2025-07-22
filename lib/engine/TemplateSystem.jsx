@@ -15,7 +15,7 @@ import {normalizeAttributesForReactJsx} from "../component/element/html/Html.jsx
  * @throws {Error} The path cannot be determined.
  */
 export const dataLocationToPath = ({dataLocation, currentPath, globalDataContext, templateContext}) => {
-    if (!(typeof dataLocation === "string") || !(dataLocation.startsWith("~.") || dataLocation.startsWith("~~.") || dataLocation.startsWith("~>"))) {
+    if (!(typeof dataLocation === "string") || !(dataLocation.startsWith("~.") || dataLocation.startsWith("~~.") || dataLocation.startsWith("~>") || dataLocation.startsWith("~~>"))) {
         if ("~" === dataLocation) {
             // The data location is the template root.
             return templateContext.templatePath;
@@ -40,27 +40,44 @@ export const dataLocationToPath = ({dataLocation, currentPath, globalDataContext
     } else if (dataLocation.startsWith("~.")) {
         // Build the path starting from the current template path.
         pathBase = templateContext.templatePath;
-    } else if (dataLocation.startsWith("~>")) {
+    } else if (dataLocation.startsWith("~>") || dataLocation.startsWith("~~>")) {
         // Build the path starting from an ascendant of the current template path.
-        const keyToFind = dataLocation.substring(2, dataLocation.indexOf("."));
+        const prefix = dataLocation.startsWith("~>") ? "~>" : "~~>";
+        
+        // First, determine the base key.
+        const dotIndex = dataLocation.indexOf(".");
+        const baseKeyToFind = dotIndex === -1
+            ? dataLocation.substring(prefix.length)  // "~>key" => "key".
+            : dataLocation.substring(prefix.length, dotIndex); // "~>key.prop" => "key".
 
-        if (!templateContext.templatePath.includes(keyToFind)) {
-            throw new Error(keyToFind + " not found in the current template path. The current template path is: " + templateContext.templatePath);
+        if (!templateContext.templatePath.includes(baseKeyToFind)) {
+            throw new Error(baseKeyToFind + " not found in the current template path. The current template path is: " + templateContext.templatePath);
         }
 
-        const keyToFindIndex = templateContext.templatePath.indexOf(keyToFind);
+        let baseKeyToFindIndex;
 
-        pathBase = templateContext.templatePath.substring(0, keyToFindIndex + keyToFind.length);
+        if (prefix === "~>") {
+            // Build the path that starts from the last key found in the current template path.
+            baseKeyToFindIndex = templateContext.templatePath.lastIndexOf(baseKeyToFind);
+        }
+        else {
+            // Build the path that starts from the first key found in the current template path.
+            baseKeyToFindIndex = templateContext.templatePath.indexOf(baseKeyToFind);
+        }
+
+        pathBase = templateContext.templatePath.substring(0, baseKeyToFindIndex + baseKeyToFind.length);
     } else {
         pathBase = currentPath;
     }
 
-    const splitLocationArray = dataLocation.split(".");
+    const locationRemainder = dataLocation.split(".");
 
     // Remove the template value detection character.
-    splitLocationArray.shift();
+    locationRemainder.shift();
 
-    return pathBase + "." + splitLocationArray.join(".");
+    return locationRemainder.length
+        ? pathBase + "." + locationRemainder.join(".")
+        : pathBase;
 };
 
 /**
@@ -156,9 +173,14 @@ export const evaluateTemplateValue = ({valueToEvaluate, globalDataContext, templ
     if (valueToEvaluate.startsWith("~~.")) {
         // Start from the global data context node.
         currentNode = globalDataContext?.templateData;
-    } else if (valueToEvaluate.startsWith("~>")) {
-        // Start from the global data context node, but evaluate the "valueToEvaluate"
-        // to use one of the ascending nodes of the current template.
+    } else if (valueToEvaluate.startsWith("~>") || valueToEvaluate.startsWith("~~>")) {
+        // Special syntax that searches for a location in the current template path.
+        // ~> : Searches toward root (lastIndexOf).
+        // ~~> : Searches from root (indexOf).
+        // The resulting valueToEvaluate is expressed in the global data context.
+        // Note: the first part of valueToEvaluate is "data" (e.g. "data.key.prop").
+        // This is not a problem because we will remove it later as if it was
+        // a template value detection character (e.g. "~", "~~").
         valueToEvaluate = dataLocationToPath({
             dataLocation: valueToEvaluate,
             currentPath: templateContext.templatePath,
@@ -283,7 +305,7 @@ export const evaluateTemplateValueCollection = ({valueToEvaluate, globalDataCont
  * @returns {string|boolean}
  */
 export const isTemplateValue = (valueToEvaluate) => {
-    if (!(typeof valueToEvaluate === "string") || !(valueToEvaluate.startsWith("~.") || valueToEvaluate.startsWith("~~.") || valueToEvaluate.startsWith("~>") || "~" === valueToEvaluate || "~~" === valueToEvaluate)) {
+    if (!(typeof valueToEvaluate === "string") || !(valueToEvaluate.startsWith("~.") || valueToEvaluate.startsWith("~~.") || valueToEvaluate.startsWith("~>") || valueToEvaluate.startsWith("~~>") || "~" === valueToEvaluate || "~~" === valueToEvaluate)) {
         // This value does not use the template context data.
         return false;
     }

@@ -231,7 +231,7 @@ export const ActionComponentName = (props) => {
 - **EventDispatcherContext**: Centralized event handling for performance
 
 ### Key Functions
-- **evaluateTemplateValue()**: Evaluates template patterns (`~.value`, `~~.value`, `~>.value`)
+- **evaluateTemplateValue()**: Evaluates template patterns (`~.value`, `~~.value`, `~>key` for nearest, `~~>key` for global)
 - **useEvaluatedAttributes()**: Hook to evaluate dynamic attributes
 - **propsDataLocationToPathAndValue()**: Form-specific data location handling
 
@@ -398,13 +398,35 @@ export const CustomRoot = (props) => {
 ```yaml
 data:
   global_value: "Hello"
-  template_data:
-    nested_value: "World"
+  config:
+    theme: "dark"
+    userSection:
+      title: "User List"
+      config:
+        theme: "light"
+      level1:
+        items:
+          - name: "Item 1"
+          # userList template instances run here at: data.config.userSection.level1.items
+
+templates:
+  userList:
+    type: div
+    content:
+      - type: div
+        content: ["Global: ", ~~.global_value]        # From root data
+      - type: div  
+        content: ["Local: ", ~.name]                  # From current template
+      - type: div
+        content: ["Theme (nearest): ", ~>config.theme]    # Get from nearest config → "light"
+      - type: div
+        content: ["Theme (global): ", ~~>config.theme]   # Get from top-level config → "dark"
 
 renderView:
-  - content: ~~.global_value        # From root data
-  - content: ~.nested_value         # From current template
-  - content: ~>.nested_value        # Search up hierarchy
+  - type: Switch
+    content: ~~.config.userSection.level1.items
+    singleOption:
+      load: userList
 ```
 
 ### Common RjBuild Patterns
