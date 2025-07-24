@@ -347,6 +347,24 @@ export const ReactiveJsonRoot = ({
     }
 
     /**
+     * Replaces the entire data object.
+     * 
+     * This provides a way to completely replace the root data, unlike updateData 
+     * which can only merge properties at the root level.
+     *
+     * This is not related to the setData reaction.
+     *
+     * @param {any} newData The new data to set. Will completely replace the current data.
+     */
+    const setData = (newData) => {
+        // noinspection JSCheckFunctionSignatures
+        dispatchCurrentData({
+            type: "setData",
+            data: newData
+        });
+    }
+
+    /**
      * Updates the given data object.
      *
      * This must be a function to be used in the currentData's reducer.
@@ -475,6 +493,7 @@ export const ReactiveJsonRoot = ({
                     element: templates,
                     headersForRjBuild,
                     plugins,
+                    setData,
                     setRawAppRjBuild,
                     templateData: currentData.realCurrentData,
                     templatePath: "data",

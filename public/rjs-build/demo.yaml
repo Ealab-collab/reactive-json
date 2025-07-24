@@ -302,6 +302,101 @@ renderView:
 
   - type: hr
 
+  - type: h2
+    content: SetData Tests
+
+  - type: p
+    content: This section demonstrates the `setData` reaction with examples from the documentation.
+
+  - type: div
+    attributes:
+      class: row
+    content:
+      - type: div
+        attributes:
+          class: col-md-6
+        content:
+          - type: h3
+            content: "Basic Usage"
+          - type: div
+            attributes:
+              class: card
+            content:
+              - type: div
+                attributes:
+                  class: card-body
+                content:
+                  - type: div
+                    attributes:
+                      class: mb-3
+                    content: ["Current value: ", ~~.setDataTests.myValue]
+                  - type: button
+                    attributes:
+                      class: btn btn-primary me-2
+                    content: "Set value to 'Hello World'"
+                    actions:
+                      - what: setData
+                        on: click
+                        path: ~~.setDataTests.myValue
+                        value: "Hello World"
+                  - type: button
+                    attributes:
+                      class: btn btn-secondary
+                    content: "Set value to 'Another value'"
+                    actions:
+                      - what: setData
+                        on: click
+                        path: ~~.setDataTests.myValue
+                        value: "Another value"
+
+      - type: div
+        attributes:
+          class: col-md-6
+        content:
+          - type: h3
+            content: "Conditional Usage"
+          - type: div
+            attributes:
+              class: card
+            content:
+              - type: div
+                attributes:
+                  class: card-body
+                content:
+                  - type: TextField
+                    dataLocation: ~~.setDataTests.username
+                    label: "Username:"
+                    placeholder: "Enter username"
+                    attributes:
+                      class: mb-3
+                  - type: button
+                    attributes:
+                      class: btn btn-success mb-3
+                    content: "Set Welcome Message"
+                    actions:
+                      - what: setData
+                        on: click
+                        path: ~~.setDataTests.message
+                        value: ["Welcome, ", ~~.setDataTests.username, "!"]
+                        when: ~~.setDataTests.username
+                        isEmpty: "not"
+                      - what: setData
+                        on: click
+                        path: ~~.setDataTests.message
+                        value: "Please enter a username first"
+                        when: ~~.setDataTests.username
+                        isEmpty: true
+                  - type: div
+                    attributes:
+                      class: alert alert-info
+                    content: ~~.setDataTests.message
+                    actions:
+                      - what: hide
+                        when: ~~.setDataTests.message
+                        isEmpty: true
+
+  - type: hr
+
   - type: DataFilter
     context: global
     filters:
@@ -470,6 +565,10 @@ templates:
 
 data:
   page_title: Demo page!
+  setDataTests:
+    myValue: "initial value"
+    username: ""
+    message: ""
   # Temporary loading states for non-blocking data sources
   systemConfig:
     version: "" # Will be populated by additionalDataSource

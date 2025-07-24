@@ -1,5 +1,5 @@
 import axios from "axios";
-import {evaluateTemplateValue} from "../../engine/TemplateSystem.jsx";
+import {dataLocationToPath, evaluateTemplateValue} from "../../../engine/TemplateSystem.jsx";
 
 /**
  * Handles the common logic of HTTP requests for fetchData and submitData.
@@ -7,6 +7,8 @@ import {evaluateTemplateValue} from "../../engine/TemplateSystem.jsx";
  * @param {Object} props - The properties of the reaction.
  * @param {Object} props.args - The arguments of the reaction.
  * @param {Object} props.args.refreshAppOnResponse - Tells if the response content will replace the current app content.
+ * @param {Object} props.args.updateOnlyData - When true, only update the data instead of replacing the entire RjBuild.
+ * @param {Object} props.args.updateDataAtLocation - Specifies where to update the data (like additionalDataSource path).
  * @param {Object} props.args.url - The URL of the request.
  * @param {Object} props.args.data - The data of the request.
  * @param {Object} props.event - The event of the reaction.
@@ -87,6 +89,20 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
      */
     const refreshAppOnResponse = props?.args?.refreshAppOnResponse ?? true;
 
+    /**
+     * When true, only update the data instead of replacing the entire RjBuild.
+     *
+     * @type {boolean}
+     */
+    const updateOnlyData = props?.args?.updateOnlyData ?? false;
+
+    /**
+     * Specifies where to update the data (like additionalDataSource path).
+     *
+     * @type {string|undefined}
+     */
+    const updateDataAtLocation = props?.args?.updateDataAtLocation;
+
     const url = evaluateTemplateValue({
         valueToEvaluate: props?.args?.url, 
         globalDataContext, 
@@ -99,7 +115,7 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
     }
 
     const headers = globalDataContext.headersForRjBuild ?? {};
-    const {setRawAppRjBuild} = globalDataContext;
+    const {setData, setRawAppRjBuild, updateData} = globalDataContext;
 
     const config = {
         method: requestConfig.method,
@@ -115,8 +131,39 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
     axios(config)
         .then((value) => {
             if (refreshAppOnResponse) {
-                // This will trigger a complete re-render.
-                setRawAppRjBuild(value.data);
+                if (updateOnlyData) {
+                    // Only update the data, not the entire RjBuild.
+                    if (!updateDataAtLocation) {
+                        // Replace entire data.
+                        setData(value.data);
+                        return;
+                    }
+
+                    // Update at specific location.
+                    const evaluatedPath = dataLocationToPath({
+                        dataLocation: updateDataAtLocation,
+                        currentPath: "data",
+                        globalDataContext,
+                        templateContext
+                    });
+
+                    if (typeof evaluatedPath !== "string" || !evaluatedPath.startsWith("data")) {
+                        console.warn(`reactionFunction:${errorPrefix} : updateDataAtLocation evaluation did not result in a valid locationstring:`, updateDataAtLocation, "->", evaluatedPath);
+                        return;
+                    }
+
+                    if (evaluatedPath === "data") {
+                        // The path points to root data, use setData for complete replacement.
+                        setData(value.data);
+                        return;
+                    }
+
+                    updateData(value.data, evaluatedPath);
+                    
+                } else {
+                    // This will trigger a complete re-render.
+                    setRawAppRjBuild(value.data);
+                }
             }
         })
         .catch((reason) => {
