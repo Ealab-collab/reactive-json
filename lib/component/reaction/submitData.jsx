@@ -1,4 +1,4 @@
-import axios from "axios";
+import {executeHttpRequest} from "./utility/httpRequestCommon.jsx";
 import {evaluateTemplateValue} from "../../engine/TemplateSystem.jsx";
 
 /**
@@ -9,56 +9,16 @@ import {evaluateTemplateValue} from "../../engine/TemplateSystem.jsx";
  * @param {{args: {data, httpMethod, refreshAppOnResponse, submitSilently, url}, event, globalDataContext, templateContext}} props Reaction function props.
  */
 export const submitData = (props) => {
-    // Prevent multiple submits.
-    const reactionEvent = props?.event;
-
-    // Check in realtime if we are already submitting.
-    // With this system, only 1 submit can be made concurrently for all roots.
-    const body = document.body;
-
-    if (body.dataset.htmlBuilderIsSubmitting === "true") {
-        return;
-    }
-
-    // This will block any attempts to resubmit until receiving the response.
-    body.dataset.htmlBuilderIsSubmitting = "true";
-
-    if (props?.args?.submitSilently) {
-        // This will prevent CSS from visually disabling the fields if true.
-        body.dataset.htmlBuilderIsSubmittingSilently = "true";
-    } else {
-        delete body.dataset.htmlBuilderIsSubmittingSilently;
-    }
-
-    const currentTarget = reactionEvent?.currentTarget;
-
-    if (currentTarget?.dataset) {
-        // Useful for styling.
-        currentTarget.dataset.isSubmitting = "true";
-    }
-
     const {globalDataContext: _globalDataContext, templateContext} = props;
 
     // Use the root context when submitting data,
     // not the maybe-filtered one that the DataFilter component may have edited.
     // This could be made configurable if ever needed.
-    const globalDataContext = _globalDataContext.getRootContext ? _globalDataContext.getRootContext() : _globalDataContext;
+    const globalDataContext = _globalDataContext.getRootContext
+        ? _globalDataContext.getRootContext()
+        : _globalDataContext;
 
-    /**
-     * Tells if the response content will replace the current app content.
-     *
-     * @type {boolean}
-     */
-    const refreshAppOnResponse = props?.args?.refreshAppOnResponse ?? true;
-
-    const url = evaluateTemplateValue({
-        valueToEvaluate: props?.args?.url, globalDataContext, templateContext
-    });
-
-    if (!url) {
-        return;
-    }
-
+    // Prepare the payload of the request.
     let payload = {};
 
     if (props?.args?.hasOwnProperty("data")) {
@@ -98,39 +58,13 @@ export const submitData = (props) => {
         }
     }
 
-    const headers = globalDataContext.headersForRjBuild ?? {};
-
-    const {setRawAppRjBuild} = globalDataContext;
-
-    const config = {
-        method: props?.args?.httpMethod ?? "post",
-        url: url,
-        data: payload,
-    };
-
-    if (headers) {
-        // Override headers only when explicitly set.
-        config.headers = headers;
-    }
-
-    axios(config)
-        .then((value) => {
-            if (!refreshAppOnResponse) {
-                return;
-            }
-
-            // This will trigger a complete re-render.
-            setRawAppRjBuild(value.data);
-        })
-        .catch((reason) => {
-            console.log("reactionFunction:submitData : Could not submit. Reason: " + reason.message);
-        })
-        .finally(() => {
-            delete body.dataset.htmlBuilderIsSubmitting;
-            delete body.dataset.htmlBuilderIsSubmittingSilently;
-
-            if (currentTarget?.dataset) {
-                delete currentTarget.dataset.isSubmitting;
-            }
-        });
+    executeHttpRequest(
+        props,
+        {
+            method: props?.args?.httpMethod ?? "post",
+            data: payload,
+            submitSilently: props?.args?.submitSilently
+        },
+        "submitData"
+    );
 };
