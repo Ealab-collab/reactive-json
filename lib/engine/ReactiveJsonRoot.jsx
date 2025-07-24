@@ -380,6 +380,13 @@ export const ReactiveJsonRoot = ({
     function updateObject(data, path, value, updateMode = undefined) {
         const splitPath = path.split(".");
 
+        // Ensure realCurrentData is a valid object before proceeding.
+        // The data may be undefined if the data has not been initialized.
+        // This happens when there is no data (yet) appended to this root.
+        if (typeof data.realCurrentData !== "object" || data.realCurrentData === null || Array.isArray(data.realCurrentData)) {
+            data.realCurrentData = {};
+        }
+
         // This will point to the current nested object.
         let pointer = data.realCurrentData;
 
