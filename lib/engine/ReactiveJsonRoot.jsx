@@ -90,7 +90,7 @@ export const ReactiveJsonRoot = ({
                 return {updateId: 0, realCurrentData: dispatched.data};
 
             case "updateData":
-                return updateObject(prevState, dispatched.path, dispatched.value, dispatched.updateMode);
+                return updateDataObject(prevState, dispatched.path, dispatched.value, dispatched.updateMode);
 
             default:
                 // Unknown type.
@@ -297,7 +297,7 @@ export const ReactiveJsonRoot = ({
 
             if (nonBlockingSources.length > 0) {
                 // Process non-blocking sources in background.
-                const nonBlockingPromises = nonBlockingSources.map((source, index) => 
+                const nonBlockingPromises = nonBlockingSources.map((source, index) =>
                     fetchDataSource(source, blockingSources.length + index)
                 );
 
@@ -309,31 +309,50 @@ export const ReactiveJsonRoot = ({
         processSources();
     }, [rawAppRjBuild, dataOverride, headersForRjBuild]);
 
+    /**
+     * Handles upstream update callbacks and returns true if an upstream callback was used.
+     *
+     * @param {string} path The path without "data." prefix
+     * @param {any} newValue The value to update
+     * @param {string} updateMode The update mode
+     * @returns {boolean} True if an upstream callback handled the update, false otherwise
+     */
+    const tryUpstreamUpdate = (path, newValue, updateMode) => {
+        if (!upstreamUpdateCallbacks || upstreamUpdateCallbacks.size === 0) {
+            return false;
+        }
+
+        // Upstream update callbacks have been set. Let's check if there is one
+        // that matches the path to update.
+        for (const [pathInDataOverride, upstreamCallback] of upstreamUpdateCallbacks) {
+            // Check if the updated path matches or is a sub-path of pathInDataOverride.
+            // "pathInDataOverride" does not contain the "data." prefix.
+            if (path === pathInDataOverride || path.startsWith(pathInDataOverride + ".") || pathInDataOverride === "") {
+                // The value to update is located in a template reference of the parent rjBuild.
+                // Calculate the relative path from pathInDataOverride.
+                const relativePath = pathInDataOverride === "" ? path : path.substring(pathInDataOverride.length + 1);
+
+                try {
+                    // Use the upstream callback instead of updating locally.
+                    upstreamCallback(newValue, relativePath, updateMode);
+                    return true; // Upstream callback handled the update.
+                } catch (error) {
+                    console.warn("Error during upstream update:", error);
+                    // Continue with local update in case of error.
+                    break;
+                }
+            }
+        }
+
+        return false;
+    };
+
     const updateData = (newValue, pathInData, updateMode = undefined) => {
         let path = pathInData.replace('data.', '');
 
-        if (upstreamUpdateCallbacks && upstreamUpdateCallbacks.size > 0) {
-            // Upstream update callbacks have been set. Let's check if there is one
-            // that matches the path to update.
-            for (const [pathInDataOverride, upstreamCallback] of upstreamUpdateCallbacks) {
-                // Check if the updated path matches or is a sub-path of pathInDataOverride.
-                // "pathInDataOverride" does not contain the "data." prefix.
-                if (path === pathInDataOverride || path.startsWith(pathInDataOverride + ".") || pathInDataOverride === "") {
-                    // The value to update is located in a template reference of the parent rjBuild.
-                    // Calculate the relative path from pathInDataOverride.
-                    const relativePath = pathInDataOverride === "" ? path : path.substring(pathInDataOverride.length + 1);
-                    
-                    try {
-                        // Use the upstream callback instead of updating locally.
-                        upstreamCallback(newValue, relativePath, updateMode);
-                        return; // Do not perform the local update.
-                    } catch (error) {
-                        console.warn("Error during upstream update:", error);
-                        // Continue with local update in case of error.
-                        break;
-                    }
-                }
-            }
+        // Try upstream update first
+        if (tryUpstreamUpdate(path, newValue, updateMode)) {
+            return; // Upstream callback handled it
         }
 
         // Standard local update if no upstream callback applies.
@@ -348,8 +367,8 @@ export const ReactiveJsonRoot = ({
 
     /**
      * Replaces the entire data object.
-     * 
-     * This provides a way to completely replace the root data, unlike updateData 
+     *
+     * This provides a way to completely replace the root data, unlike updateData
      * which can only merge properties at the root level.
      *
      * This is not related to the setData reaction.
@@ -357,6 +376,12 @@ export const ReactiveJsonRoot = ({
      * @param {any} newData The new data to set. Will completely replace the current data.
      */
     const setData = (newData) => {
+        // Try upstream update first (for root data replacement)
+        if (tryUpstreamUpdate("", newData, undefined)) {
+            return; // Upstream callback handled it
+        }
+
+        // Standard local update if no upstream callback applies.
         // noinspection JSCheckFunctionSignatures
         dispatchCurrentData({
             type: "setData",
@@ -369,6 +394,8 @@ export const ReactiveJsonRoot = ({
      *
      * This must be a function to be used in the currentData's reducer.
      *
+     * Dev note: previously named "updateObject".
+     *
      * @param {{updateId: Number, realCurrentData: {}}} data The current data to edit. It will be mutated.
      *     updateId will increment when a re-render is needed.
      * @param {string} path The path where to put (or remove) the data.
@@ -377,7 +404,7 @@ export const ReactiveJsonRoot = ({
      *
      * @returns {{updateId: Number, realCurrentData: {}}} Data with update ID changed if a render is needed.
      */
-    function updateObject(data, path, value, updateMode = undefined) {
+    function updateDataObject(data, path, value, updateMode = undefined) {
         const splitPath = path.split(".");
 
         // Ensure realCurrentData is a valid object before proceeding.
