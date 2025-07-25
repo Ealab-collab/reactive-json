@@ -74,7 +74,12 @@ export const SelectField = ({props, currentData, path, datafield}) => {
         // under the datafield key. (Dev note: this is maybe not the best way to handle this.)
         formData = templateContext.templateData[datafield];
 
-        formDataPath = dataLocationToPath({dataLocation: "~." + datafield, currentPath: templateContext.templatePath});
+        formDataPath = dataLocationToPath({
+            dataLocation: "~." + datafield,
+            currentPath: templateContext.templatePath,
+            globalDataContext,
+            templateContext,
+        });
     }
 
     const changeValue = (e) => {
