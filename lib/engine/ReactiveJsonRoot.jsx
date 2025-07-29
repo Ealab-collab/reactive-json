@@ -3,7 +3,7 @@ import {EventDispatcherProvider} from "./EventDispatcherProvider.jsx";
 import {GlobalDataContextProvider} from "./GlobalDataContextProvider.jsx";
 import {TemplateContext} from "./TemplateContext.jsx";
 import {View} from "./View.jsx";
-import {parseRjBuild, stringToBoolean} from "./utility";
+import {alterData, parseRjBuild, stringToBoolean} from "./utility";
 import {dataLocationToPath} from "./TemplateSystem.jsx";
 import axios from "axios";
 import {isEqual} from "lodash";
@@ -218,7 +218,31 @@ export const ReactiveJsonRoot = ({
                 }
 
                 const response = await axios(config);
-                const fetchedData = response.data;
+
+                // Create request context for data processors.
+                const requestContext = {
+                    url: config.url,
+                    method: config.method,
+                    headers: config.headers || {},
+                    body: config.data,
+                };
+
+                // Create response context for data processors.
+                const responseContext = {
+                    headers: response.headers || {},
+                    status: response.status,
+                    data: response.data
+                };
+
+                // Apply data processors to alter the response.
+                const fetchedData = alterData({
+                    requestContext,
+                    responseContext,
+                    responseBody: response.data,
+                    // additionalDataSource always processes raw data, not RjBuild.
+                    isRjBuild: false,
+                    dataProcessors: plugins?.dataProcessor || {},
+                });
 
                 // Merge data immediately when this source completes.
                 if (!source.path) {

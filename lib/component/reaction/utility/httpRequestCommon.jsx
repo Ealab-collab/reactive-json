@@ -1,5 +1,6 @@
 import axios from "axios";
 import {dataLocationToPath, evaluateTemplateValue} from "../../../engine/TemplateSystem.jsx";
+import {alterData} from "../../../engine/utility/alterData.jsx";
 
 /**
  * Handles the common logic of HTTP requests for fetchData and submitData.
@@ -128,14 +129,46 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
         config.headers = headers;
     }
 
+    // Extract dataProcessors from plugins.
+    const dataProcessors = globalDataContext.plugins?.dataProcessor || {};
+
     axios(config)
         .then((value) => {
             if (refreshAppOnResponse) {
+                // Create request context for data processors.
+                const requestContext = {
+                    url: config.url,
+                    method: config.method,
+                    headers: config.headers || {},
+                    body: config.data,
+                };
+
+                // Create response context for data processors.
+                const responseContext = {
+                    headers: value.headers || {},
+                    status: value.status,
+                    data: value.data
+                };
+
+                // Determine if this is an RjBuild response.
+                // RjBuild when updateOnlyData is false (meaning we're processing a complete RjBuild).
+                // When updateOnlyData is true, we're only processing data.
+                const isRjBuild = updateOnlyData === false;
+
+                // Apply data processors to alter the response.
+                const alteredResponse = alterData({
+                    requestContext,
+                    responseContext,
+                    responseBody: value.data,
+                    isRjBuild,
+                    dataProcessors
+                });
+
                 if (updateOnlyData) {
                     // Only update the data, not the entire RjBuild.
                     if (!updateDataAtLocation) {
                         // Replace entire data.
-                        setData(value.data);
+                        setData(alteredResponse);
                         return;
                     }
 
@@ -154,15 +187,15 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
 
                     if (evaluatedPath === "data") {
                         // The path points to root data, use setData for complete replacement.
-                        setData(value.data);
+                        setData(alteredResponse);
                         return;
                     }
 
-                    updateData(value.data, evaluatedPath);
+                    updateData(alteredResponse, evaluatedPath);
                     
                 } else {
                     // This will trigger a complete re-render.
-                    setRawAppRjBuild(value.data);
+                    setRawAppRjBuild(alteredResponse);
                 }
             }
         })
