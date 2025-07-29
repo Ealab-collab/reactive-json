@@ -18,7 +18,7 @@ You are an expert React developer specializing in creating components for **@ea-
 ## Reference Documentation
 - Installation: `npm install --save-dev @ea-lab/reactive-json-docs`
 - Main documentation entry point with demos: `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/index.yaml`
-- **Component Development** (React source code): `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/extend/`
+- **Component Development** (React source code): `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/advanced-concepts/plugins/`
   - `component-development.md`: Complete guide for creating React components
   - `plugin-system.md`: Plugin system and architecture
 - **Component Usage** (JSON/YAML configuration): `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/core/`
@@ -85,7 +85,7 @@ export const ComponentName = ({props}) => {
 };
 ```
 
-> 📚 **More details**: See `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/extend/component-development.md` for detailed component development patterns.
+> 📚 **More details**: See `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/advanced-concepts/plugins/component-development.md` for detailed component development patterns.
 
 ### 2. Form Element Component Structure
 
@@ -127,7 +127,7 @@ export const FormComponentName = ({props, datafield, path}) => {
 };
 ```
 
-> 📚 **More details**: See `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/extend/component-development.md` for form component development patterns. For usage examples, see `core/element/form/`.
+> 📚 **More details**: See `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/advanced-concepts/plugins/component-development.md` for form component development patterns. For usage examples, see `core/element/form/`.
 
 ### 3. Component with View (Nested Content)
 
@@ -158,7 +158,7 @@ export const WrapperComponent = ({props, path, currentData, datafield}) => {
 };
 ```
 
-> 📚 **More details**: See `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/extend/component-development.md` for wrapper component patterns. For usage examples, see `core/element/html/`.
+> 📚 **More details**: See `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/advanced-concepts/plugins/component-development.md` for wrapper component patterns. For usage examples, see `core/element/html/`.
 
 ### 4. Generic Bootstrap Wrapper
 
@@ -219,7 +219,7 @@ export const ActionComponentName = (props) => {
 };
 ```
 
-> 📚 **More details**: See `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/extend/component-development.md` for action component development patterns. For usage examples, see `core/action/`.
+> 📚 **More details**: See `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/advanced-concepts/plugins/component-development.md` for action component development patterns. For usage examples, see `core/action/`.
 
 ---
 
@@ -235,13 +235,13 @@ export const ActionComponentName = (props) => {
 - **useEvaluatedAttributes()**: Hook to evaluate dynamic attributes
 - **propsDataLocationToPathAndValue()**: Form-specific data location handling
 
-> 📚 **More details**: See `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/extend/component-development.md` for API usage patterns.
+> 📚 **More details**: See `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/advanced-concepts/plugins/component-development.md` for API usage patterns.
 
 ### Core Components
 - **ActionDependant**: Enables action system support (wrap your component content)
 - **View**: Renders RjBuild content or any displayable value
 
-> 📚 **More details**: See `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/extend/component-development.md` for core component development patterns. For reaction function usage, see `core/reaction/`.
+> 📚 **More details**: See `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/advanced-concepts/plugins/component-development.md` for core component development patterns. For reaction function usage, see `core/reaction/`.
 
 ---
 
@@ -332,7 +332,7 @@ export const CustomRoot = (props) => {
 }
 ```
 
-> 📚 **More details**: See `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/extend/plugin-system.md` for plugin development. For integration examples, see `core/example/`.
+> 📚 **More details**: See `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/advanced-concepts/plugins/plugin-system.md` for plugin development. For integration examples, see `core/example/`.
 
 ---
 
@@ -388,7 +388,7 @@ export const CustomRoot = (props) => {
 - Show typical use cases
 - Include integration instructions if needed
 
-> 📚 **More details**: See `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/extend/component-development.md` for complete development workflow guide.
+> 📚 **More details**: See `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/advanced-concepts/plugins/component-development.md` for complete development workflow guide.
 
 ---
 
