@@ -44,7 +44,7 @@ export const submitData = (props) => {
                     entries
                 );
             } else {
-                return filterFn(value) ? value : null;
+                return filterFn(value);
             }
         }
 
