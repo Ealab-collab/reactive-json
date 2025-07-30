@@ -5,7 +5,8 @@ import {executeHttpRequest} from "./utility/httpRequestCommon.jsx";
  *
  * Will reload the app content if refreshAppOnResponse is true.
  *
- * @param {{args: {httpMethod, refreshAppOnResponse, updateOnlyData, updateDataAtLocation, url}, event, globalDataContext, templateContext}} props Reaction function props.
+ * @param {{args: {httpMethod, refreshAppOnResponse, updateOnlyData, updateDataAtLocation, dataMapping, url}, event, globalDataContext, templateContext}} props Reaction function props.
+ * @param {Object} [props.args.dataMapping] Configuration for selective data dispatch using mapping processors.
  * @param {string} [props.args.httpMethod="get"] HTTP method to use for the request.
  * @param {boolean} [props.args.refreshAppOnResponse=true] Whether to refresh the app content with the response.
  * @param {boolean} [props.args.updateOnlyData=false] When true, only update the data instead of replacing the entire RjBuild.

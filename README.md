@@ -124,7 +124,7 @@ npm install --save-dev @ea-lab/reactive-json-docs
 ```
 
 Documentation is available at:
-- `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/extend/component-development.md`
+- `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/advanced-concepts/plugins/component-development.md`
 - Main entry point: `node_modules/@ea-lab/reactive-json-docs/public/rjbuild/docs/index.yaml`
 
 ## Demo Application

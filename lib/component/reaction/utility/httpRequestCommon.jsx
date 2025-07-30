@@ -1,12 +1,13 @@
 import axios from "axios";
 import {dataLocationToPath, evaluateTemplateValue} from "../../../engine/TemplateSystem.jsx";
-import {alterData} from "../../../engine/utility/alterData.jsx";
+import {alterData, applyDataMapping} from "../../../engine/utility";
 
 /**
  * Handles the common logic of HTTP requests for fetchData and submitData.
  * 
  * @param {Object} props - The properties of the reaction.
  * @param {Object} props.args - The arguments of the reaction.
+ * @param {Object} props.args.dataMapping - Configuration for selective data dispatch using mapping processors.
  * @param {Object} props.args.refreshAppOnResponse - Tells if the response content will replace the current app content.
  * @param {Object} props.args.updateOnlyData - When true, only update the data instead of replacing the entire RjBuild.
  * @param {Object} props.args.updateDataAtLocation - Specifies where to update the data (like additionalDataSource path).
@@ -82,6 +83,13 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
     // This could be made configurable if ever needed.
     const globalDataContext = _globalDataContext.getRootContext ? 
         _globalDataContext.getRootContext() : _globalDataContext;
+
+    /**
+     * Configuration for selective data dispatch using mapping processors.
+     *
+     * @type {Object|undefined}
+     */
+    const dataMapping = props?.args?.dataMapping;
 
     /**
      * Tells if the response content will replace the current app content.
@@ -165,9 +173,32 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
                 });
 
                 if (updateOnlyData) {
+                    if (dataMapping) {
+                        try {
+                            // A data mapping has been supplied.
+                            applyDataMapping({
+                                dataMapping,
+                                responseData: alteredResponse,
+                                globalDataContext,
+                                templateContext,
+                            });
+
+                            // If dataMapping is used, we don't continue with the traditional updateDataAtLocation logic
+                            return;
+                        } catch (error) {
+                            console.error(`reactionFunction:${errorPrefix} : Error applying dataMapping:`, error);
+                            
+                            // Don't continue with the traditional updateDataAtLocation logic
+                            // even if updateDataAtLocation is set.
+                            // Using dataMapping means that we don't use updateDataAtLocation.
+                            return;
+                        }
+                    }
+
                     // Only update the data, not the entire RjBuild.
                     if (!updateDataAtLocation) {
                         // Replace entire data.
+                        // TODO: when updateData works at the root, we can use it here with updateMode.
                         setData(alteredResponse);
                         return;
                     }
@@ -191,8 +222,8 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
                         return;
                     }
 
+                    // TODO: support updateMode.
                     updateData(alteredResponse, evaluatedPath);
-                    
                 } else {
                     // This will trigger a complete re-render.
                     setRawAppRjBuild(alteredResponse);

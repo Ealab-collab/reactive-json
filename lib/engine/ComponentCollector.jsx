@@ -1,16 +1,17 @@
 /**
  * Merges component collections (aka plugins).
  * @param {[{}]} collections Array of plugin collections.
- * @return {{hook: {}, reaction: {}, action: {}, utility: {}, element: {}, dataProcessor: {}}}
+ * @return {{hook: {}, reaction: {}, action: {}, utility: {}, element: {}, dataProcessor: {}, dataMapping: {}}}
  */
 export function mergeComponentCollections(collections) {
     const mergedCollections = {
         "action": {},
+        "dataMapping": {},
+        "dataProcessor": {},
         "element": {},
         "hook": {},
         "reaction": {},
         "utility": {},
-        "dataProcessor": {},
     };
 
     collections.forEach((collection) => {

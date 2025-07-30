@@ -1,9 +1,16 @@
 // import styles from "./ReactiveJsonRoot.module.css"
+import {coreComponentsPlugin} from "../coreComponentsPlugin.jsx";
+import {mergeComponentCollections} from "./ComponentCollector.jsx";
 import {EventDispatcherProvider} from "./EventDispatcherProvider.jsx";
 import {GlobalDataContextProvider} from "./GlobalDataContextProvider.jsx";
 import {TemplateContext} from "./TemplateContext.jsx";
 import {View} from "./View.jsx";
-import {alterData, parseRjBuild, stringToBoolean} from "./utility";
+import {
+    alterData,
+    applyDataMapping,
+    parseRjBuild,
+    stringToBoolean,
+} from "./utility";
 import {dataLocationToPath} from "./TemplateSystem.jsx";
 import axios from "axios";
 import {isEqual} from "lodash";
@@ -113,6 +120,11 @@ export const ReactiveJsonRoot = ({
         return JSON.stringify(maybeRawAppRjBuild);
     });
 
+    // Merge core plugins with user-provided plugins.
+    const mergedPlugins = plugins 
+        ? mergeComponentCollections([coreComponentsPlugin, plugins])
+        : coreComponentsPlugin;
+
     useEffect(() => {
         if (!rjBuildUrl) {
             return;
@@ -183,9 +195,11 @@ export const ReactiveJsonRoot = ({
         // Do not worry too much about these contexts, because each source will use the
         // dispatcher that works with the real final data.
         const globalDataContext = {
+            headersForRjBuild,
             templateData: finalData,
             templatePath: "data",
-            headersForRjBuild
+            setData,
+            updateData,
         };
 
         const templateContext = {
@@ -241,8 +255,27 @@ export const ReactiveJsonRoot = ({
                     responseBody: response.data,
                     // additionalDataSource always processes raw data, not RjBuild.
                     isRjBuild: false,
-                    dataProcessors: plugins?.dataProcessor || {},
+                    dataProcessors: mergedPlugins?.dataProcessor || {},
                 });
+
+                if (source.dataMapping) {
+                    try {
+                        // Apply dataMapping.
+                        applyDataMapping({
+                            dataMapping: source.dataMapping,
+                            responseData: fetchedData,
+                            globalDataContext,
+                            templateContext,
+                        });
+
+                        // When dataMapping is used (successfully or with a fallback),
+                        // we don't continue with the traditional path logic.
+                        return;
+                    } catch (error) {
+                        console.error("Error applying dataMapping for additionalDataSource:", error);
+                        // Continue with traditional logic on error
+                    }
+                }
 
                 // Merge data immediately when this source completes.
                 if (!source.path) {
@@ -341,7 +374,7 @@ export const ReactiveJsonRoot = ({
      * @param {string} updateMode The update mode
      * @returns {boolean} True if an upstream callback handled the update, false otherwise
      */
-    const tryUpstreamUpdate = (path, newValue, updateMode) => {
+    function tryUpstreamUpdate(path, newValue, updateMode) {
         if (!upstreamUpdateCallbacks || upstreamUpdateCallbacks.size === 0) {
             return false;
         }
@@ -371,7 +404,7 @@ export const ReactiveJsonRoot = ({
         return false;
     };
 
-    const updateData = (newValue, pathInData, updateMode = undefined) => {
+    function updateData(newValue, pathInData, updateMode = undefined) {
         let path = pathInData.replace('data.', '');
 
         // Try upstream update first
@@ -399,7 +432,7 @@ export const ReactiveJsonRoot = ({
      *
      * @param {any} newData The new data to set. Will completely replace the current data.
      */
-    const setData = (newData) => {
+    function setData(newData) {
         // Try upstream update first (for root data replacement)
         if (tryUpstreamUpdate("", newData, undefined)) {
             return; // Upstream callback handled it
@@ -550,7 +583,7 @@ export const ReactiveJsonRoot = ({
                 value={{
                     element: templates,
                     headersForRjBuild,
-                    plugins,
+                    plugins: mergedPlugins,
                     setData,
                     setRawAppRjBuild,
                     templateData: currentData.realCurrentData,

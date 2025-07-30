@@ -397,6 +397,238 @@ renderView:
 
   - type: hr
 
+  - type: h2
+    content: SimpleMapping Tests
+
+  - type: p
+    content: This section demonstrates the new `simpleMapping` dataMapping system with 2-phase processing (gather + apply) and robust error handling.
+
+  - type: div
+    attributes:
+      class: row
+    content:
+      - type: div
+        attributes:
+          class: col-md-6
+        content:
+          - type: h3
+            content: "Basic Mapping"
+          - type: div
+            attributes:
+              class: card
+            content:
+              - type: div
+                attributes:
+                  class: card-body
+                content:
+                  - type: div
+                    attributes:
+                      class: mb-3
+                    content: 
+                      - "Mapped user: "
+                      - type: strong
+                        content: ~~.mappingTests.user.name
+                      - " ("
+                      - type: em
+                        content: ~~.mappingTests.user.email
+                      - ")"
+                  - type: div
+                    attributes:
+                      class: mb-3
+                    content:
+                      - "Mapped theme: "
+                      - type: code
+                        content: ~~.mappingTests.theme
+                  - type: button
+                    attributes:
+                      class: btn btn-primary
+                    content: "Test Basic Mapping"
+                    actions:
+                      - what: fetchData
+                        on: click
+                        url: "/rjs-build/test-data/user-profile.json"
+                        updateOnlyData: true
+                        dataMapping:
+                          simpleMapping:
+                            stringMap:
+                              "~~.mappingTests.user.name":        # ← Destination: data.mappingTests.user
+                                value: "name"                # ← Source: response.name
+                                updateMode: "replace"
+                              "~~.mappingTests.theme":       # ← Destination: data.mappingTests.theme
+                                value: "preferences.theme"  # ← Source: response.preferences.theme
+                                updateMode: ""                  # Default (replace)
+
+      - type: div
+        attributes:
+          class: col-md-6
+        content:
+          - type: h3
+            content: "Error Handling & Fallbacks"
+          - type: div
+            attributes:
+              class: card
+            content:
+              - type: div
+                attributes:
+                  class: card-body
+                content:
+                  - type: div
+                    attributes:
+                      class: mb-3
+                    content:
+                      - "Fallback user: "
+                      - type: strong
+                        content: ~~.mappingTests.fallbackUser.name
+                      - " ("
+                      - type: em
+                        content: ~~.mappingTests.fallbackUser.status
+                      - ")"
+                  - type: div
+                    attributes:
+                      class: mb-3
+                    content:
+                      - "Error result: "
+                      - type: code
+                        content: ~~.mappingTests.errorResult
+                  - type: button
+                    attributes:
+                      class: btn btn-warning
+                    content: "Test Error Handling"
+                    actions:
+                      - what: fetchData
+                        on: click
+                        url: "/invalid-url-that-will-fail.json"
+                        updateOnlyData: true
+                        dataMapping:
+                          simpleMapping:
+                            stringMap:
+                              "~~.mappingTests.fallbackUser.name":   # ← Destination: data.mappingTests.fallbackUser
+                                value: "user"                  # ← Source: response.user (will fail)
+                                required: true
+                              "~~.mappingTests.errorResult":    # ← Destination: data.mappingTests.errorResult
+                                value: "nonexistent.data"     # ← Source: response.nonexistent.data (will fail)
+                                required: true
+                            onErrorMap:
+                              "~~.mappingTests.fallbackUser.name":   # ← Fallback using template
+                                value: "~~.defaultUser.name"      # Uses template evaluation!
+                                updateMode: "replace"
+                              "~~.mappingTests.fallbackUser.status":
+                                value: "Error fallback"
+                              "~~.mappingTests.errorResult":
+                                value: "Mapping failed, fallback applied"
+
+  - type: div
+    attributes:
+      class: row mt-4
+    content:
+      - type: div
+        attributes:
+          class: col-md-6
+        content:
+          - type: h3
+            content: "Default Values"
+          - type: div
+            attributes:
+              class: card
+            content:
+              - type: div
+                attributes:
+                  class: card-body
+                content:
+                  - type: div
+                    attributes:
+                      class: mb-3
+                    content:
+                      - "Config with defaults: "
+                      - type: code
+                        content: ~~.mappingTests.config.theme
+                      - " / "
+                      - type: code
+                        content: ~~.mappingTests.config.language
+                  - type: button
+                    attributes:
+                      class: btn btn-info
+                    content: "Test Default Values"
+                    actions:
+                      - what: fetchData
+                        on: click
+                        url: "/rjs-build/test-data/system-config.json"
+                        updateOnlyData: true
+                        dataMapping:
+                          simpleMapping:
+                            stringMap:
+                              "~~.mappingTests.config.theme":     # ← Destination
+                                value: "nonexistent.theme"       # ← Source (doesn't exist)
+                                required: false
+                                defaultValue: "~~.defaultTheme"     # Template-evaluated default!
+                              "~~.mappingTests.config.language":  # ← Destination
+                                value: "missing.language"        # ← Source (doesn't exist)
+                                required: false
+                                defaultValue: "fr-FR"               # Static default
+
+      - type: div
+        attributes:
+          class: col-md-6
+        content:
+          - type: h3
+            content: "Current Mapping Data"
+          - type: div
+            attributes:
+              class: card
+            content:
+              - type: div
+                attributes:
+                  class: card-body
+                content:
+                  - type: div
+                    attributes:
+                      class: mb-2
+                    content:
+                      - type: strong
+                        content: "User: "
+                      - ~~.mappingTests.user.name
+                      - " ("
+                      - ~~.mappingTests.user.email
+                      - ")"
+                  - type: div
+                    attributes:
+                      class: mb-2
+                    content:
+                      - type: strong
+                        content: "Theme: "
+                      - type: code
+                        content: ~~.mappingTests.theme
+                  - type: div
+                    attributes:
+                      class: mb-2
+                    content:
+                      - type: strong
+                        content: "Fallback User: "
+                      - ~~.mappingTests.fallbackUser.name
+                      - " ("
+                      - ~~.mappingTests.fallbackUser.status
+                      - ")"
+                  - type: div
+                    attributes:
+                      class: mb-2
+                    content:
+                      - type: strong
+                        content: "Error Result: "
+                      - type: code
+                        content: ~~.mappingTests.errorResult
+                  - type: div
+                    content:
+                      - type: strong
+                        content: "Config: "
+                      - "Theme="
+                      - type: code
+                        content: ~~.mappingTests.config.theme
+                      - ", Language="
+                      - type: code
+                        content: ~~.mappingTests.config.language
+
+  - type: hr
+
   - type: DataFilter
     context: global
     filters:
@@ -569,6 +801,21 @@ data:
     myValue: "initial value"
     username: ""
     message: ""
+  mappingTests:
+    user:
+      name: "Not mapped yet"
+      email: "no-email@example.com"
+    theme: "default"
+    fallbackUser:
+      name: "No fallback yet"
+      status: "pending"
+    errorResult: "No test run"
+    config:
+      theme: "not-set"
+      language: "not-set"
+  defaultUser:
+    name: "Fallback User"
+  defaultTheme: "dark-mode"
   # Temporary loading states for non-blocking data sources
   systemConfig:
     version: "" # Will be populated by additionalDataSource

@@ -6,8 +6,9 @@ import {evaluateTemplateValue} from "../../engine/TemplateSystem.jsx";
  *
  * Will reload the app content if refreshAppOnResponse is true.
  *
- * @param {{args: {data, httpMethod, refreshAppOnResponse, submitSilently, updateOnlyData, updateDataAtLocation, url}, event, globalDataContext, templateContext}} props Reaction function props.
+ * @param {{args: {data, httpMethod, refreshAppOnResponse, submitSilently, updateOnlyData, updateDataAtLocation, dataMapping, url}, event, globalDataContext, templateContext}} props Reaction function props.
  * @param {*} [props.args.data] Data to submit. If not provided, will submit globalDataContext.templateData.
+ * @param {Object} [props.args.dataMapping] Configuration for selective data dispatch using mapping processors.
  * @param {string} [props.args.httpMethod="post"] HTTP method to use for the request.
  * @param {boolean} [props.args.refreshAppOnResponse=true] Whether to refresh the app content with the response.
  * @param {boolean} [props.args.submitSilently] Whether to submit silently (visual feedback control).

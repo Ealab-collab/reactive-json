@@ -23,10 +23,10 @@ export const alterData = ({ requestContext, responseContext, responseBody, isRjB
         // No data processors, return original response.
         return responseBody;
     }
-    
+
     // Clone the response to avoid mutations of the given responseBody.
     const responseBodyClone = cloneDeep(responseBody);
-    
+
     // Extract the data to process.
     const originalDataToProcess = isRjBuild ? responseBodyClone.data : responseBodyClone;
     let processedData = cloneDeep(originalDataToProcess);
