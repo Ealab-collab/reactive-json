@@ -9,7 +9,6 @@ import { dataLocationToPath, evaluateTemplateValueCollection } from "../../engin
  * @param {*} mappingProps.responseData - Response data to map
  */
 export function simpleMapping({config, globalDataContext, templateContext, responseData}) {
-    debugger;
     const {
         stringMap = {},
         onErrorMap,
