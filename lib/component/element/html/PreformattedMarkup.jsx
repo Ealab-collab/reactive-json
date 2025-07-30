@@ -25,6 +25,11 @@ export const PreformattedMarkup = ({props}) => {
 
     const html = evaluateTemplateValue({valueToEvaluate: props.content, templateContext, globalDataContext});
 
+    if (typeof html !== "string") {
+        console.error("PreformattedMarkup: the given content is not a string.");
+        return null;
+    }
+
     // Allow the base list to be overridden. Useful to disallow all tags, by supplying an empty array.
     const htmlTagAllowList = Array.isArray(props.htmlTagAllowList) ? props.htmlTagAllowList : defaultHtmlTagAllowList;
 
