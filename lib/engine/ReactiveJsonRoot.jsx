@@ -1,20 +1,22 @@
 // import styles from "./ReactiveJsonRoot.module.css"
-import {coreComponentsPlugin} from "../coreComponentsPlugin.jsx";
-import {mergeComponentCollections} from "./ComponentCollector.jsx";
-import {EventDispatcherProvider} from "./EventDispatcherProvider.jsx";
-import {GlobalDataContextProvider} from "./GlobalDataContextProvider.jsx";
-import {TemplateContext} from "./TemplateContext.jsx";
-import {View} from "./View.jsx";
+import { coreComponentsPlugin } from "../coreComponentsPlugin.jsx";
+import { mergeComponentCollections } from "./ComponentCollector.jsx";
+import { EventDispatcherProvider } from "./EventDispatcherProvider.jsx";
+import { GlobalDataContextProvider } from "./GlobalDataContextProvider.jsx";
+import { TemplateContext } from "./TemplateContext.jsx";
+import { View } from "./View.jsx";
 import {
     alterData,
     applyDataMapping,
     parseRjBuild,
     stringToBoolean,
 } from "./utility";
-import {dataLocationToPath} from "./TemplateSystem.jsx";
+import { dataLocationToPath } from "./TemplateSystem.jsx";
 import axios from "axios";
-import {isEqual} from "lodash";
-import {useEffect, useReducer, useState} from 'react';
+import { isEqual } from "lodash";
+import { useEffect, useReducer, useState } from "react";
+import { createPortal } from "react-dom";
+import ParsingDebugDisplay from "../component/debug/ParsingDebugDisplay/ParsingDebugDisplay.jsx";
 
 /**
  * Production ready app root.
@@ -41,49 +43,66 @@ import {useEffect, useReducer, useState} from 'react';
  * @constructor
  */
 export const ReactiveJsonRoot = ({
-                                     dataOverride,
-                                     dataFetchMethod,
-                                     dataUrl,
-                                     debugMode,
-                                     DebugModeContentWrapper,
-                                     DebugModeDataWrapper,
-                                     DebugModeRootWrapper,
-                                     headersForData,
-                                     headersForRjBuild,
-                                     maybeRawAppData,
-                                     maybeRawAppRjBuild,
-                                     plugins,
-                                     rjBuildFetchMethod,
-                                     rjBuildUrl,
-                                     upstreamUpdateCallbacks,
-                                 }) => {
+    dataOverride,
+    dataFetchMethod,
+    dataUrl,
+    debugMode,
+    DebugModeContentWrapper,
+    DebugModeDataWrapper,
+    DebugModeRootWrapper,
+    headersForData,
+    headersForRjBuild,
+    maybeRawAppData,
+    maybeRawAppRjBuild,
+    plugins,
+    rjBuildFetchMethod,
+    rjBuildUrl,
+    upstreamUpdateCallbacks,
+}) => {
     // Deprecated properties.
     // TODO: remove these in the next major version.
     const deprecatedProperties = [];
 
     if (dataFetchMethod) {
-        deprecatedProperties.push({deprecatedProperty: "dataFetchMethod", newProperty: "rjBuildFetchMethod"});
+        deprecatedProperties.push({
+            deprecatedProperty: "dataFetchMethod",
+            newProperty: "rjBuildFetchMethod",
+        });
         rjBuildFetchMethod = dataFetchMethod;
     }
 
     if (dataUrl) {
-        deprecatedProperties.push({deprecatedProperty: "dataUrl", newProperty: "rjBuildUrl"});
+        deprecatedProperties.push({
+            deprecatedProperty: "dataUrl",
+            newProperty: "rjBuildUrl",
+        });
         rjBuildUrl = dataUrl;
     }
 
     if (headersForData) {
-        deprecatedProperties.push({deprecatedProperty: "headersForData", newProperty: "headersForRjBuild"});
+        deprecatedProperties.push({
+            deprecatedProperty: "headersForData",
+            newProperty: "headersForRjBuild",
+        });
         headersForRjBuild = headersForData;
     }
 
     if (maybeRawAppData) {
-        deprecatedProperties.push({deprecatedProperty: "maybeRawAppData", newProperty: "maybeRawAppRjBuild"});
+        deprecatedProperties.push({
+            deprecatedProperty: "maybeRawAppData",
+            newProperty: "maybeRawAppRjBuild",
+        });
         maybeRawAppRjBuild = maybeRawAppData;
     }
 
     if (deprecatedProperties.length > 0) {
         // Show a warning in this format: oldValue -> newValue, oldValue -> newValue, ...
-        console.warn("A ReactiveJsonRoot component got the following deprecated properties that must be replaced: " + deprecatedProperties.map(p => p.deprecatedProperty + " -> " + p.newProperty).join(", "));
+        console.warn(
+            "A ReactiveJsonRoot component got the following deprecated properties that must be replaced: " +
+                deprecatedProperties
+                    .map((p) => p.deprecatedProperty + " -> " + p.newProperty)
+                    .join(", ")
+        );
     }
 
     // End of deprecated properties.
@@ -91,19 +110,27 @@ export const ReactiveJsonRoot = ({
     // Dev note: on PhpStorm, disregard the Function signatures inspection errors of reducers.
     // See: https://youtrack.jetbrains.com/issue/WEB-53963.
     // noinspection JSCheckFunctionSignatures
-    const [currentData, dispatchCurrentData] = useReducer((prevState, dispatched) => {
-        switch (dispatched.type) {
-            case "setData":
-                return {updateId: 0, realCurrentData: dispatched.data};
+    const [currentData, dispatchCurrentData] = useReducer(
+        (prevState, dispatched) => {
+            switch (dispatched.type) {
+                case "setData":
+                    return { updateId: 0, realCurrentData: dispatched.data };
 
-            case "updateData":
-                return updateDataObject(prevState, dispatched.path, dispatched.value, dispatched.updateMode);
+                case "updateData":
+                    return updateDataObject(
+                        prevState,
+                        dispatched.path,
+                        dispatched.value,
+                        dispatched.updateMode
+                    );
 
-            default:
-                // Unknown type.
-                return prevState;
-        }
-    }, {updateId: 0, realCurrentData: {}});
+                default:
+                    // Unknown type.
+                    return prevState;
+            }
+        },
+        { updateId: 0, realCurrentData: {} }
+    );
     const [templates, setTemplates] = useState({});
     const [renderView, setRenderView] = useState({});
     const [items, setItems] = useState([]);
@@ -119,9 +146,10 @@ export const ReactiveJsonRoot = ({
         // Serialize it.
         return JSON.stringify(maybeRawAppRjBuild);
     });
+    const [errorPortal, setErrorPortal] = useState(null);
 
     // Merge core plugins with user-provided plugins.
-    const mergedPlugins = plugins 
+    const mergedPlugins = plugins
         ? mergeComponentCollections([coreComponentsPlugin, plugins])
         : coreComponentsPlugin;
 
@@ -130,11 +158,13 @@ export const ReactiveJsonRoot = ({
             return;
         }
 
-        if (typeof rjBuildFetchMethod === "string" && rjBuildFetchMethod.toLowerCase() === "post") {
+        if (
+            typeof rjBuildFetchMethod === "string" &&
+            rjBuildFetchMethod.toLowerCase() === "post"
+        ) {
             // TODO: support form data.
-            axios.post(
-                rjBuildUrl,
-                {
+            axios
+                .post(rjBuildUrl, {
                     headers: headersForRjBuild,
                 })
                 .then((res) => {
@@ -142,9 +172,8 @@ export const ReactiveJsonRoot = ({
                     setRawAppRjBuild(res.data);
                 });
         } else {
-            axios.get(
-                rjBuildUrl,
-                {
+            axios
+                .get(rjBuildUrl, {
                     headers: headersForRjBuild,
                 })
                 .then((res) => {
@@ -160,31 +189,52 @@ export const ReactiveJsonRoot = ({
             return;
         }
 
-        let parsedData = parseRjBuild(rawAppRjBuild);
+        const processedRjBuild = parseRjBuild(rawAppRjBuild);
 
-        if (!parsedData?.renderView) {
+        if (!processedRjBuild.success) {
             // There is no renderView set.
-            console.log("Tried to load app data but the content could not be parsed as JSON nor YAML.");
+            console.group(
+                `Tried to load app data but the ${processedRjBuild.format} content could not be parsed`
+            );
+            console.error(processedRjBuild.error);
+            console.groupEnd();
+            setErrorPortal(
+                createPortal(
+                    <ParsingDebugDisplay processedRjBuild={processedRjBuild} />,
+                    document.getElementById("global-error-debug-container")
+                )
+            );
             return;
         }
 
+        if (errorPortal) {
+            setErrorPortal(null);
+        }
+
+        const parsedData = processedRjBuild.data;
         // Dev note: listForms is deprecated; will be removed later.
         setTemplates(parsedData.templates ?? parsedData.listForms);
 
         if (!parsedData.templates && parsedData.listForms) {
-            console.log("'listForms' needs to be renamed to 'templates'. The support for 'listForms' will be removed in the next releases of reactive-json.");
+            console.log(
+                "'listForms' needs to be renamed to 'templates'. The support for 'listForms' will be removed in the next releases of reactive-json."
+            );
         }
 
         // Apply dataOverride if provided.
-        let finalData = dataOverride === undefined ? parsedData.data : dataOverride;
+        let finalData =
+            dataOverride === undefined ? parsedData.data : dataOverride;
 
         // Process additionalDataSource if present.
         const additionalDataSource = parsedData.additionalDataSource;
 
-        if (!Array.isArray(additionalDataSource) || additionalDataSource.length === 0) {
+        if (
+            !Array.isArray(additionalDataSource) ||
+            additionalDataSource.length === 0
+        ) {
             // No additionalDataSource, use data as-is.
             // noinspection JSCheckFunctionSignatures
-            dispatchCurrentData({type: "setData", "data": finalData});
+            dispatchCurrentData({ type: "setData", data: finalData });
             setRenderView(parsedData.renderView);
             setItems(Object.keys(parsedData.renderView));
             return;
@@ -204,30 +254,42 @@ export const ReactiveJsonRoot = ({
 
         const templateContext = {
             templateData: finalData,
-            templatePath: "data"
+            templatePath: "data",
         };
 
         // Separate blocking and non-blocking sources.
-        const blockingSources = additionalDataSource.filter(source => source.blocking === true);
-        const nonBlockingSources = additionalDataSource.filter(source => source.blocking !== true);
+        const blockingSources = additionalDataSource.filter(
+            (source) => source.blocking === true
+        );
+        const nonBlockingSources = additionalDataSource.filter(
+            (source) => source.blocking !== true
+        );
 
         // Fetches a single data source and merges it into the current data.
         const fetchDataSource = async (source, index) => {
             try {
                 if (!source.src) {
                     // Ignore this source.
-                    console.warn("additionalDataSource item number " + index + " missing 'src' property.", source);
+                    console.warn(
+                        "additionalDataSource item number " +
+                            index +
+                            " missing 'src' property.",
+                        source
+                    );
                     return;
                 }
 
-                const method = source.method?.toUpperCase() || 'GET';
+                const method = source.method?.toUpperCase() || "GET";
                 const config = {
                     method,
                     url: source.src,
                 };
 
                 // Add headers if available.
-                if (headersForRjBuild && Object.keys(headersForRjBuild).length > 0) {
+                if (
+                    headersForRjBuild &&
+                    Object.keys(headersForRjBuild).length > 0
+                ) {
                     config.headers = headersForRjBuild;
                 }
 
@@ -245,7 +307,7 @@ export const ReactiveJsonRoot = ({
                 const responseContext = {
                     headers: response.headers || {},
                     status: response.status,
-                    data: response.data
+                    data: response.data,
                 };
 
                 // Apply data processors to alter the response.
@@ -272,7 +334,10 @@ export const ReactiveJsonRoot = ({
                         // we don't continue with the traditional path logic.
                         return;
                     } catch (error) {
-                        console.error("Error applying dataMapping for additionalDataSource:", error);
+                        console.error(
+                            "Error applying dataMapping for additionalDataSource:",
+                            error
+                        );
                         // Continue with traditional logic on error
                     }
                 }
@@ -280,8 +345,14 @@ export const ReactiveJsonRoot = ({
                 // Merge data immediately when this source completes.
                 if (!source.path) {
                     // No path specified, merge at root level.
-                    if (typeof fetchedData !== 'object' || Array.isArray(fetchedData)) {
-                        console.warn("additionalDataSource data cannot be merged at root - must be an object:", fetchedData);
+                    if (
+                        typeof fetchedData !== "object" ||
+                        Array.isArray(fetchedData)
+                    ) {
+                        console.warn(
+                            "additionalDataSource data cannot be merged at root - must be an object:",
+                            fetchedData
+                        );
                         return;
                     }
 
@@ -292,7 +363,7 @@ export const ReactiveJsonRoot = ({
                         dispatchCurrentData({
                             type: "updateData",
                             path: key,
-                            value: value
+                            value: value,
                         });
                     });
 
@@ -305,11 +376,16 @@ export const ReactiveJsonRoot = ({
                         dataLocation: source.path,
                         currentPath: "data",
                         globalDataContext,
-                        templateContext
+                        templateContext,
                     });
 
-                    if (typeof evaluatedPath !== 'string') {
-                        console.warn("additionalDataSource path evaluation did not result in a string:", source.path, "->", evaluatedPath);
+                    if (typeof evaluatedPath !== "string") {
+                        console.warn(
+                            "additionalDataSource path evaluation did not result in a string:",
+                            source.path,
+                            "->",
+                            evaluatedPath
+                        );
                         return;
                     }
 
@@ -321,30 +397,43 @@ export const ReactiveJsonRoot = ({
                     dispatchCurrentData({
                         type: "updateData",
                         path: dataPath,
-                        value: fetchedData
+                        value: fetchedData,
                     });
                 } catch (error) {
-                    console.error("Error evaluating additionalDataSource path:", source.path, error);
+                    console.error(
+                        "Error evaluating additionalDataSource path:",
+                        source.path,
+                        error
+                    );
                 }
             } catch (error) {
                 // Fail silently but log the error.
-                console.error("Error fetching additional data source:", source.src, error);
+                console.error(
+                    "Error fetching additional data source:",
+                    source.src,
+                    error
+                );
             }
         };
 
         // Dispatch initial data immediately.
         // Subsequent fetches using the additionalDataSource will update the data with updateData.
         // noinspection JSCheckFunctionSignatures
-        dispatchCurrentData({type: "setData", "data": finalData});
+        dispatchCurrentData({ type: "setData", data: finalData });
 
         const processSources = async () => {
             if (blockingSources.length > 0) {
                 // Process blocking sources first - use allSettled for robustness.
-                const blockingPromises = blockingSources.map((source, index) => fetchDataSource(source, index));
+                const blockingPromises = blockingSources.map((source, index) =>
+                    fetchDataSource(source, index)
+                );
 
                 await Promise.allSettled(blockingPromises).catch((error) => {
                     // Even if some blocking sources fail, we should still render the view.
-                    console.error("Error processing blocking additionalDataSource:", error);
+                    console.error(
+                        "Error processing blocking additionalDataSource:",
+                        error
+                    );
                 });
             }
 
@@ -354,8 +443,9 @@ export const ReactiveJsonRoot = ({
 
             if (nonBlockingSources.length > 0) {
                 // Process non-blocking sources in background.
-                const nonBlockingPromises = nonBlockingSources.map((source, index) =>
-                    fetchDataSource(source, blockingSources.length + index)
+                const nonBlockingPromises = nonBlockingSources.map(
+                    (source, index) =>
+                        fetchDataSource(source, blockingSources.length + index)
                 );
 
                 // Non-blocking sources don't need to be awaited.
@@ -381,13 +471,23 @@ export const ReactiveJsonRoot = ({
 
         // Upstream update callbacks have been set. Let's check if there is one
         // that matches the path to update.
-        for (const [pathInDataOverride, upstreamCallback] of upstreamUpdateCallbacks) {
+        for (const [
+            pathInDataOverride,
+            upstreamCallback,
+        ] of upstreamUpdateCallbacks) {
             // Check if the updated path matches or is a sub-path of pathInDataOverride.
             // "pathInDataOverride" does not contain the "data." prefix.
-            if (path === pathInDataOverride || path.startsWith(pathInDataOverride + ".") || pathInDataOverride === "") {
+            if (
+                path === pathInDataOverride ||
+                path.startsWith(pathInDataOverride + ".") ||
+                pathInDataOverride === ""
+            ) {
                 // The value to update is located in a template reference of the parent rjBuild.
                 // Calculate the relative path from pathInDataOverride.
-                const relativePath = pathInDataOverride === "" ? path : path.substring(pathInDataOverride.length + 1);
+                const relativePath =
+                    pathInDataOverride === ""
+                        ? path
+                        : path.substring(pathInDataOverride.length + 1);
 
                 try {
                     // Use the upstream callback instead of updating locally.
@@ -402,10 +502,10 @@ export const ReactiveJsonRoot = ({
         }
 
         return false;
-    };
+    }
 
     function updateData(newValue, pathInData, updateMode = undefined) {
-        let path = pathInData.replace('data.', '');
+        let path = pathInData.replace("data.", "");
 
         // Try upstream update first
         if (tryUpstreamUpdate(path, newValue, updateMode)) {
@@ -442,7 +542,7 @@ export const ReactiveJsonRoot = ({
         // noinspection JSCheckFunctionSignatures
         dispatchCurrentData({
             type: "setData",
-            data: newData
+            data: newData,
         });
     }
 
@@ -467,7 +567,11 @@ export const ReactiveJsonRoot = ({
         // Ensure realCurrentData is a valid object before proceeding.
         // The data may be undefined if the data has not been initialized.
         // This happens when there is no data (yet) appended to this root.
-        if (typeof data.realCurrentData !== "object" || data.realCurrentData === null || Array.isArray(data.realCurrentData)) {
+        if (
+            typeof data.realCurrentData !== "object" ||
+            data.realCurrentData === null ||
+            Array.isArray(data.realCurrentData)
+        ) {
             data.realCurrentData = {};
         }
 
@@ -491,7 +595,14 @@ export const ReactiveJsonRoot = ({
                             return data;
                         }
 
-                        const newIndex = Math.min(pointer.length, Math.max(0, parseInt(currentNodeKey) + parseInt(value.increment)));
+                        const newIndex = Math.min(
+                            pointer.length,
+                            Math.max(
+                                0,
+                                parseInt(currentNodeKey) +
+                                    parseInt(value.increment)
+                            )
+                        );
 
                         if (newIndex === parseInt(currentNodeKey)) {
                             // No changes.
@@ -534,8 +645,10 @@ export const ReactiveJsonRoot = ({
 
                 return {
                     // Using modulo in case of massive update counts in long frontend sessions.
-                    updateId: ((data.updateId ?? 0) % (Number.MAX_SAFE_INTEGER - 1)) + 1,
-                    realCurrentData: data.realCurrentData
+                    updateId:
+                        ((data.updateId ?? 0) % (Number.MAX_SAFE_INTEGER - 1)) +
+                        1,
+                    realCurrentData: data.realCurrentData,
                 };
             }
 
@@ -543,7 +656,10 @@ export const ReactiveJsonRoot = ({
                 // The pointer already has the specified key.
 
                 // Dig deeper.
-                if (typeof pointer[currentNodeKey] !== "object" || pointer[currentNodeKey] === null) {
+                if (
+                    typeof pointer[currentNodeKey] !== "object" ||
+                    pointer[currentNodeKey] === null
+                ) {
                     // Ensure the data is writable.
                     pointer[currentNodeKey] = {};
                 }
@@ -566,13 +682,16 @@ export const ReactiveJsonRoot = ({
         return null;
     }
 
-    const rootViews = items.map(view => {
-        return (<View
-            datafield={view}
-            key={view}
-            props={renderView[view]}
-            path={"data." + view}
-            currentData={currentData.realCurrentData?.[view]}/>)
+    const rootViews = items.map((view) => {
+        return (
+            <View
+                datafield={view}
+                key={view}
+                props={renderView[view]}
+                path={"data." + view}
+                currentData={currentData.realCurrentData?.[view]}
+            />
+        );
     });
 
     const debugMode_bool = stringToBoolean(debugMode);
@@ -588,23 +707,44 @@ export const ReactiveJsonRoot = ({
                     setRawAppRjBuild,
                     templateData: currentData.realCurrentData,
                     templatePath: "data",
-                    updateData
-                }}>
-                <TemplateContext.Provider value={{templateData: currentData.realCurrentData, templatePath: "data"}}>
-                    {(debugMode_bool && DebugModeContentWrapper)
-                        ? <DebugModeContentWrapper>{rootViews}</DebugModeContentWrapper>
-                        : rootViews}
+                    updateData,
+                }}
+            >
+                <TemplateContext.Provider
+                    value={{
+                        templateData: currentData.realCurrentData,
+                        templatePath: "data",
+                    }}
+                >
+                    {debugMode_bool && DebugModeContentWrapper ? (
+                        <DebugModeContentWrapper>
+                            {rootViews}
+                        </DebugModeContentWrapper>
+                    ) : (
+                        rootViews
+                    )}
                 </TemplateContext.Provider>
                 {debugMode_bool
-                    ? (DebugModeDataWrapper && <DebugModeDataWrapper>
-                        {JSON.stringify(currentData.realCurrentData, null, '  ')}
-                    </DebugModeDataWrapper>)
+                    ? DebugModeDataWrapper && (
+                          <DebugModeDataWrapper>
+                              {JSON.stringify(
+                                  currentData.realCurrentData,
+                                  null,
+                                  "  "
+                              )}
+                          </DebugModeDataWrapper>
+                      )
                     : null}
             </GlobalDataContextProvider>
         </EventDispatcherProvider>
     );
 
-    return (debugMode_bool && DebugModeContentWrapper)
-        ? <DebugModeRootWrapper>{mainBuild}</DebugModeRootWrapper>
-        : mainBuild;
-}
+    return debugMode_bool && DebugModeContentWrapper ? (
+        <DebugModeRootWrapper>
+            {mainBuild}
+            {errorPortal}
+        </DebugModeRootWrapper>
+    ) : (
+        mainBuild
+    );
+};
