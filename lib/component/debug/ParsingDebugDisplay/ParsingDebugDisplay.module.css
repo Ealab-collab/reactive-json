@@ -1,0 +1,17 @@
+.container {
+    overflow: auto;
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.errorDetailsTitle {
+    font-weight: bold;
+    color: red;
+}
+
+.errorDetails {
+    color: red;
+}

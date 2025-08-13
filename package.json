@@ -1,96 +1,98 @@
 {
-  "name": "@ea-lab/reactive-json",
-  "private": false,
-  "version": "0.3.1",
-  "type": "module",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Ealab-collab/reactive-json.git"
-  },
-  "keywords": [
-    "build",
-    "config",
-    "data",
-    "dynamic",
-    "interactive",
-    "json",
-    "react",
-    "structure",
-    "yaml",
-    "llm",
-    "ai-assistant",
-    "cursor",
-    "chatgpt",
-    "claude"
-  ],
-  "author": "Quang-Minh DANG <quang-minh@ea-lab.io> (https://ea-lab.io/)",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Ealab-collab/reactive-json/issues"
-  },
-  "homepage": "https://github.com/Ealab-collab/reactive-json#readme",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc -b ./tsconfig.lib.json && vite build",
-    "lint": "eslint .",
-    "prepublishOnly": "npm run build",
-    "preview": "vite preview"
-  },
-  "peerDependencies": {
-    "axios": "^1.8.4",
-    "clsx": "^2.1.1",
-    "dnd-kit-sortable-tree": "^0.1.73",
-    "html-react-parser": "^5.2.3",
-    "js-yaml": "^4.1.0",
-    "jsonpath": "^1.1.1",
-    "lodash": "^4.17.21",
-    "react": "^19.1.0",
-    "react-bootstrap": "^2.10.9",
-    "react-dom": "^19.1.0"
-  },
-  "devDependencies": {
-    "@ea-lab/reactive-json-docs": "^0.1.6",
-    "@eslint/js": "^9.25.0",
-    "@types/js-yaml": "^4.0.9",
-    "@types/lodash": "^4.17.16",
-    "@types/node": "^22.15.17",
-    "@types/react": "^19.1.2",
-    "@types/react-dom": "^19.1.2",
-    "@vitejs/plugin-react": "^4.4.1",
-    "axios": "^1.8.4",
-    "bootstrap": "^5.3.5",
-    "clsx": "^2.1.1",
-    "dnd-kit-sortable-tree": "^0.1.73",
-    "eslint": "^9.25.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.19",
-    "glob": "^11.0.2",
-    "globals": "^16.0.0",
-    "html-react-parser": "^5.2.3",
-    "js-yaml": "^4.1.0",
-    "jsonpath": "^1.1.1",
-    "lodash": "^4.17.21",
-    "react-bootstrap": "^2.10.9",
-    "react-router-dom": "^7.5.0",
-    "typescript": "~5.8.3",
-    "typescript-eslint": "^8.30.1",
-    "vite": "^6.3.5",
-    "vite-plugin-dts": "^4.5.3",
-    "vite-plugin-lib-inject-css": "^2.2.2"
-  },
-  "main": "dist/main.js",
-  "types": "dist/main.d.ts",
-  "files": [
-    "dist",
-    "README_LLM.md",
-    ".cursorrules"
-  ],
-  "sideEffects": [
-    "**/*.css"
-  ],
-  "llm": {
-    "entrypoint": "README_LLM.md",
-    "description": "AI/LLM guide for reactive-json development",
-    "purpose": "Component creation and reactive-json usage patterns for AI assistants"
-  }
+    "name": "@ea-lab/reactive-json",
+    "private": false,
+    "version": "0.3.1",
+    "type": "module",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Ealab-collab/reactive-json.git"
+    },
+    "keywords": [
+        "build",
+        "config",
+        "data",
+        "dynamic",
+        "interactive",
+        "json",
+        "react",
+        "structure",
+        "yaml",
+        "llm",
+        "ai-assistant",
+        "cursor",
+        "chatgpt",
+        "claude"
+    ],
+    "author": "Quang-Minh DANG <quang-minh@ea-lab.io> (https://ea-lab.io/)",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/Ealab-collab/reactive-json/issues"
+    },
+    "homepage": "https://github.com/Ealab-collab/reactive-json#readme",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc -b ./tsconfig.lib.json && vite build",
+        "lint": "eslint .",
+        "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
+        "prepublishOnly": "npm run build",
+        "preview": "vite preview"
+    },
+    "peerDependencies": {
+        "axios": "^1.8.4",
+        "clsx": "^2.1.1",
+        "dnd-kit-sortable-tree": "^0.1.73",
+        "html-react-parser": "^5.2.3",
+        "js-yaml": "^4.1.0",
+        "jsonpath": "^1.1.1",
+        "lodash": "^4.17.21",
+        "react": "^19.1.0",
+        "react-bootstrap": "^2.10.9",
+        "react-dom": "^19.1.0"
+    },
+    "devDependencies": {
+        "@ea-lab/reactive-json-docs": "^0.1.6",
+        "@eslint/js": "^9.25.0",
+        "@types/js-yaml": "^4.0.9",
+        "@types/lodash": "^4.17.16",
+        "@types/node": "^22.15.17",
+        "@types/react": "^19.1.2",
+        "@types/react-dom": "^19.1.2",
+        "@vitejs/plugin-react": "^4.4.1",
+        "axios": "^1.8.4",
+        "bootstrap": "^5.3.5",
+        "clsx": "^2.1.1",
+        "dnd-kit-sortable-tree": "^0.1.73",
+        "eslint": "^9.25.0",
+        "eslint-plugin-react-hooks": "^5.2.0",
+        "eslint-plugin-react-refresh": "^0.4.19",
+        "glob": "^11.0.2",
+        "globals": "^16.0.0",
+        "html-react-parser": "^5.2.3",
+        "jest": "^30.0.5",
+        "js-yaml": "^4.1.0",
+        "jsonpath": "^1.1.1",
+        "lodash": "^4.17.21",
+        "react-bootstrap": "^2.10.9",
+        "react-router-dom": "^7.5.0",
+        "typescript": "~5.8.3",
+        "typescript-eslint": "^8.30.1",
+        "vite": "^6.3.5",
+        "vite-plugin-dts": "^4.5.3",
+        "vite-plugin-lib-inject-css": "^2.2.2"
+    },
+    "main": "dist/main.js",
+    "types": "dist/main.d.ts",
+    "files": [
+        "dist",
+        "README_LLM.md",
+        ".cursorrules"
+    ],
+    "sideEffects": [
+        "**/*.css"
+    ],
+    "llm": {
+        "entrypoint": "README_LLM.md",
+        "description": "AI/LLM guide for reactive-json development",
+        "purpose": "Component creation and reactive-json usage patterns for AI assistants"
+    }
 }
