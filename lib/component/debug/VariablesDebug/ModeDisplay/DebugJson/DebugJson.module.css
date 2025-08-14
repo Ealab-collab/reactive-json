@@ -1,0 +1,6 @@
+.container {
+    max-height: 56vh;
+    overflow: auto;
+    font-size: 12px;
+    margin: 0;
+}

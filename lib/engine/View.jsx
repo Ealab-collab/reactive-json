@@ -1,4 +1,5 @@
 import {useContext} from 'react';
+import { VariablesDebug } from '../component';
 import {CheckBoxField} from "../component/element/form/CheckBoxField.jsx";
 import {DateField} from "../component/element/form/DateField.jsx";
 import {NumberField} from "../component/element/form/NumberField.jsx";
@@ -61,6 +62,7 @@ export function View({props, currentData, datafield, path}) {
         Tabs,
         TextAreaField,
         TextField,
+        VariablesDebug,
         ...plugins?.element,
     };
 
