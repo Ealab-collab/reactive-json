@@ -1,10 +1,10 @@
-import React, { useContext, useMemo, useRef, useState } from "react";
-import { flattenObject } from "./utils";
+import { TemplateContext } from "../../../engine";
 import { DebugMode } from "./DebugMode.enum";
 import DebugList from "./ModeDisplay/DebugList/DebugList";
 import DebugJson from "./ModeDisplay/DebugJson/DebugJson";
-import { TemplateContext } from "../../../engine";
+import React, { useContext, useMemo, useRef, useState } from "react";
 import "./reset.css";
+import { flattenObject } from "./utils";
 import styles from "./VariablesDebug.module.css";
 
 export const VariablesDebug = () => {
