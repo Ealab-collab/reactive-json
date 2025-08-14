@@ -130,8 +130,24 @@ export const CheckBoxField = ({props, currentData, datafield, path}) => {
         updateData(formDataClone, formDataPath);
     }
 
+    const label = evaluateTemplateValue({
+        valueToEvaluate: props.label,
+        globalDataContext,
+        templateContext
+    });
+
     return <ActionDependant {...props}>
         <Form.Group {...attributes} controlId={Math.random().toString()}>
+            {label && (
+                <Form.Label>
+                    <View
+                        currentData={currentData?.["label"] ?? undefined}
+                        datafield={"label"}
+                        path={path + ".label"}
+                        props={props.label}
+                    />
+                </Form.Label>
+            )}
             {options.map((option, i) => {
                 // The option value.
                 const finalOptionValue = typeof option.value === "string" ? evaluateTemplateValue({
