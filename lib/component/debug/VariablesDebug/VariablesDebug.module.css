@@ -1,0 +1,65 @@
+.container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #111827;
+    color: #e5e7eb;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    border: 1px solid #374151;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Courier New", monospace;
+    z-index: 9999;
+    width: 240px;
+    overflow: hidden;
+}
+
+.container.expanded {
+    width: 560px;
+    max-height: 64vh;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn {
+    background: transparent;
+    color: #e5e7eb;
+    border: 1px solid #4b5563;
+    border-radius: 6px;
+    padding: 2px 8px;
+}
+
+.btn.active {
+    background: #1f2937;
+}
+
+.path {
+    color: #93c5fd;
+}
+
+.value {
+    color: #fbbf24;
+}
+
+.copyBtn {
+    transition: background-color 0.2s ease-in-out;
+}
+
+.copyBtnSuccess {
+    background-color: #10b932;
+}
+
+.copyBtnError {
+    background-color: #ef4444;
+}
