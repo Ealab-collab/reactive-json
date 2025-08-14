@@ -36,7 +36,7 @@ const capitalizeFirstLetter = (str) => str && str.charAt(0).toUpperCase() + str.
 
 /**
  * Checks whether the conditions are fulfilled.
- * @param {{andConditions, containedBy, containedByNot, contains, containsNot, is, isNot, orConditions, when, whenDataCountOf, ">", "<", ">=", "<=", compareAsDates}} condition
+ * @param {{andConditions, containedBy, containedByNot, contains, containsNot, is, isEmpty, isNot, isNotEmpty, orConditions, when, whenDataCountOf, ">", "<", ">=", "<=", compareAsDates}} condition
  * @param {object} templateContexts
  * @param {Map} additionalConditionHandlers
  * @returns {*}
@@ -123,8 +123,15 @@ export const isValid = (condition, templateContexts, additionalConditionHandlers
         })();
     }
 
-    if (condition.hasOwnProperty("isEmpty")) {
-        const maybeInvert = val => condition.isEmpty === "not" ? !val : val;
+    if (condition.hasOwnProperty("isEmpty") || condition.hasOwnProperty("isNotEmpty")) {
+        const maybeInvert = (val) => {
+            if (condition.hasOwnProperty("isEmpty")) {
+                // isEmpty: "not" is equivalent to isNotEmpty.
+                return condition.isEmpty === "not" ? !val : val;
+            }
+
+            return !val;
+        };
 
         if (valueToCompare === null) {
             return maybeInvert(true);
