@@ -11,6 +11,7 @@ import {ReactOnEvent, reactionFunctions} from "../component/action/ReactOnEvent.
 import {Redirect} from "../component/action/Redirect.jsx";
 import {SetAttributeValue} from "../component/action/SetAttributeValue.jsx";
 import {Tooltip} from "../component/action/Tooltip.jsx";
+import {UnsetAttributeValue} from "../component/action/UnsetAttributeValue.jsx";
 import {VisuallyHide} from "../component/action/VisuallyHide.jsx";
 import {isEqual} from "lodash";
 import JSONPath from "jsonpath";
@@ -25,6 +26,7 @@ const actionsToEvaluate = {
     redirect: Redirect,
     setAttributeValue: SetAttributeValue,
     tooltip: Tooltip,
+    unsetAttributeValue: UnsetAttributeValue,
     visuallyHide: VisuallyHide,
 };
 
