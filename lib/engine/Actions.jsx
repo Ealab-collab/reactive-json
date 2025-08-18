@@ -10,6 +10,7 @@ import {Popover} from "../component/action/Popover.jsx";
 import {ReactOnEvent, reactionFunctions} from "../component/action/ReactOnEvent.jsx";
 import {Redirect} from "../component/action/Redirect.jsx";
 import {SetAttributeValue} from "../component/action/SetAttributeValue.jsx";
+import {ToggleAttributeValue} from "../component/action/ToggleAttributeValue.jsx";
 import {Tooltip} from "../component/action/Tooltip.jsx";
 import {UnsetAttribute} from "../component/action/UnsetAttribute.jsx";
 import {UnsetAttributeValue} from "../component/action/UnsetAttributeValue.jsx";
@@ -26,6 +27,7 @@ const actionsToEvaluate = {
     popover: Popover,
     redirect: Redirect,
     setAttributeValue: SetAttributeValue,
+    toggleAttributeValue: ToggleAttributeValue,
     tooltip: Tooltip,
     unsetAttribute: UnsetAttribute,
     unsetAttributeValue: UnsetAttributeValue,
