@@ -1,7 +1,7 @@
 import {evaluateAttributes} from "../../../engine/TemplateSystem.jsx";
 import {View} from "../../../engine/View.jsx";
 import {ActionDependant} from "../../../engine/Actions.jsx";
-import {useContext} from "react";
+import {useContext, useRef} from "react";
 import {GlobalDataContext} from "../../../engine/GlobalDataContext.jsx";
 import {TemplateContext} from "../../../engine/TemplateContext.jsx";
 
@@ -33,6 +33,7 @@ export const normalizeAttributesForReactJsx = (maybeAttributesObj) => {
 export const Html = ({props, currentData, datafield, path}) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
+    const mainAttributesHolderRef = useRef(null);
 
     const Tag = `${props.tag}`;
     const extra = props.extra ?? {};
@@ -61,24 +62,15 @@ export const Html = ({props, currentData, datafield, path}) => {
 
     const evaluatedAttrs = evaluateAttributes({attrs, globalDataContext, templateContext});
 
-    // console.log({
-    //     "cpn": "Html",
-    //     "props": props,
-    //     "currentData": currentData,
-    //     "datafield": datafield,
-    //     "path": path,
-    //     "finalAttrs": attrs,
-    // });
-
     const isVoidTag = (tag) => {
         const voidTagList = ["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"];
         return tag && (voidTagList.indexOf(tag) !== -1);
     };
 
-    return <ActionDependant {...props}>
+    return <ActionDependant {...props} attributesHolderRef={mainAttributesHolderRef}>
         {isVoidTag(props.tag)
             ? <>
-                <Tag {...evaluatedAttrs}/>
+                <Tag ref={mainAttributesHolderRef} {...evaluatedAttrs}/>
                 {Object.keys(extra).length ? (
                     <View
                         props={extra}
@@ -86,7 +78,7 @@ export const Html = ({props, currentData, datafield, path}) => {
                 ) : ("")}
             </>
             : <>
-                <Tag {...evaluatedAttrs}>
+                <Tag ref={mainAttributesHolderRef} {...evaluatedAttrs}>
                     {props.content &&
                         (<View
                             currentData={currentData.content ?? undefined}

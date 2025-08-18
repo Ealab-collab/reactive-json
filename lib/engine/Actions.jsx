@@ -9,6 +9,7 @@ import {MessageListener} from "../component/action/MessageListener.jsx";
 import {Popover} from "../component/action/Popover.jsx";
 import {ReactOnEvent, reactionFunctions} from "../component/action/ReactOnEvent.jsx";
 import {Redirect} from "../component/action/Redirect.jsx";
+import {SetAttributeValue} from "../component/action/SetAttributeValue.jsx";
 import {Tooltip} from "../component/action/Tooltip.jsx";
 import {VisuallyHide} from "../component/action/VisuallyHide.jsx";
 import {isEqual} from "lodash";
@@ -22,6 +23,7 @@ const actionsToEvaluate = {
     hide: Hide,
     popover: Popover,
     redirect: Redirect,
+    setAttributeValue: SetAttributeValue,
     tooltip: Tooltip,
     visuallyHide: VisuallyHide,
 };
@@ -390,7 +392,8 @@ export const ActionDependant = (props) => {
         return <ActionComponent
             componentProps={props}
             actionProps={actionProps}
-            actionIndex={actionIndex}>
+            actionIndex={actionIndex}
+            attributesHolderRef={props.attributesHolderRef}>
             {acc}
         </ActionComponent>;
     }, props?.children ?? null);
