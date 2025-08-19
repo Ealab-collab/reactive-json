@@ -1,4 +1,4 @@
-import {useContext} from 'react';
+import {useContext, useRef} from 'react';
 import {Form} from 'react-bootstrap';
 import {GlobalDataContext} from "../../../engine/GlobalDataContext.jsx";
 import {ActionDependant} from "../../../engine/Actions.jsx";
@@ -10,6 +10,7 @@ import {propsDataLocationToPathAndValue} from "./formElementsCommon.jsx";
 export const TextField = ({props, datafield, path, currentData}) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
+    const mainAttributesHolderRef = useRef(null);
 
     const attributes = useEvaluatedAttributes(props.attributes);
     const inputAttributes = useEvaluatedAttributes(props.inputAttributes ?? []);
@@ -43,8 +44,8 @@ export const TextField = ({props, datafield, path, currentData}) => {
     });
 
     return (
-        <ActionDependant {...props}>
-            <Form.Group {...attributes} controlId={Math.random().toString()}>
+        <ActionDependant {...props} attributesHolderRef={mainAttributesHolderRef}>
+            <Form.Group {...attributes} ref={mainAttributesHolderRef} controlId={Math.random().toString()}>
                 {props.label && <Form.Label>
                     <View
                         currentData={currentData?.["label"] ?? undefined}

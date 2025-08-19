@@ -5,7 +5,7 @@ import {
     evaluateAttributes, useEvaluatedAttributes
 } from "../../../engine/TemplateSystem.jsx";
 import {View} from "../../../engine/View.jsx";
-import {useContext} from "react";
+import {useContext, useRef} from "react";
 // import BsTab from 'react-bootstrap/Tab';
 // import BsTabs from 'react-bootstrap/Tabs';
 import {Tab as BsTab, Tabs as BsTabs} from 'react-bootstrap';
@@ -25,12 +25,13 @@ import {Tab as BsTab, Tabs as BsTabs} from 'react-bootstrap';
 export const Tabs = ({currentData, path, props}) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
+    const mainAttributesHolderRef = useRef(null);
 
     const evaluatedAttrs = useEvaluatedAttributes(props.attributes);
 
     return (
-        <ActionDependant {...props}>
-            <BsTabs {...evaluatedAttrs}>
+        <ActionDependant {...props} attributesHolderRef={mainAttributesHolderRef}>
+            <BsTabs {...evaluatedAttrs} ref={mainAttributesHolderRef}>
                 {Array.isArray(props.tabs) && props.tabs.map((item, index) => {
                     const tabAttributes = evaluateAttributes({
                         attrs: item.attributes,

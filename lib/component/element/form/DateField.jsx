@@ -1,4 +1,4 @@
-import {useContext} from "react";
+import {useContext, useRef} from "react";
 import {Form} from "react-bootstrap";
 import {ActionDependant} from "../../../engine/Actions.jsx";
 import {useEvaluatedAttributes} from "../../../engine/TemplateSystem.jsx";
@@ -11,6 +11,7 @@ export const DateField = (componentProps) => {
     // TODO: type date & datetime-local support.
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
+    const mainAttributesHolderRef = useRef(null);
 
     const props = componentProps.props;
 
@@ -32,8 +33,8 @@ export const DateField = (componentProps) => {
         globalDataContext.updateData(e.target.value, formDataPath);
     };
 
-    return <ActionDependant {...props}>
-        <Form.Group {...attributes} controlId={Math.random().toString()}>
+    return <ActionDependant {...props} attributesHolderRef={mainAttributesHolderRef}>
+        <Form.Group {...attributes} ref={mainAttributesHolderRef} controlId={Math.random().toString()}>
             {props.label && <Form.Label>
                 <View
                     currentData={componentProps.currentData?.["label"] ?? undefined}

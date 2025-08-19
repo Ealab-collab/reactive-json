@@ -1,4 +1,4 @@
-import {useContext} from 'react';
+import {useContext, useRef} from 'react';
 import Form from 'react-bootstrap/Form';
 import {propsDataLocationToPathAndValue} from "./formElementsCommon.jsx";
 import {ActionDependant} from "../../../engine/Actions.jsx";
@@ -13,6 +13,7 @@ import {View} from "../../../engine/View.jsx";
 export const CheckBoxField = ({props, currentData, datafield, path}) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
+    const mainAttributesHolderRef = useRef(null);
 
     const {updateData} = globalDataContext;
 
@@ -136,8 +137,8 @@ export const CheckBoxField = ({props, currentData, datafield, path}) => {
         templateContext
     });
 
-    return <ActionDependant {...props}>
-        <Form.Group {...attributes} controlId={Math.random().toString()}>
+    return <ActionDependant {...props} attributesHolderRef={mainAttributesHolderRef}>
+        <Form.Group {...attributes} ref={mainAttributesHolderRef} controlId={Math.random().toString()}>
             {label && (
                 <Form.Label>
                     <View

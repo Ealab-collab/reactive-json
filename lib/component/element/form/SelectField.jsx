@@ -3,12 +3,13 @@ import {GlobalDataContext} from "../../../engine/GlobalDataContext.jsx";
 import {TemplateContext} from "../../../engine/TemplateContext.jsx";
 import {dataLocationToPath, evaluateAttributes, evaluateTemplateValue} from "../../../engine/TemplateSystem.jsx";
 import {View} from "../../../engine/View.jsx";
-import {useContext} from 'react';
+import {useContext, useRef} from 'react';
 import {Form} from 'react-bootstrap';
 
 export const SelectField = ({props, currentData, path, datafield}) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
+    const mainAttributesHolderRef = useRef(null);
 
     const {updateData} = globalDataContext;
 
@@ -120,8 +121,8 @@ export const SelectField = ({props, currentData, path, datafield}) => {
     }
 
     return (
-        <ActionDependant {...props}>
-            <Form.Group {...attributes} controlId={Math.random().toString()}>
+        <ActionDependant {...props} attributesHolderRef={mainAttributesHolderRef}>
+            <Form.Group {...attributes} ref={mainAttributesHolderRef} controlId={Math.random().toString()}>
                 {props.label && <Form.Label>
                     <View
                         currentData={currentData?.["label"] ?? undefined}

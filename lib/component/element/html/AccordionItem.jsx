@@ -2,6 +2,7 @@ import {Accordion as BsAccordion} from "react-bootstrap";
 import {View} from "../../../engine/View.jsx";
 import {useEvaluatedAttributes} from "../../../engine/TemplateSystem.jsx";
 import {ActionDependant} from "../../../engine/Actions.jsx";
+import {useRef} from "react";
 
 /**
  * To use with the BsAccordion component.
@@ -14,9 +15,10 @@ import {ActionDependant} from "../../../engine/Actions.jsx";
  */
 export const AccordionItem = ({props, path, currentData, datafield}) => {
     const attributes = useEvaluatedAttributes(props.attributes);
+    const mainAttributesHolderRef = useRef(null);
 
-    return <ActionDependant {...props}>
-        <BsAccordion.Item {...attributes} eventKey={datafield} key={datafield}>
+    return <ActionDependant {...props} attributesHolderRef={mainAttributesHolderRef}>
+        <BsAccordion.Item {...attributes} ref={mainAttributesHolderRef} eventKey={datafield} key={datafield}>
             {props?.header
                 ? <BsAccordion.Header>
                     <View
