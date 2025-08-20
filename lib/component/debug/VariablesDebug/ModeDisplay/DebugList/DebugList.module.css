@@ -1,0 +1,19 @@
+.container {
+    max-height: 56vh;
+    overflow: auto;
+    font-size: 12px;
+}
+
+.row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.path {
+    color: #93c5fd;
+}
+
+.value {
+    color: #fbbf24;
+}
