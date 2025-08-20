@@ -1,8 +1,9 @@
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { TemplateContext } from "../../../../engine";
 import { DebugMode } from "./DebugMode.enum";
 import DebugList from "./ModeDisplay/DebugList/DebugList";
 import DebugJson from "./ModeDisplay/DebugJson/DebugJson";
-import React, { useContext, useMemo, useRef, useState } from "react";
 import "./reset.css";
 import { flattenObject } from "./utils";
 import styles from "./VariablesDebug.module.css";
@@ -12,6 +13,19 @@ export const VariablesDebug = () => {
     const [mode, setMode] = useState(DebugMode.LIST);
     const templateContext = useContext(TemplateContext);
     const copyButtonRef = useRef(null);
+    const [portalContainer, setPortalContainer] = useState(null);
+
+    useEffect(() => {
+        if (typeof document === "undefined") return;
+        let container = document.getElementById("rj-debug-root");
+        if (!container) {
+            container = document.createElement("div");
+            container.id = "rj-debug-root";
+            container.classList.add(styles.debugRoot);
+            document.body.appendChild(container);
+        }
+        setPortalContainer(container);
+    }, []);
 
     const data = useMemo(
         () => templateContext?.templateData ?? {},
@@ -59,7 +73,7 @@ export const VariablesDebug = () => {
         }
     };
 
-    return (
+    const content = (
         <div
             className={`${styles.container} ${
                 isExpanded ? styles.expanded : ""
@@ -68,7 +82,7 @@ export const VariablesDebug = () => {
             role="button"
         >
             <div className={styles.header}>
-                <p style={{ margin: 0, fontWeight: 600 }}>Debug Variables</p>
+                <p style={{ margin: 0, fontWeight: 600 }}>Debug Variables <code>{templateContext.templatePath}</code></p>
                 <div
                     className={styles.actions}
                     onClick={(e) => e.stopPropagation()}
@@ -126,4 +140,7 @@ export const VariablesDebug = () => {
             )}
         </div>
     );
+
+    if (!portalContainer) return null;
+    return createPortal(content, portalContainer);
 };

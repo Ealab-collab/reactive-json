@@ -1,7 +1,22 @@
-.container {
+.debugRoot {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    bottom: 12px;
+    right: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: min(560px, 96vw);
+    max-height: 70vh;
+    overflow-y: auto;
+    z-index: 9998;
+    pointer-events: none;
+}
+
+.container {
+    position: relative;
+    bottom: auto;
+    right: auto;
     background-color: #111827;
     color: #e5e7eb;
     padding: 10px;
@@ -12,12 +27,13 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
         "Liberation Mono", "Courier New", monospace;
     z-index: 9999;
-    width: 240px;
+    width: 100%;
     overflow: hidden;
+    pointer-events: auto;
 }
 
 .container.expanded {
-    width: 560px;
+    width: 100%;
     max-height: 64vh;
 }
 
@@ -62,4 +78,16 @@
 
 .copyBtnError {
     background-color: #ef4444;
+}
+
+.info {
+    margin-top: 8px;
+}
+
+@media (max-width: 480px) {
+    .debugRoot {
+        right: 8px;
+        left: 8px;
+        width: auto;
+    }
 }
