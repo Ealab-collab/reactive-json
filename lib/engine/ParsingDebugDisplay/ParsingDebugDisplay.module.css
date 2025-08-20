@@ -1,5 +1,8 @@
 .container {
+    background-color: #3e5b69;
+    color: white;
     overflow: auto;
+    padding: 10px;
 }
 
 .subtitle {
@@ -9,9 +12,7 @@
 
 .errorDetailsTitle {
     font-weight: bold;
-    color: red;
 }
 
 .errorDetails {
-    color: red;
 }

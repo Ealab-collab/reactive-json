@@ -3,6 +3,7 @@ import { coreComponentsPlugin } from "../coreComponentsPlugin.jsx";
 import { mergeComponentCollections } from "./ComponentCollector.jsx";
 import { EventDispatcherProvider } from "./EventDispatcherProvider.jsx";
 import { GlobalDataContextProvider } from "./GlobalDataContextProvider.jsx";
+import ParsingDebugDisplay from "./ParsingDebugDisplay/ParsingDebugDisplay.jsx";
 import { TemplateContext } from "./TemplateContext.jsx";
 import { View } from "./View.jsx";
 import {
@@ -14,9 +15,8 @@ import {
 import { dataLocationToPath } from "./TemplateSystem.jsx";
 import axios from "axios";
 import { isEqual } from "lodash";
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import ParsingDebugDisplay from "../component/debug/ParsingDebugDisplay/ParsingDebugDisplay.jsx";
 
 /**
  * Production ready app root.
@@ -147,6 +147,23 @@ export const ReactiveJsonRoot = ({
         return JSON.stringify(maybeRawAppRjBuild);
     });
     const [errorPortal, setErrorPortal] = useState(null);
+    const errorContainerRef = useRef(null);
+
+    // Cleanup this instance's error container on unmount.
+    useEffect(() => {
+        return () => {
+            if (
+                typeof document !== "undefined" &&
+                errorContainerRef.current &&
+                errorContainerRef.current.parentNode
+            ) {
+                errorContainerRef.current.parentNode.removeChild(
+                    errorContainerRef.current
+                );
+                errorContainerRef.current = null;
+            }
+        };
+    }, []);
 
     // Merge core plugins with user-provided plugins.
     const mergedPlugins = plugins
@@ -192,23 +209,76 @@ export const ReactiveJsonRoot = ({
         const processedRjBuild = parseRjBuild(rawAppRjBuild);
 
         if (!processedRjBuild.success) {
-            // There is no renderView set.
+            // Failed to parse the RjBuild for this instance.
             console.group(
-                `Tried to load app data but the ${processedRjBuild.format} content could not be parsed`
+                `Tried to load the app's RjBuild but the ${processedRjBuild.format} content could not be parsed.`
             );
-            console.error(processedRjBuild.error);
+            console.error(processedRjBuild.error.message);
+            console.debug("Context:", {
+                rjBuildUrl,
+                rjBuildFetchMethod,
+                headersForRjBuild,
+                maybeRawAppRjBuild,
+                dataOverride,
+            });
+            console.debug("Error details:",processedRjBuild.error);
             console.groupEnd();
-            setErrorPortal(
-                createPortal(
-                    <ParsingDebugDisplay processedRjBuild={processedRjBuild} />,
-                    document.getElementById("global-error-debug-container")
-                )
-            );
+
+            // Create or reuse a global container for parsing errors.
+            if (typeof document !== "undefined") {
+                let rootContainer = document.getElementById("rj-parsing-error-root");
+                if (!rootContainer) {
+                    rootContainer = document.createElement("div");
+                    rootContainer.id = "rj-parsing-error-root";
+                    document.body.appendChild(rootContainer);
+                }
+
+                // Create a dedicated container for this instance to support multiple errors safely.
+                if (!errorContainerRef.current) {
+                    const instanceContainer = document.createElement("div");
+                    rootContainer.appendChild(instanceContainer);
+                    errorContainerRef.current = instanceContainer;
+                }
+
+                setErrorPortal(
+                    createPortal(
+                        <ParsingDebugDisplay
+                            processedRjBuild={processedRjBuild}
+                            errorContext={{
+                                rjBuildUrl,
+                                rjBuildFetchMethod,
+                                headersForRjBuild,
+                                maybeRawAppRjBuild,
+                            }} />,
+                        errorContainerRef.current,
+                        () => {
+                            // Cleanup this instance's error container.
+                            if (errorContainerRef.current) {
+                                errorContainerRef.current.parentNode.removeChild(errorContainerRef.current);
+                                errorContainerRef.current = null;
+                            }
+                        }
+                    )
+                );
+            }
             return;
         }
 
         if (errorPortal) {
+            // This instance has an error portal, but is no longer in parsing error state.
+            // Remove the error portal and its container.
             setErrorPortal(null);
+
+            if (
+                typeof document !== "undefined" &&
+                errorContainerRef.current &&
+                errorContainerRef.current.parentNode
+            ) {
+                errorContainerRef.current.parentNode.removeChild(
+                    errorContainerRef.current
+                );
+                errorContainerRef.current = null;
+            }
         }
 
         const parsedData = processedRjBuild.data;
@@ -745,6 +815,9 @@ export const ReactiveJsonRoot = ({
             {errorPortal}
         </DebugModeRootWrapper>
     ) : (
-        mainBuild
+        <>
+            {mainBuild}
+            {errorPortal}
+        </>
     );
 };

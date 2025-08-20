@@ -1,8 +1,8 @@
+import PropTypes from "prop-types";
 import React from "react";
 import styles from "./ParsingDebugDisplay.module.css";
-import PropTypes from "prop-types";
 
-const ParsingDebugDisplay = ({ processedRjBuild }) => {
+const ParsingDebugDisplay = ({ processedRjBuild, errorContext }) => {
     return (
         <div className={styles.container}>
             <h1>Parsing error</h1>
@@ -10,15 +10,13 @@ const ParsingDebugDisplay = ({ processedRjBuild }) => {
                 The {processedRjBuild.format} content could not be parsed.
             </p>
             <p className={styles.errorDetailsTitle}>Error details:</p>
-            <p
-                className={styles.errorDetails}
-                dangerouslySetInnerHTML={{
-                    __html: processedRjBuild.error.message.replace(
-                        "\n",
-                        "<br />"
-                    ),
-                }}
-            />
+            <pre className={styles.errorDetails}>{processedRjBuild.error.message}</pre>
+            {errorContext && (
+                <>
+                    <p className={styles.errorDetailsTitle}>Error context:</p>
+                    <pre className={styles.errorDetails}>{JSON.stringify(errorContext, null, 2)}</pre>
+                </>
+            )}
         </div>
     );
 };
@@ -30,6 +28,7 @@ ParsingDebugDisplay.propTypes = {
             message: PropTypes.string.isRequired,
         }).isRequired,
     }).isRequired,
+    errorContext: PropTypes.object,
 };
 
 export default ParsingDebugDisplay;
