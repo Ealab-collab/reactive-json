@@ -34,7 +34,8 @@
     "build": "tsc -b ./tsconfig.lib.json && vite build",
     "lint": "eslint .",
     "prepublishOnly": "npm run build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js"
   },
   "peerDependencies": {
     "axios": "^1.8.4",
@@ -67,6 +68,7 @@
     "glob": "^11.0.2",
     "globals": "^16.0.0",
     "html-react-parser": "^5.2.3",
+    "jest": "^30.0.5",
     "js-yaml": "^4.1.0",
     "jsonpath": "^1.1.1",
     "lodash": "^4.17.21",
