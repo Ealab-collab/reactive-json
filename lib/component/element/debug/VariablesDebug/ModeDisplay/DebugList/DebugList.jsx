@@ -7,9 +7,7 @@ const DebugList = ({ flatRows }) => {
                 <div key={row.path} className={styles.row}>
                     <span className={styles.path}>{row.path}</span>
                     <span>:</span>
-                    <span className={styles.value}>
-                        {JSON.stringify(row.value)}
-                    </span>
+                    <span className={styles.value}>{JSON.stringify(row.value)}</span>
                 </div>
             ))}
         </div>

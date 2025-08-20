@@ -1,10 +1,10 @@
-import {useContext, useEffect} from "react";
-import {reactionFunctions} from "./ReactOnEvent.jsx";
-import {EventDispatcherContext} from "../../engine/EventDispatcherContext.jsx";
-import {GlobalDataContext} from "../../engine/GlobalDataContext.jsx";
-import {TemplateContext} from "../../engine/TemplateContext.jsx";
-import {evaluateTemplateValueCollection} from "../../engine/TemplateSystem.jsx";
-import {isEqual} from "lodash";
+import { isEqual } from "lodash";
+import { useContext, useEffect } from "react";
+import { EventDispatcherContext } from "../../engine/EventDispatcherContext.jsx";
+import { GlobalDataContext } from "../../engine/GlobalDataContext.jsx";
+import { TemplateContext } from "../../engine/TemplateContext.jsx";
+import { evaluateTemplateValueCollection } from "../../engine/TemplateSystem.jsx";
+import { reactionFunctions } from "./ReactOnEvent.jsx";
 
 /**
  * Listens to messages on the window object and executes a reaction function in response.
@@ -28,7 +28,7 @@ export const MessageListener = (props) => {
         const whenMessageIs_evaluated = evaluateTemplateValueCollection({
             globalDataContext,
             templateContext,
-            valueToEvaluate: whenMessageIs
+            valueToEvaluate: whenMessageIs,
         });
 
         const listener = (event) => {
@@ -45,7 +45,7 @@ export const MessageListener = (props) => {
 
             const toCall = functionToCall && (reactionFunctions[functionToCall] ?? undefined);
 
-            toCall && toCall({args: payload, event, globalDataContext, templateContext});
+            toCall && toCall({ args: payload, event, globalDataContext, templateContext });
         };
 
         // Dev note: we use a context to prevent adding too many real event listeners which would slow down the build.

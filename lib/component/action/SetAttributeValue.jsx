@@ -5,7 +5,7 @@ import { evaluateTemplateValue } from "../../engine/TemplateSystem.jsx";
 
 /**
  * Action that sets or modifies the value of an HTML attribute on the target element.
- * 
+ *
  * @param {Object} props - Component props
  * @param {Object} props.actionProps - Configuration for the attribute modification
  * @param {string} props.actionProps.name - The name of the attribute to modify
@@ -21,14 +21,8 @@ export const SetAttributeValue = (props) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
     const { attributesHolderRef } = props;
-    
-    const { 
-        name, 
-        mode = "append", 
-        value, 
-        preventDuplicateValues = true, 
-        separator = " " 
-    } = props.actionProps;
+
+    const { name, mode = "append", value, preventDuplicateValues = true, separator = " " } = props.actionProps;
 
     useEffect(() => {
         // Early return if we don't have the required elements
@@ -37,11 +31,13 @@ export const SetAttributeValue = (props) => {
         }
 
         // Evaluate the template value
-        const evaluatedValue = String(evaluateTemplateValue({
-            valueToEvaluate: value,
-            globalDataContext,
-            templateContext
-        }));
+        const evaluatedValue = String(
+            evaluateTemplateValue({
+                valueToEvaluate: value,
+                globalDataContext,
+                templateContext,
+            })
+        );
 
         const element = attributesHolderRef.current;
 
@@ -52,7 +48,7 @@ export const SetAttributeValue = (props) => {
             // Append mode: add the value to the existing attribute
             const currentValue = element.getAttribute(name) || "";
             const currentValues = currentValue ? currentValue.split(separator) : [];
-            
+
             // Check if we should add the value (based on duplicate prevention)
             if (!preventDuplicateValues || !currentValues.includes(evaluatedValue)) {
                 const newValues = [...currentValues, evaluatedValue];
@@ -60,14 +56,14 @@ export const SetAttributeValue = (props) => {
             }
         }
     }, [
-        name, 
-        mode, 
-        value, 
-        preventDuplicateValues, 
-        separator, 
-        globalDataContext.data, 
-        templateContext, 
-        attributesHolderRef
+        name,
+        mode,
+        value,
+        preventDuplicateValues,
+        separator,
+        globalDataContext.data,
+        templateContext,
+        attributesHolderRef,
     ]);
 
     // Return children unchanged - this action doesn't wrap anything

@@ -1,13 +1,13 @@
-import {ActionDependant} from "../../../engine/Actions.jsx";
-import {GlobalDataContext} from "../../../engine/GlobalDataContext.jsx";
-import {TemplateContext} from "../../../engine/TemplateContext.jsx";
-import {evaluateTemplateValue} from "../../../engine/TemplateSystem.jsx";
-import {useContext} from "react";
+import { useContext } from "react";
+import { ActionDependant } from "../../../engine/Actions.jsx";
+import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
+import { TemplateContext } from "../../../engine/TemplateContext.jsx";
+import { evaluateTemplateValue } from "../../../engine/TemplateSystem.jsx";
 
 /**
  * Transforms a number into a numeral of a specific language: roman, upper latin, lower latin, ... and custom.
  */
-export const FormatNumeral = ({props}) => {
+export const FormatNumeral = ({ props }) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
 
@@ -17,7 +17,7 @@ export const FormatNumeral = ({props}) => {
     let evaluatedFormat = undefined;
 
     if (props.content !== undefined) {
-        evaluated = evaluateTemplateValue({valueToEvaluate: props.content, globalDataContext, templateContext});
+        evaluated = evaluateTemplateValue({ valueToEvaluate: props.content, globalDataContext, templateContext });
     }
 
     if (evaluated === undefined || evaluated === null || evaluated === "") {
@@ -26,7 +26,7 @@ export const FormatNumeral = ({props}) => {
     }
 
     if (props.format !== undefined) {
-        evaluatedFormat = evaluateTemplateValue({valueToEvaluate: props.format, globalDataContext, templateContext});
+        evaluatedFormat = evaluateTemplateValue({ valueToEvaluate: props.format, globalDataContext, templateContext });
     }
 
     switch (evaluatedFormat) {
@@ -54,9 +54,7 @@ export const FormatNumeral = ({props}) => {
 
     return (
         <ActionDependant {...props}>
-            <>
-                {(formatted !== false) && formatted}
-            </>
+            <>{formatted !== false && formatted}</>
         </ActionDependant>
     );
 };
@@ -77,8 +75,8 @@ function convertArabicToLatinLetters(number, asLowerCase = false) {
     }
 
     let mod = number % 26,
-        pow = number / 26 | 0,
-        out = mod ? String.fromCharCode(64 + mod) : (--pow, 'Z');
+        pow = (number / 26) | 0,
+        out = mod ? String.fromCharCode(64 + mod) : (--pow, "Z");
 
     const letters = pow ? convertArabicToLatinLetters(pow) + out : out;
 
@@ -103,28 +101,26 @@ function convertArabicToRoman(number, asLowercase = false) {
     }
 
     const lookup = [
-        ['M', 1000],
-        ['CM', 900],
-        ['D', 500],
-        ['CD', 400],
-        ['C', 100],
-        ['XC', 90],
-        ['L', 50],
-        ['XL', 40],
-        ['X', 10],
-        ['IX', 9],
-        ['V', 5],
-        ['IV', 4],
-        ['I', 1],
+        ["M", 1000],
+        ["CM", 900],
+        ["D", 500],
+        ["CD", 400],
+        ["C", 100],
+        ["XC", 90],
+        ["L", 50],
+        ["XL", 40],
+        ["X", 10],
+        ["IX", 9],
+        ["V", 5],
+        ["IV", 4],
+        ["I", 1],
     ];
 
-    const uppercase = lookup.reduce(
-        (acc, [k, v]) => {
-            acc += k.repeat(Math.floor(number / v));
-            number = number % v;
-            return acc;
-        },
-        '');
+    const uppercase = lookup.reduce((acc, [k, v]) => {
+        acc += k.repeat(Math.floor(number / v));
+        number = number % v;
+        return acc;
+    }, "");
 
     return asLowercase ? uppercase.toLowerCase() : uppercase;
 }

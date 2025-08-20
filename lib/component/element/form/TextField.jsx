@@ -1,13 +1,13 @@
-import {useContext, useRef} from 'react';
-import {Form} from 'react-bootstrap';
-import {GlobalDataContext} from "../../../engine/GlobalDataContext.jsx";
-import {ActionDependant} from "../../../engine/Actions.jsx";
-import {TemplateContext} from "../../../engine/TemplateContext.jsx";
-import {evaluateTemplateValue, useEvaluatedAttributes} from "../../../engine/TemplateSystem.jsx";
-import {View} from "../../../engine/View.jsx";
-import {propsDataLocationToPathAndValue} from "./formElementsCommon.jsx";
+import { useContext, useRef } from "react";
+import { Form } from "react-bootstrap";
+import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
+import { ActionDependant } from "../../../engine/Actions.jsx";
+import { TemplateContext } from "../../../engine/TemplateContext.jsx";
+import { evaluateTemplateValue, useEvaluatedAttributes } from "../../../engine/TemplateSystem.jsx";
+import { View } from "../../../engine/View.jsx";
+import { propsDataLocationToPathAndValue } from "./formElementsCommon.jsx";
 
-export const TextField = ({props, datafield, path, currentData}) => {
+export const TextField = ({ props, datafield, path, currentData }) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
     const mainAttributesHolderRef = useRef(null);
@@ -15,10 +15,7 @@ export const TextField = ({props, datafield, path, currentData}) => {
     const attributes = useEvaluatedAttributes(props.attributes);
     const inputAttributes = useEvaluatedAttributes(props.inputAttributes ?? []);
 
-    const {
-        formData,
-        formDataPath,
-    } = propsDataLocationToPathAndValue({
+    const { formData, formDataPath } = propsDataLocationToPathAndValue({
         currentPath: path,
         datafield: datafield,
         dataLocation: props.dataLocation,
@@ -34,32 +31,36 @@ export const TextField = ({props, datafield, path, currentData}) => {
     const maybePlaceholder = evaluateTemplateValue({
         valueToEvaluate: props.placeholder,
         globalDataContext,
-        templateContext
+        templateContext,
     });
 
     const maybeInputType = evaluateTemplateValue({
         valueToEvaluate: props.inputType,
         globalDataContext,
-        templateContext
+        templateContext,
     });
 
     return (
         <ActionDependant {...props} attributesHolderRef={mainAttributesHolderRef}>
             <Form.Group {...attributes} ref={mainAttributesHolderRef} controlId={Math.random().toString()}>
-                {props.label && <Form.Label>
-                    <View
-                        currentData={currentData?.["label"] ?? undefined}
-                        datafield={"label"}
-                        path={path + ".label"}
-                        props={props.label}/>
-                </Form.Label>}
+                {props.label && (
+                    <Form.Label>
+                        <View
+                            currentData={currentData?.["label"] ?? undefined}
+                            datafield={"label"}
+                            path={path + ".label"}
+                            props={props.label}
+                        />
+                    </Form.Label>
+                )}
                 <Form.Control
                     onChange={onChange}
                     placeholder={maybePlaceholder}
                     type={maybeInputType ?? "text"}
                     value={formData ?? ""}
-                    {...inputAttributes}/>
+                    {...inputAttributes}
+                />
             </Form.Group>
         </ActionDependant>
     );
-}
+};

@@ -9,5 +9,5 @@
  * @constructor
  */
 export const VisuallyHide = (props) => {
-    return <visually-hidden style={{"display": "none"}}>{props.children}</visually-hidden>;
+    return <visually-hidden style={{ display: "none" }}>{props.children}</visually-hidden>;
 };

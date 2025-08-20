@@ -1,7 +1,7 @@
-import {evaluateTemplateValue} from "../../engine/TemplateSystem.jsx";
-import {useContext} from "react";
-import {GlobalDataContext} from "../../engine/GlobalDataContext.jsx";
-import {TemplateContext} from "../../engine/TemplateContext.jsx";
+import { useContext } from "react";
+import { GlobalDataContext } from "../../engine/GlobalDataContext.jsx";
+import { TemplateContext } from "../../engine/TemplateContext.jsx";
+import { evaluateTemplateValue } from "../../engine/TemplateSystem.jsx";
 
 /**
  * Redirects when the conditions are valid.
@@ -14,11 +14,11 @@ export const Redirect = (props) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
 
-    const {to} = props.actionProps;
+    const { to } = props.actionProps;
 
     if (!to || typeof to !== "string") {
         return;
     }
 
-    window.location.href = evaluateTemplateValue({valueToEvaluate: to, globalDataContext, templateContext});
+    window.location.href = evaluateTemplateValue({ valueToEvaluate: to, globalDataContext, templateContext });
 };

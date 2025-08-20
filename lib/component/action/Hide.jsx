@@ -2,7 +2,7 @@
  * Action which will not render the children.
  *
  * This will also cancel any subsequent actions.
- * 
+ *
  * @returns {null}
  * @constructor
  */

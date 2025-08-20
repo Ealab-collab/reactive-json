@@ -1,9 +1,9 @@
-import {useContext, useEffect} from "react";
-import {reactionFunctions} from "./ReactOnEvent.jsx";
-import {EventDispatcherContext} from "../../engine/EventDispatcherContext.jsx";
-import {GlobalDataContext} from "../../engine/GlobalDataContext.jsx";
-import {TemplateContext} from "../../engine/TemplateContext.jsx";
-import {evaluateTemplateValueCollection} from "../../engine/TemplateSystem.jsx";
+import { useContext, useEffect } from "react";
+import { EventDispatcherContext } from "../../engine/EventDispatcherContext.jsx";
+import { GlobalDataContext } from "../../engine/GlobalDataContext.jsx";
+import { TemplateContext } from "../../engine/TemplateContext.jsx";
+import { evaluateTemplateValueCollection } from "../../engine/TemplateSystem.jsx";
+import { reactionFunctions } from "./ReactOnEvent.jsx";
 
 /**
  * Listens to hash changes (URL fragment) on the window object and executes a reaction function in response.
@@ -28,28 +28,28 @@ export const HashChangeListener = (props) => {
         const whenHashIs_evaluated = evaluateTemplateValueCollection({
             globalDataContext,
             templateContext,
-            valueToEvaluate: whenHashIs
+            valueToEvaluate: whenHashIs,
         });
 
         const whenHashWas_evaluated = evaluateTemplateValueCollection({
             globalDataContext,
             templateContext,
-            valueToEvaluate: whenHashWas
+            valueToEvaluate: whenHashWas,
         });
 
         const listener = (event) => {
             // The hash contains the '#' character.
-            if (typeof whenHashIs_evaluated === "string" && ((new URL(event.newUrl)).hash !== whenHashIs_evaluated)) {
+            if (typeof whenHashIs_evaluated === "string" && new URL(event.newUrl).hash !== whenHashIs_evaluated) {
                 return;
             }
 
-            if (typeof whenHashWas_evaluated === "string" && ((new URL(event.oldUrl)).hash !== whenHashWas_evaluated)) {
+            if (typeof whenHashWas_evaluated === "string" && new URL(event.oldUrl).hash !== whenHashWas_evaluated) {
                 return;
             }
 
             const toCall = functionToCall && (reactionFunctions[functionToCall] ?? undefined);
 
-            toCall && toCall({args: payload, event, globalDataContext, templateContext});
+            toCall && toCall({ args: payload, event, globalDataContext, templateContext });
         };
 
         // Dev note: we use a context to prevent adding too many real event listeners which would slow down the build.
