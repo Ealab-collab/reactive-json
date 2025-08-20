@@ -1,4 +1,4 @@
-import {dataLocationToPath, evaluateTemplateValue} from "../../../engine/TemplateSystem.jsx";
+import { dataLocationToPath, evaluateTemplateValue } from "../../../engine/TemplateSystem.jsx";
 
 /**
  * Gets the path and the data for the specified dataLocation and contexts.
@@ -13,14 +13,13 @@ import {dataLocationToPath, evaluateTemplateValue} from "../../../engine/Templat
  * @returns {{formDataPath: undefined, formData: undefined}}
  */
 export const propsDataLocationToPathAndValue = ({
-                                                    currentPath,
-                                                    datafield,
-                                                    dataLocation,
-                                                    defaultValue,
-                                                    globalDataContext,
-                                                    templateContext
-                                                }) => {
-
+    currentPath,
+    datafield,
+    dataLocation,
+    defaultValue,
+    globalDataContext,
+    templateContext,
+}) => {
     const result = {
         // This is the data that contains the current checked state.
         formData: undefined, // This is the path that leads to the data.
@@ -29,15 +28,24 @@ export const propsDataLocationToPathAndValue = ({
 
     if (dataLocation && typeof dataLocation === "string") {
         // A custom data location has been specified.
-        result.formData = evaluateTemplateValue({
-            globalDataContext: globalDataContext, templateContext: templateContext, valueToEvaluate: dataLocation,
-        }) ?? defaultValue;
-        result.formDataPath = dataLocationToPath({dataLocation: dataLocation, currentPath: currentPath, globalDataContext, templateContext});
+        result.formData =
+            evaluateTemplateValue({
+                globalDataContext: globalDataContext,
+                templateContext: templateContext,
+                valueToEvaluate: dataLocation,
+            }) ?? defaultValue;
+        result.formDataPath = dataLocationToPath({
+            dataLocation: dataLocation,
+            currentPath: currentPath,
+            globalDataContext,
+            templateContext,
+        });
     } else {
         // Use the template data.
         if ((templateContext.templateData[datafield] ?? undefined) === undefined) {
             // Initialize the data for this component.
-            templateContext.templateData = (typeof templateContext.templateData === "object") ? templateContext.templateData : {};
+            templateContext.templateData =
+                typeof templateContext.templateData === "object" ? templateContext.templateData : {};
             templateContext.templateData[datafield] = defaultValue;
         }
 
@@ -46,7 +54,10 @@ export const propsDataLocationToPathAndValue = ({
         result.formData = templateContext.templateData[datafield];
 
         result.formDataPath = dataLocationToPath({
-            dataLocation: "~." + datafield, currentPath: templateContext.templatePath, globalDataContext, templateContext
+            dataLocation: "~." + datafield,
+            currentPath: templateContext.templatePath,
+            globalDataContext,
+            templateContext,
         });
     }
 

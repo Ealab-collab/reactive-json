@@ -8,12 +8,7 @@ export const ToggleAttributeValue = (props) => {
     const templateContext = useContext(TemplateContext);
     const { attributesHolderRef } = props;
 
-    const { 
-        name, 
-        value, 
-        separator = " ", 
-        keepAttributeWhenEmpty = false,
-    } = props.actionProps || {};
+    const { name, value, separator = " ", keepAttributeWhenEmpty = false } = props.actionProps || {};
 
     useEffect(() => {
         if (!attributesHolderRef?.current || !name || value === undefined) {
@@ -23,7 +18,7 @@ export const ToggleAttributeValue = (props) => {
         const evaluatedValue = evaluateTemplateValue({
             valueToEvaluate: value,
             globalDataContext,
-            templateContext
+            templateContext,
         });
 
         // Get base attribute value from component props (not from DOM).
@@ -33,28 +28,26 @@ export const ToggleAttributeValue = (props) => {
         const componentProps = props.componentProps || {};
         const baseAttributes = componentProps.attributes || {};
         const baseValue = baseAttributes[name] || "";
-        
+
         // Split base values (from props) and filter out empty ones.
-        const baseValues = baseValue ? 
-            baseValue.split(separator).filter(val => val.trim() !== "") : 
-            [];
-        
+        const baseValues = baseValue ? baseValue.split(separator).filter((val) => val.trim() !== "") : [];
+
         let newValues = [...baseValues];
 
         if (Array.isArray(evaluatedValue)) {
             // Cyclic Toggle (array value).
-            const arrayValues = evaluatedValue.map(v => String(v));
-            
+            const arrayValues = evaluatedValue.map((v) => String(v));
+
             if (arrayValues.length === 0) {
                 // Empty array, do nothing.
                 return;
             }
-            
+
             if (arrayValues.length === 1) {
                 // Single value array - behaves like string toggle.
                 const toggleValue = arrayValues[0];
                 const valueIndex = newValues.indexOf(toggleValue);
-                
+
                 if (valueIndex > -1) {
                     // Remove the value.
                     newValues.splice(valueIndex, 1);
@@ -69,7 +62,7 @@ export const ToggleAttributeValue = (props) => {
                 // Find first match in current values.
                 let foundIndex = -1;
                 let foundArrayIndex = -1;
-                
+
                 for (let i = 0; i < arrayValues.length; i++) {
                     const arrayVal = arrayValues[i];
                     const currentIndex = newValues.indexOf(arrayVal);
@@ -79,15 +72,15 @@ export const ToggleAttributeValue = (props) => {
                         break;
                     }
                 }
-                
+
                 if (foundIndex > -1) {
                     // Found a value, replace with next in cycle.
                     const nextArrayIndex = (foundArrayIndex + 1) % arrayValues.length;
                     const nextValue = arrayValues[nextArrayIndex];
-                    
+
                     // Remove current value.
                     newValues.splice(foundIndex, 1);
-                    
+
                     // Add next value (unless it's empty string).
                     if (nextValue !== "") {
                         newValues.push(nextValue);
@@ -104,7 +97,7 @@ export const ToggleAttributeValue = (props) => {
             // Simple Toggle (string value).
             const toggleValue = String(evaluatedValue);
             const valueIndex = newValues.indexOf(toggleValue);
-            
+
             if (valueIndex > -1) {
                 // Value exists, remove it.
                 newValues.splice(valueIndex, 1);
@@ -117,35 +110,35 @@ export const ToggleAttributeValue = (props) => {
         // Apply the changes to the actual DOM element.
         const element = attributesHolderRef.current;
         const currentDomValue = element.getAttribute(name) || "";
-        const currentDomValues = currentDomValue ? 
-            currentDomValue.split(separator).filter(val => val.trim() !== "") : 
-            [];
-        
+        const currentDomValues = currentDomValue
+            ? currentDomValue.split(separator).filter((val) => val.trim() !== "")
+            : [];
+
         // Calculate the final result: merge base values changes with current DOM state.
         // Remove values that are no longer in newValues compared to baseValues.
-        const valuesToRemove = baseValues.filter(val => !newValues.includes(val));
-        const valuesToAdd = newValues.filter(val => !baseValues.includes(val));
-        
+        const valuesToRemove = baseValues.filter((val) => !newValues.includes(val));
+        const valuesToAdd = newValues.filter((val) => !baseValues.includes(val));
+
         let finalValues = [...currentDomValues];
-        
+
         // Remove values that should be removed.
-        valuesToRemove.forEach(val => {
+        valuesToRemove.forEach((val) => {
             const index = finalValues.indexOf(val);
             if (index > -1) {
                 finalValues.splice(index, 1);
             }
         });
-        
+
         // Add values that should be added (avoiding duplicates).
-        valuesToAdd.forEach(val => {
+        valuesToAdd.forEach((val) => {
             if (!finalValues.includes(val)) {
                 finalValues.push(val);
             }
         });
-        
+
         // Update the attribute.
         const finalAttributeValue = finalValues.join(separator);
-        
+
         if (finalAttributeValue.trim() === "") {
             if (keepAttributeWhenEmpty) {
                 // Keep empty attribute.
@@ -158,7 +151,6 @@ export const ToggleAttributeValue = (props) => {
             // Set new value.
             element.setAttribute(name, finalAttributeValue);
         }
-
     }, [name, value, separator, keepAttributeWhenEmpty, globalDataContext.data, templateContext, attributesHolderRef]);
 
     return props.children;

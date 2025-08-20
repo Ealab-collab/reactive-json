@@ -15,14 +15,16 @@ export const UnsetAttribute = (props) => {
             return;
         }
 
-        const evaluatedName = String(evaluateTemplateValue({
-            valueToEvaluate: name,
-            globalDataContext,
-            templateContext
-        }));
+        const evaluatedName = String(
+            evaluateTemplateValue({
+                valueToEvaluate: name,
+                globalDataContext,
+                templateContext,
+            })
+        );
 
         const element = attributesHolderRef.current;
-        
+
         element.removeAttribute(evaluatedName);
     }, [name, globalDataContext.data, templateContext, attributesHolderRef]);
 

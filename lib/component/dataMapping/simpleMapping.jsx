@@ -2,17 +2,14 @@ import { dataLocationToPath, evaluateTemplateValueCollection } from "../../engin
 
 /**
  * Simple mapping processor based on string → location associations.
- * 
+ *
  * @param {Object} mappingProps.config - Simple mapping configuration
  * @param {Object} mappingProps.globalDataContext - Global data context
  * @param {Object} mappingProps.templateContext - Template context
  * @param {*} mappingProps.responseData - Response data to map
  */
-export function simpleMapping({config, globalDataContext, templateContext, responseData}) {
-    const {
-        stringMap = {},
-        onErrorMap,
-    } = config;
+export function simpleMapping({ config, globalDataContext, templateContext, responseData }) {
+    const { stringMap = {}, onErrorMap } = config;
 
     const { updateData } = globalDataContext;
 
@@ -28,13 +25,16 @@ export function simpleMapping({config, globalDataContext, templateContext, respo
         /**
          * The data to apply.
          */
-        const toApply = Object.entries(stringMap).map(([destinationDataLocation, mappingConfig]) => {
-            return processMappingItem({
-                destinationDataLocation,
-                mappingConfig,
-                sourceDataRetriever: ({location}) => retrieveValueFromResponseData({location, data: responseData})
-            });
-        }).filter(Boolean);
+        const toApply = Object.entries(stringMap)
+            .map(([destinationDataLocation, mappingConfig]) => {
+                return processMappingItem({
+                    destinationDataLocation,
+                    mappingConfig,
+                    sourceDataRetriever: ({ location }) =>
+                        retrieveValueFromResponseData({ location, data: responseData }),
+                });
+            })
+            .filter(Boolean);
 
         // Apply the data.
         // Dev note: The values are supposed to be cloned in updateData,
@@ -49,13 +49,15 @@ export function simpleMapping({config, globalDataContext, templateContext, respo
 
         // There is an onErrorMap. The mapping failed.
         // Apply the onErrorMap.
-        const toApplyOnError = Object.entries(onErrorMap).map(([destinationDataLocation, mappingConfig]) => {
-            return processMappingItem({
-                destinationDataLocation,
-                mappingConfig,
-                sourceDataRetriever: retrieveValueFromTemplateData,
-            });
-        }).filter(Boolean);
+        const toApplyOnError = Object.entries(onErrorMap)
+            .map(([destinationDataLocation, mappingConfig]) => {
+                return processMappingItem({
+                    destinationDataLocation,
+                    mappingConfig,
+                    sourceDataRetriever: retrieveValueFromTemplateData,
+                });
+            })
+            .filter(Boolean);
 
         // Apply the data.
         // Dev note: The values are supposed to be cloned in updateData,
@@ -65,10 +67,10 @@ export function simpleMapping({config, globalDataContext, templateContext, respo
 
     /**
      * Applies a mapping item.
-     * 
+     *
      * @param {Object} mappingItem - The mapping item to apply.
      */
-    function applyMappingItem({destinationPath, value, updateMode}) {
+    function applyMappingItem({ destinationPath, value, updateMode }) {
         // TODO: support root update.
         updateData(value, destinationPath, updateMode);
     }
@@ -81,8 +83,8 @@ export function simpleMapping({config, globalDataContext, templateContext, respo
      * @param {Object} params.data - The data to parse.
      * @returns {any} The value at the given location.
      */
-    function retrieveValueFromResponseData({location, data}) {
-        if (typeof data !== 'object') {
+    function retrieveValueFromResponseData({ location, data }) {
+        if (typeof data !== "object") {
             throw new Error("simpleMapping: Could not find location in response data: " + location + ".");
         }
 
@@ -101,46 +103,44 @@ export function simpleMapping({config, globalDataContext, templateContext, respo
             }
 
             // When there is a remaining location, parse the remaining location.
-            return retrieveValueFromResponseData({location: remainingLocation, data: data[currentLocation]});
+            return retrieveValueFromResponseData({ location: remainingLocation, data: data[currentLocation] });
         }
 
         // When the current location is not found, throw an error.
-        throw new Error("simpleMapping: Could not find location in response data: " + location + " (location not found in data).");
+        throw new Error(
+            "simpleMapping: Could not find location in response data: " + location + " (location not found in data)."
+        );
     }
 
     /**
      * Retrieves the value from the template data.
-     * 
+     *
      * @param {Object} params - The parameters to retrieve the value from the template data.
      * @param {string} params.location - The location to parse.
      * @returns {any} The value at the given location.
      */
-    function retrieveValueFromTemplateData({location}) {
+    function retrieveValueFromTemplateData({ location }) {
         // Retrieve using the template system.
         return evaluateTemplateValueCollection({
             valueToEvaluate: location,
             globalDataContext,
             templateContext,
-            evaluationDepth: -1
+            evaluationDepth: -1,
         });
     }
 
     /**
      * Processes a mapping item.
-     * 
+     *
      * @param {Object} params - The parameters to process the mapping item.
      * @param {string} params.destinationDataLocation - The destination data location.
      * @param {Object} params.mappingConfig - The mapping configuration.
      * @param {Function} params.sourceDataRetriever - The function to retrieve the value from the source data.
      * @returns {Object} The processed mapping item.
      */
-    function processMappingItem({destinationDataLocation, mappingConfig, sourceDataRetriever}) {
+    function processMappingItem({ destinationDataLocation, mappingConfig, sourceDataRetriever }) {
         // Default configuration.
-        const {
-            value,
-            required = true,
-            defaultValue
-        } = mappingConfig;
+        const { value, required = true, defaultValue } = mappingConfig;
 
         let updateMode = "";
 
@@ -170,23 +170,28 @@ export function simpleMapping({config, globalDataContext, templateContext, respo
             // TODO: This is incorrect because simpleMapping could be called from a fetchData reaction that is not located at the root of the data.
             currentPath: "data",
             globalDataContext,
-            templateContext
+            templateContext,
         });
 
         if (typeof evaluatedDestinationPath !== "string" || !evaluatedDestinationPath.startsWith("data")) {
-            console.warn("simpleMapping: the given destination path is invalid:", destinationDataLocation, "->", evaluatedDestinationPath);
+            console.warn(
+                "simpleMapping: the given destination path is invalid:",
+                destinationDataLocation,
+                "->",
+                evaluatedDestinationPath
+            );
             return;
         }
 
         try {
-            const sourceValue = sourceDataRetriever({location: value});
+            const sourceValue = sourceDataRetriever({ location: value });
 
             return {
                 destinationPath: evaluatedDestinationPath,
                 value: sourceValue,
                 updateMode: updateMode,
             };
-        } catch(error) {
+        } catch (error) {
             // The value is not found in the response data.
             if (required) {
                 // This is a required value. The mapping may fail unless there is a fallback map (onErrorMap).
@@ -200,7 +205,7 @@ export function simpleMapping({config, globalDataContext, templateContext, respo
                     valueToEvaluate: defaultValue,
                     globalDataContext,
                     templateContext,
-                    evaluationDepth: -1
+                    evaluationDepth: -1,
                 });
 
                 return {
@@ -210,5 +215,5 @@ export function simpleMapping({config, globalDataContext, templateContext, respo
                 };
             }
         }
-    };
-};
+    }
+}

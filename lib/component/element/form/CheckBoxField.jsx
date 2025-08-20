@@ -1,31 +1,27 @@
-import {useContext, useRef} from 'react';
-import Form from 'react-bootstrap/Form';
-import {propsDataLocationToPathAndValue} from "./formElementsCommon.jsx";
-import {ActionDependant} from "../../../engine/Actions.jsx";
-import {GlobalDataContext} from "../../../engine/GlobalDataContext.jsx";
-import {TemplateContext} from "../../../engine/TemplateContext.jsx";
-import {
-    evaluateAttributes,
-    evaluateTemplateValue,
-} from "../../../engine/TemplateSystem.jsx";
-import {View} from "../../../engine/View.jsx";
+import { useContext, useRef } from "react";
+import Form from "react-bootstrap/Form";
+import { propsDataLocationToPathAndValue } from "./formElementsCommon.jsx";
+import { ActionDependant } from "../../../engine/Actions.jsx";
+import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
+import { TemplateContext } from "../../../engine/TemplateContext.jsx";
+import { evaluateAttributes, evaluateTemplateValue } from "../../../engine/TemplateSystem.jsx";
+import { View } from "../../../engine/View.jsx";
 
-export const CheckBoxField = ({props, currentData, datafield, path}) => {
+export const CheckBoxField = ({ props, currentData, datafield, path }) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
     const mainAttributesHolderRef = useRef(null);
 
-    const {updateData} = globalDataContext;
+    const { updateData } = globalDataContext;
 
-    const attributes = evaluateAttributes(
-        {
-            attrs: props.attributes,
-            globalDataContext,
-            templateContext,
-            options: {
-                normalizeBeforeEvaluation: true,
-            },
-        });
+    const attributes = evaluateAttributes({
+        attrs: props.attributes,
+        globalDataContext,
+        templateContext,
+        options: {
+            normalizeBeforeEvaluation: true,
+        },
+    });
 
     let options;
 
@@ -33,7 +29,7 @@ export const CheckBoxField = ({props, currentData, datafield, path}) => {
 
     if (dynamicOptions) {
         // Build the options through the given data.
-        options = evaluateTemplateValue({valueToEvaluate: dynamicOptions, globalDataContext, templateContext}) ?? [];
+        options = evaluateTemplateValue({ valueToEvaluate: dynamicOptions, globalDataContext, templateContext }) ?? [];
     } else {
         options = props.options ?? [];
     }
@@ -61,10 +57,7 @@ export const CheckBoxField = ({props, currentData, datafield, path}) => {
     // This is the field value when the data is not supplied on initialization.
     const defaultFieldValue = props.defaultFieldValue ?? (!usesSingleValueData ? [] : undefined);
 
-    const {
-        formData: checkboxFormData,
-        formDataPath,
-    } = propsDataLocationToPathAndValue({
+    const { formData: checkboxFormData, formDataPath } = propsDataLocationToPathAndValue({
         currentPath: path,
         datafield,
         dataLocation: props.dataLocation,
@@ -129,62 +122,77 @@ export const CheckBoxField = ({props, currentData, datafield, path}) => {
         }
 
         updateData(formDataClone, formDataPath);
-    }
+    };
 
     const label = evaluateTemplateValue({
         valueToEvaluate: props.label,
         globalDataContext,
-        templateContext
+        templateContext,
     });
 
-    return <ActionDependant {...props} attributesHolderRef={mainAttributesHolderRef}>
-        <Form.Group {...attributes} ref={mainAttributesHolderRef} controlId={Math.random().toString()}>
-            {label && (
-                <Form.Label>
-                    <View
-                        currentData={currentData?.["label"] ?? undefined}
-                        datafield={"label"}
-                        path={path + ".label"}
-                        props={props.label}
-                    />
-                </Form.Label>
-            )}
-            {options.map((option, i) => {
-                // The option value.
-                const finalOptionValue = typeof option.value === "string" ? evaluateTemplateValue({
-                    globalDataContext: globalDataContext,
-                    templateContext: templateContext,
-                    valueToEvaluate: option.value,
-                }) : option.value;
+    return (
+        <ActionDependant {...props} attributesHolderRef={mainAttributesHolderRef}>
+            <Form.Group {...attributes} ref={mainAttributesHolderRef} controlId={Math.random().toString()}>
+                {label && (
+                    <Form.Label>
+                        <View
+                            currentData={currentData?.["label"] ?? undefined}
+                            datafield={"label"}
+                            path={path + ".label"}
+                            props={props.label}
+                        />
+                    </Form.Label>
+                )}
+                {options.map((option, i) => {
+                    // The option value.
+                    const finalOptionValue =
+                        typeof option.value === "string"
+                            ? evaluateTemplateValue({
+                                  globalDataContext: globalDataContext,
+                                  templateContext: templateContext,
+                                  valueToEvaluate: option.value,
+                              })
+                            : option.value;
 
-                const optionAttributes = evaluateAttributes({attrs: option.attributes ?? [], templateContext, globalDataContext, options: {normalizeBeforeEvaluation: true}});
+                    const optionAttributes = evaluateAttributes({
+                        attrs: option.attributes ?? [],
+                        templateContext,
+                        globalDataContext,
+                        options: { normalizeBeforeEvaluation: true },
+                    });
 
-                return <Form.Check
-                    {...optionAttributes}
-                    checked={isChecked(checkboxFormData, finalOptionValue)}
-                    key={i}
-                    label={<View
-                        currentData={currentData?.["options"]?.[i]?.["label"] ?? undefined}
-                        datafield={"label"}
-                        path={path + ".options." + i + ".label"}
-                        props={option.label}/>}
-                    id={`${Math.random()}`}
-                    name={path}
-                    onChange={changeValue}
-                    type={controlType}
-                    value={finalOptionValue}
-                />
-            })}
-        </Form.Group>
-    </ActionDependant>;
-}
+                    return (
+                        <Form.Check
+                            {...optionAttributes}
+                            checked={isChecked(checkboxFormData, finalOptionValue)}
+                            key={i}
+                            label={
+                                <View
+                                    currentData={currentData?.["options"]?.[i]?.["label"] ?? undefined}
+                                    datafield={"label"}
+                                    path={path + ".options." + i + ".label"}
+                                    props={option.label}
+                                />
+                            }
+                            id={`${Math.random()}`}
+                            name={path}
+                            onChange={changeValue}
+                            type={controlType}
+                            value={finalOptionValue}
+                        />
+                    );
+                })}
+            </Form.Group>
+        </ActionDependant>
+    );
+};
 
 function isChecked(checkboxFormData, finalOptionValue) {
     if (Array.isArray(checkboxFormData)) {
         return checkboxFormData.includes(finalOptionValue);
     }
 
-    if (typeof checkboxFormData === 'object') {
+    if (typeof checkboxFormData === "object") {
         return Object.values(checkboxFormData).includes(finalOptionValue);
     }
 
@@ -201,13 +209,13 @@ function addCheckedValueToData(checkboxFormData, optionValue) {
         return checkboxFormData;
     }
 
-    if (typeof checkboxFormData === 'object') {
+    if (typeof checkboxFormData === "object") {
         const arrayValuesCopy = Object.values(checkboxFormData);
         arrayValuesCopy.includes(optionValue) || arrayValuesCopy.push(optionValue);
         return arrayValuesCopy;
     }
 
-    throw new Error('CheckboxField: the value to set is not properly initialized as an object or array.');
+    throw new Error("CheckboxField: the value to set is not properly initialized as an object or array.");
 }
 
 function removeCheckedValueFromData(checkboxFormData, optionValue) {
@@ -220,11 +228,11 @@ function removeCheckedValueFromData(checkboxFormData, optionValue) {
         return checkboxFormData;
     }
 
-    if (typeof checkboxFormData === 'object') {
+    if (typeof checkboxFormData === "object") {
         const arrayValuesCopy = Object.values(checkboxFormData);
         removeIfIncluded(arrayValuesCopy, optionValue);
         return arrayValuesCopy;
     }
 
-    throw new Error('CheckboxField: the value to set is not properly initialized as an object or array.');
+    throw new Error("CheckboxField: the value to set is not properly initialized as an object or array.");
 }

@@ -1,17 +1,17 @@
-import {ActionDependant} from "../../../engine/Actions.jsx";
-import {GlobalDataContext} from "../../../engine/GlobalDataContext.jsx";
-import {TemplateContext} from "../../../engine/TemplateContext.jsx";
-import {dataLocationToPath, evaluateAttributes, evaluateTemplateValue} from "../../../engine/TemplateSystem.jsx";
-import {View} from "../../../engine/View.jsx";
-import {useContext, useRef} from 'react';
-import {Form} from 'react-bootstrap';
+import { useContext, useRef } from "react";
+import { Form } from "react-bootstrap";
+import { ActionDependant } from "../../../engine/Actions.jsx";
+import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
+import { TemplateContext } from "../../../engine/TemplateContext.jsx";
+import { dataLocationToPath, evaluateAttributes, evaluateTemplateValue } from "../../../engine/TemplateSystem.jsx";
+import { View } from "../../../engine/View.jsx";
 
-export const SelectField = ({props, currentData, path, datafield}) => {
+export const SelectField = ({ props, currentData, path, datafield }) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
     const mainAttributesHolderRef = useRef(null);
 
-    const {updateData} = globalDataContext;
+    const { updateData } = globalDataContext;
 
     const dynamicOptions = props.dynamicOptions ?? undefined;
 
@@ -19,7 +19,7 @@ export const SelectField = ({props, currentData, path, datafield}) => {
 
     if (dynamicOptions) {
         // Build the options through the given data.
-        options = evaluateTemplateValue({valueToEvaluate: dynamicOptions, globalDataContext, templateContext}) ?? [];
+        options = evaluateTemplateValue({ valueToEvaluate: dynamicOptions, globalDataContext, templateContext }) ?? [];
     } else {
         options = props.options ?? [];
     }
@@ -28,14 +28,14 @@ export const SelectField = ({props, currentData, path, datafield}) => {
         attrs: props.attributes ?? {},
         globalDataContext,
         templateContext,
-        options: {normalizeBeforeEvaluation: true}
+        options: { normalizeBeforeEvaluation: true },
     });
 
     const inputAttributes = evaluateAttributes({
         attrs: props.inputAttributes ?? {},
         globalDataContext,
         templateContext,
-        options: {normalizeBeforeEvaluation: true}
+        options: { normalizeBeforeEvaluation: true },
     });
 
     // This is the data that contains the current value of SelectField.
@@ -51,23 +51,25 @@ export const SelectField = ({props, currentData, path, datafield}) => {
 
     if (dataLocation) {
         // A custom data location has been specified.
-        formData = evaluateTemplateValue({
-            globalDataContext: globalDataContext,
-            templateContext: templateContext,
-            valueToEvaluate: dataLocation,
-        }) ?? defaultFieldValue;
+        formData =
+            evaluateTemplateValue({
+                globalDataContext: globalDataContext,
+                templateContext: templateContext,
+                valueToEvaluate: dataLocation,
+            }) ?? defaultFieldValue;
 
         formDataPath = dataLocationToPath({
             dataLocation: dataLocation,
             currentPath: path,
             globalDataContext,
-            templateContext
+            templateContext,
         });
     } else {
         // Use the template data.
         if ((templateContext.templateData[datafield] ?? undefined) === undefined) {
             // Initialize the data for this component.
-            templateContext.templateData = (typeof templateContext.templateData === "object") ? templateContext.templateData : {};
+            templateContext.templateData =
+                typeof templateContext.templateData === "object" ? templateContext.templateData : {};
             templateContext.templateData[datafield] = defaultFieldValue;
         }
 
@@ -112,34 +114,37 @@ export const SelectField = ({props, currentData, path, datafield}) => {
                 // Find the option that matches the value.
                 // This is necessary because <select> elements only support string values,
                 // and the real value may be of a different type (e.g., number).
-                const selectedOption = options.find(opt => String(opt.value) === e.currentTarget.value);
+                const selectedOption = options.find((opt) => String(opt.value) === e.currentTarget.value);
                 valueToSet = selectedOption ? selectedOption.value : e.currentTarget.value;
                 break;
         }
 
         updateData(valueToSet, formDataPath);
-    }
+    };
 
     return (
         <ActionDependant {...props} attributesHolderRef={mainAttributesHolderRef}>
             <Form.Group {...attributes} ref={mainAttributesHolderRef} controlId={Math.random().toString()}>
-                {props.label && <Form.Label>
-                    <View
-                        currentData={currentData?.["label"] ?? undefined}
-                        datafield={"label"}
-                        path={path + ".label"}
-                        props={props.label}/>
-                </Form.Label>}
-                <Form.Select
-                    aria-label={props.label}
-                    onChange={changeValue}
-                    value={formData}
-                    {...inputAttributes}>
+                {props.label && (
+                    <Form.Label>
+                        <View
+                            currentData={currentData?.["label"] ?? undefined}
+                            datafield={"label"}
+                            path={path + ".label"}
+                            props={props.label}
+                        />
+                    </Form.Label>
+                )}
+                <Form.Select aria-label={props.label} onChange={changeValue} value={formData} {...inputAttributes}>
                     {options.map((item, ind) => {
-                        return <option key={'opt' + ind} value={item.value}>{item.label}</option>;
+                        return (
+                            <option key={"opt" + ind} value={item.value}>
+                                {item.label}
+                            </option>
+                        );
                     })}
                 </Form.Select>
             </Form.Group>
         </ActionDependant>
-    )
-}
+    );
+};

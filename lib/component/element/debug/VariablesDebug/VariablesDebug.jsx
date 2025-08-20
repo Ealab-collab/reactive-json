@@ -27,19 +27,10 @@ export const VariablesDebug = () => {
         setPortalContainer(container);
     }, []);
 
-    const data = useMemo(
-        () => templateContext?.templateData ?? {},
-        [templateContext]
-    );
+    const data = useMemo(() => templateContext?.templateData ?? {}, [templateContext]);
 
-    const jsonString = useMemo(
-        () => JSON.stringify(data, null, 2),
-        [data, templateContext]
-    );
-    const flatRows = useMemo(
-        () => flattenObject(data),
-        [data, templateContext]
-    );
+    const jsonString = useMemo(() => JSON.stringify(data, null, 2), [data, templateContext]);
+    const flatRows = useMemo(() => flattenObject(data), [data, templateContext]);
 
     const handleCopy = async () => {
         const copyButton = copyButtonRef.current;
@@ -47,12 +38,7 @@ export const VariablesDebug = () => {
             await navigator.clipboard.writeText(
                 mode === DebugMode.JSON
                     ? jsonString
-                    : flatRows
-                          .map(
-                              (row) =>
-                                  `${row.path}: ${JSON.stringify(row.value)}`
-                          )
-                          .join("\n")
+                    : flatRows.map((row) => `${row.path}: ${JSON.stringify(row.value)}`).join("\n")
             );
 
             if (!copyButton) return;
@@ -60,10 +46,7 @@ export const VariablesDebug = () => {
             copyButton.classList.add(styles.copyBtnSuccess);
             copyButton.textContent = "Copied!";
             setTimeout(() => {
-                copyButtonRef.current?.classList.remove(
-                    styles.copyBtnSuccess,
-                    styles.copyBtnError
-                );
+                copyButtonRef.current?.classList.remove(styles.copyBtnSuccess, styles.copyBtnError);
             }, 3000);
         } catch {
             copyButton?.classList.add(styles.copyBtnError);
@@ -75,62 +58,43 @@ export const VariablesDebug = () => {
 
     const content = (
         <div
-            className={`${styles.container} ${
-                isExpanded ? styles.expanded : ""
-            }`}
+            className={`${styles.container} ${isExpanded ? styles.expanded : ""}`}
             onClick={() => setIsExpanded((prevIsExpanded) => !prevIsExpanded)}
             role="button"
         >
             <div className={styles.header}>
-                <p style={{ margin: 0, fontWeight: 600 }}>Debug Variables <code>{templateContext.templatePath}</code></p>
-                <div
-                    className={styles.actions}
-                    onClick={(e) => e.stopPropagation()}
-                >
+                <p style={{ margin: 0, fontWeight: 600 }}>
+                    Debug Variables <code>{templateContext.templatePath}</code>
+                </p>
+                <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
                     {isExpanded && (
                         <>
                             <button
-                                className={`${styles.btn} ${
-                                    mode === DebugMode.LIST ? styles.active : ""
-                                }`}
+                                className={`${styles.btn} ${mode === DebugMode.LIST ? styles.active : ""}`}
                                 onClick={() => setMode(DebugMode.LIST)}
                             >
                                 List
                             </button>
                             <button
-                                className={`${styles.btn} ${
-                                    mode === DebugMode.JSON ? styles.active : ""
-                                }`}
+                                className={`${styles.btn} ${mode === DebugMode.JSON ? styles.active : ""}`}
                                 onClick={() => setMode(DebugMode.JSON)}
                             >
                                 JSON
                             </button>
                         </>
                     )}
-                    <button
-                        className={styles.btn}
-                        onClick={() =>
-                            setIsExpanded((prevIsExpanded) => !prevIsExpanded)
-                        }
-                    >
+                    <button className={styles.btn} onClick={() => setIsExpanded((prevIsExpanded) => !prevIsExpanded)}>
                         {isExpanded ? "Collapse" : "Expand"}
                     </button>
                     {isExpanded && (
-                        <button
-                            className={`${styles.btn} ${styles.copyBtn}`}
-                            onClick={handleCopy}
-                            ref={copyButtonRef}
-                        >
+                        <button className={`${styles.btn} ${styles.copyBtn}`} onClick={handleCopy} ref={copyButtonRef}>
                             Copy
                         </button>
                     )}
                 </div>
             </div>
             {isExpanded && (
-                <div
-                    className={styles.info}
-                    onClick={(e) => e.stopPropagation()}
-                >
+                <div className={styles.info} onClick={(e) => e.stopPropagation()}>
                     {mode === DebugMode.JSON ? (
                         <DebugJson jsonString={jsonString} />
                     ) : (

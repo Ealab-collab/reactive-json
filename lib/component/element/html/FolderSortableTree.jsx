@@ -1,24 +1,21 @@
-import {ActionDependant} from "../../../engine/Actions.jsx";
-import {GlobalDataContext} from "../../../engine/GlobalDataContext.jsx";
-import {TemplateContext} from "../../../engine/TemplateContext.jsx";
-import {evaluateTemplateValue} from "../../../engine/TemplateSystem.jsx";
-import {View} from "../../../engine/View.jsx";
-import {propsDataLocationToPathAndValue} from "../form/formElementsCommon.jsx";
 // clsx is included in dnd-kit-sortable-tree.
 import clsx from "clsx";
-import {FolderTreeItemWrapper} from "dnd-kit-sortable-tree";
-import {SortableTree} from "dnd-kit-sortable-tree";
-import {cloneDeep} from "lodash";
-import {forwardRef, useContext} from "react";
+import { FolderTreeItemWrapper } from "dnd-kit-sortable-tree";
+import { SortableTree } from "dnd-kit-sortable-tree";
+import { cloneDeep } from "lodash";
+import { forwardRef, useContext } from "react";
+import { ActionDependant } from "../../../engine/Actions.jsx";
+import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
+import { TemplateContext } from "../../../engine/TemplateContext.jsx";
+import { evaluateTemplateValue } from "../../../engine/TemplateSystem.jsx";
+import { View } from "../../../engine/View.jsx";
+import { propsDataLocationToPathAndValue } from "../form/formElementsCommon.jsx";
 
-export const FolderSortableTree = ({props, path, datafield}) => {
+export const FolderSortableTree = ({ props, path, datafield }) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
 
-    let {
-        formData: treeData,
-        formDataPath: treeDataPath,
-    } = propsDataLocationToPathAndValue({
+    let { formData: treeData, formDataPath: treeDataPath } = propsDataLocationToPathAndValue({
         currentPath: path,
         datafield: datafield,
         dataLocation: props.dataLocation,
@@ -47,7 +44,7 @@ export const FolderSortableTree = ({props, path, datafield}) => {
     const treeRootPath = evaluateTemplateValue({
         valueToEvaluate: props.treeRootPath ?? undefined,
         globalDataContext,
-        templateContext
+        templateContext,
     });
 
     /**
@@ -70,7 +67,7 @@ export const FolderSortableTree = ({props, path, datafield}) => {
      *
      * @type {boolean}
      */
-    const maxDepthIsAbsolute = (typeof treeRootPath !== "string") ? true : (props.maxDepthIsAbsolute ?? true);
+    const maxDepthIsAbsolute = typeof treeRootPath !== "string" ? true : props.maxDepthIsAbsolute ?? true;
 
     /**
      * Tells if we want to keep the base item when "treeRootPath" is defined.
@@ -170,7 +167,7 @@ export const FolderSortableTree = ({props, path, datafield}) => {
             });
         }
 
-        if ((treeRootPath !== undefined) && keepBaseItem) {
+        if (treeRootPath !== undefined && keepBaseItem) {
             // We are in a partial tree configuration,
             // and this tree has the base item kept in the hierarchy.
             // Fix the data and paths.
@@ -180,7 +177,7 @@ export const FolderSortableTree = ({props, path, datafield}) => {
         }
 
         globalDataContext.updateData(finalData, finalDataPath);
-    }
+    };
 
     const GenericTreeItemComponent = forwardRef((props, ref) => {
         const finalCurrentData = props.item.value ?? {};
@@ -217,26 +214,27 @@ export const FolderSortableTree = ({props, path, datafield}) => {
         // thanks to the SortableTreeItemCollapseButton component.
         const sortableTreeData = {};
 
-        sortableTreeData._treeAddCollapseButton = () => (
-            !!props.onCollapse && !!props.childCount &&
-            <button
-                onClick={(e) => {
-                    e.preventDefault();
-                    props.onCollapse?.();
-                }}
-                className={clsx(
-                    'dnd-sortable-tree_folder_tree-item-collapse_button',
-                    props.collapsed &&
-                    'dnd-sortable-tree_folder_tree-item-collapse_button-collapsed'
-                )}/>
-        );
+        sortableTreeData._treeAddCollapseButton = () =>
+            !!props.onCollapse &&
+            !!props.childCount && (
+                <button
+                    onClick={(e) => {
+                        e.preventDefault();
+                        props.onCollapse?.();
+                    }}
+                    className={clsx(
+                        "dnd-sortable-tree_folder_tree-item-collapse_button",
+                        props.collapsed && "dnd-sortable-tree_folder_tree-item-collapse_button-collapsed"
+                    )}
+                />
+            );
 
         if (maxDepth) {
             // A maximum depth has been defined for this tree.
             if (maxDepthIsAbsolute) {
-                props.item.canHaveChildren = (baseDepth + props.item.depth) < maxDepth;
+                props.item.canHaveChildren = baseDepth + props.item.depth < maxDepth;
             } else {
-                props.item.canHaveChildren = (props.item.depth) < maxDepth;
+                props.item.canHaveChildren = props.item.depth < maxDepth;
             }
         }
 
@@ -250,16 +248,16 @@ export const FolderSortableTree = ({props, path, datafield}) => {
                 data-htmlbuilder-tree-item-index={props.item.index}
                 data-htmlbuilder-tree-item-index1={props.item.index + 1}
                 data-htmlbuilder-tree-item-is-last={props.isLast}
-                ref={ref}>
-                <TemplateContext.Provider value={{
-                    templateData: finalCurrentData,
-                    templatePath: finalDataPath,
-                    sortableTreeData: sortableTreeData
-                }}>
-                    <View
-                        props={itemTemplate}
-                        currentData={finalCurrentData}
-                    />
+                ref={ref}
+            >
+                <TemplateContext.Provider
+                    value={{
+                        templateData: finalCurrentData,
+                        templatePath: finalDataPath,
+                        sortableTreeData: sortableTreeData,
+                    }}
+                >
+                    <View props={itemTemplate} currentData={finalCurrentData} />
                 </TemplateContext.Provider>
             </FolderTreeItemWrapper>
         );
@@ -277,7 +275,8 @@ export const FolderSortableTree = ({props, path, datafield}) => {
                 {...sortableTreeOptions}
                 items={clone}
                 onItemsChanged={onItemsChanged}
-                TreeItemComponent={GenericTreeItemComponent}/>
+                TreeItemComponent={GenericTreeItemComponent}
+            />
         </ActionDependant>
     );
 };

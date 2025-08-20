@@ -1,16 +1,16 @@
-import {Children, cloneElement, Fragment, isValidElement, useContext} from "react";
-import {GlobalDataContext} from "../../engine/GlobalDataContext.jsx";
-import {TemplateContext} from "../../engine/TemplateContext.jsx";
-import {addData} from "../reaction/addData.jsx";
-import {fetchData} from "../reaction/fetchData.jsx";
-import {moveData} from "../reaction/moveData.jsx";
-import {postMessage} from "../reaction/postMessage.jsx";
-import {redirectNow} from "../reaction/redirectNow.jsx";
-import {removeData} from "../reaction/removeData.jsx";
-import {setData} from "../reaction/setData.jsx";
-import {submitData} from "../reaction/submitData.jsx";
-import {triggerEvent} from "../reaction/triggerEvent.jsx";
-import {setClipboardData} from "../reaction/setClipboardData.jsx";
+import { Children, cloneElement, Fragment, isValidElement, useContext } from "react";
+import { GlobalDataContext } from "../../engine/GlobalDataContext.jsx";
+import { TemplateContext } from "../../engine/TemplateContext.jsx";
+import { addData } from "../reaction/addData.jsx";
+import { fetchData } from "../reaction/fetchData.jsx";
+import { moveData } from "../reaction/moveData.jsx";
+import { postMessage } from "../reaction/postMessage.jsx";
+import { redirectNow } from "../reaction/redirectNow.jsx";
+import { removeData } from "../reaction/removeData.jsx";
+import { setData } from "../reaction/setData.jsx";
+import { submitData } from "../reaction/submitData.jsx";
+import { triggerEvent } from "../reaction/triggerEvent.jsx";
+import { setClipboardData } from "../reaction/setClipboardData.jsx";
 
 /**
  * Functions that will be executed on specific events.
@@ -41,7 +41,7 @@ export const ReactOnEvent = (props) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
 
-    const {actionProps: reactionFunctionProps} = props;
+    const { actionProps: reactionFunctionProps } = props;
 
     // Event attributes to inject.
     const eventPropsForAttributes = {};
@@ -145,7 +145,7 @@ export const ReactOnEvent = (props) => {
      */
     const replaceEventPlaceholders = (source, event) => {
         if (Array.isArray(source)) {
-            return source.map(item => replaceEventPlaceholders(item, event));
+            return source.map((item) => replaceEventPlaceholders(item, event));
         }
 
         if (source && typeof source === "object") {
@@ -173,7 +173,8 @@ export const ReactOnEvent = (props) => {
                     continue;
                 }
 
-                const reactionFunction = singleReactionFunctionProps.what && (reactionFunctions[singleReactionFunctionProps.what] ?? null);
+                const reactionFunction =
+                    singleReactionFunctionProps.what && (reactionFunctions[singleReactionFunctionProps.what] ?? null);
 
                 if (!reactionFunction) {
                     continue;
@@ -183,7 +184,7 @@ export const ReactOnEvent = (props) => {
                 const preparedArgs = replaceEventPlaceholders(singleReactionFunctionProps, event);
 
                 // Call the reaction function with the props, the event details, and context data.
-                reactionFunction({args: preparedArgs, event, globalDataContext, templateContext});
+                reactionFunction({ args: preparedArgs, event, globalDataContext, templateContext });
 
                 if (preparedArgs.stopPropagation === true) {
                     // Stop executing reaction functions of this event early.
@@ -211,13 +212,13 @@ export const ReactOnEvent = (props) => {
 
         const childrenArray = Children.toArray(children);
 
-        return Children.map(childrenArray, child => {
+        return Children.map(childrenArray, (child) => {
             if (child.type === Fragment) {
                 // Dig deeper.
                 return recursiveMap(child?.props?.children);
             }
 
-            if (typeof child !== 'object' || !isValidElement(child)) {
+            if (typeof child !== "object" || !isValidElement(child)) {
                 // Not a React element that can welcome attributes.
                 return child;
             }
