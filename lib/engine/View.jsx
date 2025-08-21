@@ -1,31 +1,31 @@
-import {useContext} from 'react';
+import { useContext } from 'react';
 import { VariablesDebug } from '../component';
-import {CheckBoxField} from "../component/element/form/CheckBoxField.jsx";
-import {DateField} from "../component/element/form/DateField.jsx";
-import {NumberField} from "../component/element/form/NumberField.jsx";
-import {SelectField} from "../component/element/form/SelectField.jsx";
-import {TextAreaField} from "../component/element/form/TextAreaField.jsx";
-import {TextField} from "../component/element/form/TextField.jsx";
-import {AccordionItem} from "../component/element/html/AccordionItem.jsx";
-import {FolderSortableTree} from "../component/element/html/FolderSortableTree.jsx";
-import {FormatNumeral} from "../component/element/html/FormatNumeral.jsx";
-import {Html} from "../component/element/html/Html.jsx";
-import {LabelFromValue} from "../component/element/html/LabelFromValue.jsx";
-import {Modal} from "../component/element/html/Modal.jsx";
-import {PreformattedMarkup} from "../component/element/html/PreformattedMarkup.jsx";
-import {SortableTreeItemCollapseButton} from "../component/element/html/SortableTreeItemCollapseButton.jsx";
-import {Tabs} from "../component/element/html/Tabs.jsx";
-import {BootstrapElement} from "../component/element/special/BootstrapElement.jsx";
-import {Count} from "../component/element/special/Count.jsx";
-import {DataFilter} from "../component/element/special/DataFilter.jsx";
-import {DelayedActions} from "../component/element/special/DelayedActions.jsx";
-import {PageControls} from "../component/element/special/PageControls.jsx";
-import {Phantom} from "../component/element/special/Phantom.jsx";
-import {ReactiveJsonSubroot} from "../component/element/special/ReactiveJsonSubroot.jsx";
-import {Switch} from "../component/element/special/Switch.jsx";
-import {GlobalDataContext} from "./GlobalDataContext.jsx";
-import {TemplateContext} from "./TemplateContext.jsx";
-import TemplateValue, {dataLocationToPath, evaluateTemplateValue} from "./TemplateSystem.jsx";
+import { CheckBoxField } from "../component/element/form/CheckBoxField.jsx";
+import { DateField } from "../component/element/form/DateField.jsx";
+import { NumberField } from "../component/element/form/NumberField.jsx";
+import { SelectField } from "../component/element/form/SelectField.jsx";
+import { TextAreaField } from "../component/element/form/TextAreaField.jsx";
+import { TextField } from "../component/element/form/TextField.jsx";
+import { AccordionItem } from "../component/element/html/AccordionItem.jsx";
+import { FolderSortableTree } from "../component/element/html/FolderSortableTree.jsx";
+import { FormatNumeral } from "../component/element/html/FormatNumeral.jsx";
+import { Html } from "../component/element/html/Html.jsx";
+import { LabelFromValue } from "../component/element/html/LabelFromValue.jsx";
+import { Modal } from "../component/element/html/Modal.jsx";
+import { PreformattedMarkup } from "../component/element/html/PreformattedMarkup.jsx";
+import { SortableTreeItemCollapseButton } from "../component/element/html/SortableTreeItemCollapseButton.jsx";
+import { Tabs } from "../component/element/html/Tabs.jsx";
+import { BootstrapElement } from "../component/element/special/BootstrapElement.jsx";
+import { Count } from "../component/element/special/Count.jsx";
+import { DataFilter } from "../component/element/special/DataFilter.jsx";
+import { DelayedActions } from "../component/element/special/DelayedActions.jsx";
+import { PageControls } from "../component/element/special/PageControls.jsx";
+import { Phantom } from "../component/element/special/Phantom.jsx";
+import { ReactiveJsonSubroot } from "../component/element/special/ReactiveJsonSubroot.jsx";
+import { Switch } from "../component/element/special/Switch.jsx";
+import { GlobalDataContext } from "./GlobalDataContext.jsx";
+import { TemplateContext } from "./TemplateContext.jsx";
+import TemplateValue, { dataLocationToPath, evaluateTemplateValue } from "./TemplateSystem.jsx";
 import {
     Accordion,
     Alert,
@@ -76,11 +76,15 @@ export function View({props, currentData, datafield, path}) {
         BsButton: Button,
     };
 
+
+
     const {element} = globalDataContext;
 
     if (currentData === undefined) {
         currentData = "";
     }
+
+    // No more component registration - we'll use a different approach
 
     if (props?.type) {
         // A type is specified.
@@ -128,11 +132,13 @@ export function View({props, currentData, datafield, path}) {
             props.tag = props.tag ?? props.type;
         }
 
-        return <ComponentToRender
-            path={path}
-            props={props}
-            currentData={currentData}
-            datafield={datafield}/>;
+        return (
+            <ComponentToRender
+                path={path}
+                props={props}
+                currentData={currentData}
+                datafield={datafield}/>
+        );
     }
 
     if (props?.load) {
@@ -175,7 +181,6 @@ export function View({props, currentData, datafield, path}) {
         const {load, customDataLocation, ...propsWithoutLoadKey} = props;
         loadedRenderArray = {...loadedRenderArray, ...propsWithoutLoadKey};
 
-        // Now that we have our render array, recurse on the View component.
         if (props.keepTemplateContext) {
             // Keep the current template context.
             return (
@@ -203,27 +208,35 @@ export function View({props, currentData, datafield, path}) {
 
     // Try to go deeper to render something.
     if (Array.isArray(props)) {
-        return props.map((item, index) =>
-            <View
-                currentData={currentData[index] ?? undefined}
-                datafield={index}
-                key={path + "." + index}
-                path={path + "." + index}
-                props={item ?? undefined}
-            />
+        return (
+            <>
+                {props.map((item, index) =>
+                    <View
+                        key={path + "." + index}
+                        currentData={currentData[index] ?? undefined}
+                        datafield={index}
+                        path={path + "." + index}
+                        props={item ?? undefined}
+                    />
+                )}
+            </>
         );
     }
 
     if (typeof props === "object") {
-        return Object.entries(props).map(([itemKey, item]) => {
-                return <View
-                    currentData={currentData[itemKey] ?? undefined}
-                    datafield={itemKey ?? undefined}
-                    key={path + "." + itemKey}
-                    path={path + "." + itemKey}
-                    props={item}
-                />
-            }
+        return (
+            <>
+                {Object.entries(props).map(([itemKey, item]) => {
+                        return <View
+                            key={path + "." + itemKey}
+                            currentData={currentData[itemKey] ?? undefined}
+                            datafield={itemKey ?? undefined}
+                            path={path + "." + itemKey}
+                            props={item}
+                        />
+                    }
+                )}
+            </>
         );
     }
 

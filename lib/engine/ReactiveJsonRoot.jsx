@@ -6,6 +6,8 @@ import { GlobalDataContextProvider } from "./GlobalDataContextProvider.jsx";
 import ParsingDebugDisplay from "./ParsingDebugDisplay/ParsingDebugDisplay.jsx";
 import { TemplateContext } from "./TemplateContext.jsx";
 import { View } from "./View.jsx";
+import { DebugProvider } from "./DebugContext.jsx";
+import { DebugOverlay } from "../component/debug/DebugOverlay/index.js";
 import {
     alterData,
     applyDataMapping,
@@ -768,44 +770,48 @@ export const ReactiveJsonRoot = ({
 
     const mainBuild = (
         <EventDispatcherProvider>
-            <GlobalDataContextProvider
-                value={{
-                    element: templates,
-                    headersForRjBuild,
-                    plugins: mergedPlugins,
-                    setData,
-                    setRawAppRjBuild,
-                    templateData: currentData.realCurrentData,
-                    templatePath: "data",
-                    updateData,
-                }}
-            >
-                <TemplateContext.Provider
+            <DebugProvider>
+                <GlobalDataContextProvider
                     value={{
+                        debugMode: debugMode_bool,
+                        element: templates,
+                        headersForRjBuild,
+                        plugins: mergedPlugins,
+                        setData,
+                        setRawAppRjBuild,
                         templateData: currentData.realCurrentData,
                         templatePath: "data",
+                        updateData,
                     }}
                 >
-                    {debugMode_bool && DebugModeContentWrapper ? (
-                        <DebugModeContentWrapper>
-                            {rootViews}
-                        </DebugModeContentWrapper>
-                    ) : (
-                        rootViews
-                    )}
-                </TemplateContext.Provider>
-                {debugMode_bool
-                    ? DebugModeDataWrapper && (
-                          <DebugModeDataWrapper>
-                              {JSON.stringify(
-                                  currentData.realCurrentData,
-                                  null,
-                                  "  "
-                              )}
-                          </DebugModeDataWrapper>
-                      )
-                    : null}
-            </GlobalDataContextProvider>
+                    <TemplateContext.Provider
+                        value={{
+                            templateData: currentData.realCurrentData,
+                            templatePath: "data",
+                        }}
+                    >
+                        {debugMode_bool && DebugModeContentWrapper ? (
+                            <DebugModeContentWrapper>
+                                {rootViews}
+                            </DebugModeContentWrapper>
+                        ) : (
+                            rootViews
+                        )}
+                    </TemplateContext.Provider>
+                    {debugMode_bool
+                        ? DebugModeDataWrapper && (
+                              <DebugModeDataWrapper>
+                                  {JSON.stringify(
+                                      currentData.realCurrentData,
+                                      null,
+                                      "  "
+                                  )}
+                              </DebugModeDataWrapper>
+                          )
+                        : null}
+                    {debugMode_bool && <DebugOverlay />}
+                </GlobalDataContextProvider>
+            </DebugProvider>
         </EventDispatcherProvider>
     );
 
