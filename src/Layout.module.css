@@ -1,0 +1,104 @@
+/* Styles pour remplacer react-bootstrap */
+
+/* Container */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+/* Grid system simplifié */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.col9 {
+    flex: 0 0 calc(75% - 0.75rem);
+    max-width: calc(75% - 0.75rem);
+}
+
+.col3 {
+    flex: 0 0 calc(25% - 0.75rem);
+    max-width: calc(25% - 0.75rem);
+}
+
+/* Navbar */
+.navbar {
+    background-color: #f8f9fa;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbarBrand {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #212529;
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+.navbarBrand:hover {
+    color: #212529;
+    text-decoration: none;
+}
+
+.navbarNav {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 1rem;
+}
+
+.navLink {
+    color: #007bff;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.navLink:hover {
+    color: #0056b3;
+    background-color: #e9ecef;
+}
+
+.logo {
+    width: 2rem;
+    height: 2rem;
+    margin-right: 0.5rem;
+}
+
+/* Debug styles */
+.debugData pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    border: 1px solid #dee2e6;
+    overflow-x: auto;
+    font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .navbarNav {
+        flex-direction: column;
+        width: 100%;
+        margin-top: 1rem;
+    }
+    
+    .col9, .col3 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}

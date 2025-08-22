@@ -1,7 +1,7 @@
-import {Col, Row} from "react-bootstrap";
 import {Layout} from "./Layout.tsx";
 import {ReactiveJsonRoot} from "../lib/engine/ReactiveJsonRoot.jsx";
 import {stringToBoolean} from "../lib/engine/utility";
+import styles from "./Layout.module.css";
 
 export function Page({buildSourcePath, rjBuildFetchMethod}) {
     const filePath = buildSourcePath ?? new URL(window.location).searchParams.get("file_path") ?? "/rjs-build/home.yaml";
@@ -10,15 +10,15 @@ export function Page({buildSourcePath, rjBuildFetchMethod}) {
 
     const additionalProps = {
         DebugModeContentWrapper: ({children}) => {
-            return <Col xs={9}>{children}</Col>;
+            return <div className={styles.col9}>{children}</div>;
         },
         DebugModeDataWrapper: ({children}) => {
-            return <Col xs={3}>
+            return <div className={`${styles.col3} ${styles.debugData}`}>
                 <pre>{children}</pre>
-            </Col>;
+            </div>;
         },
         DebugModeRootWrapper: ({children}) => {
-            return <Layout><Row>{children}</Row></Layout>
+            return <Layout><div className={styles.row}>{children}</div></Layout>
         },
     };
 

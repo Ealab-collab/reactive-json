@@ -1,30 +1,30 @@
 import reactiveJsonLogo from "./assets/react.svg";
-import { Navbar, Nav, Container } from "react-bootstrap";
+import styles from "./Layout.module.css";
 
 export const Layout = ({ children }) => {
     return (
         <>
-            <Navbar bg="light" expand="lg">
-                <Navbar.Brand href="/">
+            <nav className={styles.navbar}>
+                <a href="/" className={styles.navbarBrand}>
                     <img
                         src={reactiveJsonLogo}
-                        className="logo react"
+                        className={styles.logo}
                         alt="Reactive-JSON logo"
-                    />{" "}
+                    />
                     reactive-json demo
-                </Navbar.Brand>
-                <Navbar.Toggle aria-controls="basic-navbar-nav" />
-                <Navbar.Collapse id="basic-navbar-nav">
-                    <Nav className="mr-auto">
-                        <Nav.Link href="/">Home</Nav.Link>
-                        <Nav.Link href="/demo">Demo</Nav.Link>
-                    </Nav>
-                </Navbar.Collapse>
-            </Navbar>
-            <Container>
+                </a>
+                <ul className={styles.navbarNav}>
+                    <li>
+                        <a href="/" className={styles.navLink}>Home</a>
+                    </li>
+                    <li>
+                        <a href="/demo" className={styles.navLink}>Demo</a>
+                    </li>
+                </ul>
+            </nav>
+            <div className={styles.container}>
                 {children}
-                <div id="global-error-debug-container"></div>
-            </Container>
+            </div>
         </>
     );
 };
