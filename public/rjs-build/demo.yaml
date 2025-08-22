@@ -1,4 +1,9 @@
 renderView:
+  - type: link
+    attributes:
+      rel: stylesheet
+      href: /rjs-build/demo-simple.css
+
   - type: div
     content:
       type: ReactiveJsonSubroot
@@ -13,53 +18,68 @@ renderView:
   - type: h2
     content: Static content
 
-  - type: BsAccordion
+  - type: div
     attributes:
-      defaultActiveKey: [0]
+      class: simple-accordion
     content:
-      - type: AccordionItem
-        header:
-          type: div
-          content: First accordion item
-        body:
-          type: div
-          content: Content of the first accordion item.
-      - type: AccordionItem
-        header:
-          type: div
-          content: Second accordion item
-        body:
+      - type: div
+        attributes:
+          class: simple-accordion-item
+        content:
           - type: div
             attributes:
-              class: p-2 text-center
-            content: Content of the second accordion item.
+              class: simple-accordion-header
+            content: First accordion item
           - type: div
             attributes:
-              class: row
+              class: simple-accordion-body
+            content: Content of the first accordion item.
+      - type: div
+        attributes:
+          class: simple-accordion-item
+        content:
+          - type: div
+            attributes:
+              class: simple-accordion-header
+            content: Second accordion item
+          - type: div
+            attributes:
+              class: simple-accordion-body
             content:
               - type: div
                 attributes:
-                  class: col
-                content: Of course, you can put any component you want in it. This is a column...
+                  class: text-center
+                content: Content of the second accordion item.
               - type: div
                 attributes:
-                  class: col
+                  class: simple-row
                 content:
-                  ...and this is another column, made with bootstrap's columns. Please note we have the bootstrap CSS
-                  used here, but our tool is compatible with any CSS system.
-      - type: AccordionItem
-        header:
-          type: div
-          content:
-            - "Third "
-            - type: span
-              attributes:
-                class: fw-bold
-              content: accordion
-            - " item "
-        body:
-          type: div
-          content: Demonstrates that you can customize in the accordion item heading, as you could in any other place.
+                  - type: div
+                    attributes:
+                      class: simple-col
+                    content: Of course, you can put any component you want in it. This is a column...
+                  - type: div
+                    attributes:
+                      class: simple-col
+                    content: ...and this is another column. Our tool is compatible with any CSS system.
+      - type: div
+        attributes:
+          class: simple-accordion-item
+        content:
+          - type: div
+            attributes:
+              class: simple-accordion-header
+            content:
+              - "Third "
+              - type: span
+                attributes:
+                  class: fw-bold
+                content: accordion
+              - " item "
+          - type: div
+            attributes:
+              class: simple-accordion-body
+            content: Demonstrates that you can customize in the accordion item heading, as you could in any other place.
 
   - type: hr
 
@@ -71,7 +91,7 @@ renderView:
 
   - type: div
     attributes:
-      class: alert alert-warning mb-3
+      class: simple-alert simple-alert-warning mb-3
     content:
       - type: strong
         content: "Blocking vs Non-blocking loading: "
@@ -85,26 +105,26 @@ renderView:
 
   - type: div
     attributes:
-      class: row
+      class: simple-row
     content:
       - type: div
         attributes:
-          class: col-md-4
+          class: simple-col-4
         content:
           - type: h3
             content: 
               - "User Profile "
               - type: span
                 attributes:
-                  class: badge bg-danger ms-2
+                  class: simple-badge simple-badge-danger ms-2
                 content: BLOCKING
           - type: div
             attributes:
-              class: card
+              class: simple-card
             content:
               - type: div
                 attributes:
-                  class: card-body
+                  class: simple-card-body
                 content:
                   - type: div
                     attributes:
@@ -116,7 +136,7 @@ renderView:
                         content: ~~.currentUser.name
                       - type: span
                         attributes:
-                          class: badge bg-primary
+                          class: simple-badge simple-badge-primary
                         content: ~~.currentUser.role
                   - type: p
                     content:
@@ -131,22 +151,22 @@ renderView:
 
       - type: div
         attributes:
-          class: col-md-4
+          class: simple-col-4
         content:
           - type: h3
             content:
               - "System Config "
               - type: span
                 attributes:
-                  class: badge bg-success ms-2
+                  class: simple-badge simple-badge-success ms-2
                 content: NON-BLOCKING
           - type: div
             attributes:
-              class: card
+              class: simple-card
             content:
               - type: div
                 attributes:
-                  class: card-body
+                  class: simple-card-body
                 content:
                   - type: div
                     attributes:
@@ -172,7 +192,7 @@ renderView:
                           - "Environment: "
                           - type: span
                             attributes:
-                              class: badge bg-info
+                              class: simple-badge simple-badge-info
                             content: ~~.systemConfig.environment
                       - type: h6
                         content: Features
@@ -219,22 +239,22 @@ renderView:
 
       - type: div
         attributes:
-          class: col-md-4
+          class: simple-col-4
         content:
           - type: h3
             content:
               - "Notifications "
               - type: span
                 attributes:
-                  class: badge bg-success ms-2
+                  class: simple-badge simple-badge-success ms-2
                 content: NON-BLOCKING
           - type: div
             attributes:
-              class: card
+              class: simple-card
             content:
               - type: div
                 attributes:
-                  class: card-body
+                  class: simple-card-body
                 content:
                   - type: div
                     attributes:
@@ -255,7 +275,7 @@ renderView:
                           - "Frequency: "
                           - type: span
                             attributes:
-                              class: badge bg-secondary
+                              class: simple-badge simple-badge-secondary
                             content: ~~.notifications.frequency
                       - type: h6
                         content: Notification Types
@@ -310,21 +330,21 @@ renderView:
 
   - type: div
     attributes:
-      class: row
+      class: simple-row
     content:
       - type: div
         attributes:
-          class: col-md-6
+          class: simple-col-6
         content:
           - type: h3
             content: "Basic Usage"
           - type: div
             attributes:
-              class: card
+              class: simple-card
             content:
               - type: div
                 attributes:
-                  class: card-body
+                  class: simple-card-body
                 content:
                   - type: div
                     attributes:
@@ -332,7 +352,7 @@ renderView:
                     content: ["Current value: ", ~~.setDataTests.myValue]
                   - type: button
                     attributes:
-                      class: btn btn-primary me-2
+                      class: simple-btn simple-btn-primary me-2
                     content: "Set value to 'Hello World'"
                     actions:
                       - what: setData
@@ -341,7 +361,7 @@ renderView:
                         value: "Hello World"
                   - type: button
                     attributes:
-                      class: btn btn-secondary
+                      class: simple-btn simple-btn-secondary
                     content: "Set value to 'Another value'"
                     actions:
                       - what: setData
@@ -351,27 +371,38 @@ renderView:
 
       - type: div
         attributes:
-          class: col-md-6
+          class: simple-col-6
         content:
           - type: h3
             content: "Conditional Usage"
           - type: div
             attributes:
-              class: card
+              class: simple-card
             content:
               - type: div
                 attributes:
-                  class: card-body
+                  class: simple-card-body
                 content:
-                  - type: TextField
-                    dataLocation: ~~.setDataTests.username
-                    label: "Username:"
-                    placeholder: "Enter username"
+                  - type: div
                     attributes:
                       class: mb-3
+                    content:
+                      - type: label
+                        content: "Username:"
+                      - type: input
+                        attributes:
+                          type: text
+                          placeholder: "Enter username"
+                          class: simple-input
+                          value: ~~.setDataTests.username
+                        actions:
+                          - what: setData
+                            on: change
+                            path: ~~.setDataTests.username
+                            value: <reactive-json:event-new-value>
                   - type: button
                     attributes:
-                      class: btn btn-success mb-3
+                      class: simple-btn simple-btn-success mb-3
                     content: "Set Welcome Message"
                     actions:
                       - what: setData
@@ -388,7 +419,7 @@ renderView:
                         isEmpty: true
                   - type: div
                     attributes:
-                      class: alert alert-info
+                      class: simple-alert simple-alert-info
                     content: ~~.setDataTests.message
                     actions:
                       - what: hide
@@ -405,21 +436,21 @@ renderView:
 
   - type: div
     attributes:
-      class: row
+      class: simple-row
     content:
       - type: div
         attributes:
-          class: col-md-6
+          class: simple-col-6
         content:
           - type: h3
             content: "Basic Mapping"
           - type: div
             attributes:
-              class: card
+              class: simple-card
             content:
               - type: div
                 attributes:
-                  class: card-body
+                  class: simple-card-body
                 content:
                   - type: div
                     attributes:
@@ -441,7 +472,7 @@ renderView:
                         content: ~~.mappingTests.theme
                   - type: button
                     attributes:
-                      class: btn btn-primary
+                      class: simple-btn simple-btn-primary
                     content: "Test Basic Mapping"
                     actions:
                       - what: fetchData
@@ -460,17 +491,17 @@ renderView:
 
       - type: div
         attributes:
-          class: col-md-6
+          class: simple-col-6
         content:
           - type: h3
             content: "Error Handling & Fallbacks"
           - type: div
             attributes:
-              class: card
+              class: simple-card
             content:
               - type: div
                 attributes:
-                  class: card-body
+                  class: simple-card-body
                 content:
                   - type: div
                     attributes:
@@ -492,7 +523,7 @@ renderView:
                         content: ~~.mappingTests.errorResult
                   - type: button
                     attributes:
-                      class: btn btn-warning
+                      class: simple-btn simple-btn-warning
                     content: "Test Error Handling"
                     actions:
                       - what: fetchData
@@ -519,21 +550,21 @@ renderView:
 
   - type: div
     attributes:
-      class: row mt-4
+      class: simple-row mt-4
     content:
       - type: div
         attributes:
-          class: col-md-6
+          class: simple-col-6
         content:
           - type: h3
             content: "Default Values"
           - type: div
             attributes:
-              class: card
+              class: simple-card
             content:
               - type: div
                 attributes:
-                  class: card-body
+                  class: simple-card-body
                 content:
                   - type: div
                     attributes:
@@ -547,7 +578,7 @@ renderView:
                         content: ~~.mappingTests.config.language
                   - type: button
                     attributes:
-                      class: btn btn-info
+                      class: simple-btn simple-btn-info
                     content: "Test Default Values"
                     actions:
                       - what: fetchData
@@ -568,17 +599,17 @@ renderView:
 
       - type: div
         attributes:
-          class: col-md-6
+          class: simple-col-6
         content:
           - type: h3
             content: "Current Mapping Data"
           - type: div
             attributes:
-              class: card
+              class: simple-card
             content:
               - type: div
                 attributes:
-                  class: card-body
+                  class: simple-card-body
                 content:
                   - type: div
                     attributes:
@@ -657,13 +688,21 @@ templates:
       content: We will now demonstrate how to build dynamic interfaces.
 
 
-    - type: TextField
-      placeholder: Insert some text to search here...
-      dataLocation: ~~._search
-
-    - type: BsButton
+    - type: input
       attributes:
-        class: btn btn-link
+        type: text
+        placeholder: Insert some text to search here...
+        class: simple-input
+        value: ~~._search
+      actions:
+        - what: setData
+          on: change
+          path: ~~._search
+          value: <reactive-json:event-new-value>
+
+    - type: button
+      attributes:
+        class: simple-btn simple-btn-link
       content: Select All
       actions:
         - what: postMessage
@@ -671,9 +710,9 @@ templates:
           message:
             actor: select_all
 
-    - type: BsButton
+    - type: button
       attributes:
-        class: btn btn-link
+        class: simple-btn simple-btn-link
       content: Unselect All
       actions:
         - what: postMessage
@@ -681,7 +720,7 @@ templates:
           message:
             actor: unselect_all
 
-    - type: BsButton
+    - type: button
       content: Bulk delete
       actions:
         - what: hide
@@ -696,7 +735,7 @@ templates:
 
     - type: table
       attributes:
-        class: table
+        class: simple-table
       content:
         type: tbody
         content:
@@ -718,7 +757,7 @@ templates:
                 content:
                   type: PageControls
 
-    - type: BsButton
+    - type: button
       content: Add a row
       actions:
         - what: addData
@@ -744,11 +783,16 @@ templates:
       select:
         type: td
         content:
-          type: CheckBoxField
-          dataLocation: ~.selected
-          options:
-            - value: true
+          type: input
+          attributes:
+            type: checkbox
+            class: simple-checkbox
+            checked: ~.selected
           actions:
+            - what: setData
+              on: change
+              path: ~.selected
+              value: <reactive-json:event-new-value>
             - what: setData
               path: ~.selected
               value: true
@@ -769,29 +813,66 @@ templates:
       actions:
         type: td
         content:
-          - type: BsButton
+          - type: button
             content: Edit
+            attributes:
+              class: simple-btn simple-btn-primary
             actions:
               - what: setData
                 on: click
                 path: ~._openEditModal
                 value: true
-          - type: Modal
-            showBoolPath: ~._openEditModal
-            headerTitle:
-              - "Edit the content "
-              - type: em
-                content: ~.title
-            body:
-              - type: TextField
-                dataLocation: ~.title
-                label: Content title
-              - type: BsButton
-                content: OK
-                actions:
-                  - what: setData
-                    on: click
-                    path: ~._openEditModal
+              - what: hide
+                when: ~._openEditModal
+                is: true
+          - type: div
+            attributes:
+              class: simple-card
+            actions:
+              - what: hide
+                when: ~._openEditModal
+                isEmpty: true
+            content:
+              - type: div
+                attributes:
+                  class: simple-card-body
+                content:
+                  - type: h6
+                    content: Edit content
+                  - type: div
+                    attributes:
+                      class: mb-3
+                    content:
+                      - type: label
+                        content: "Content title:"
+                      - type: input
+                        attributes:
+                          type: text
+                          class: simple-input
+                          value: ~.title
+                        actions:
+                          - what: setData
+                            on: change
+                            path: ~.title
+                            value: <reactive-json:event-new-value>
+                  - type: button
+                    content: OK
+                    attributes:
+                      class: simple-btn simple-btn-success me-2
+                    actions:
+                      - what: setData
+                        on: click
+                        path: ~._openEditModal
+                        value: false
+                  - type: button
+                    content: Cancel
+                    attributes:
+                      class: simple-btn simple-btn-secondary
+                    actions:
+                      - what: setData
+                        on: click
+                        path: ~._openEditModal
+                        value: false
 
 
 

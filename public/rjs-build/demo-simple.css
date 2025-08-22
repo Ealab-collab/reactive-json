@@ -1,0 +1,285 @@
+/* Styles simples pour remplacer Bootstrap dans demo.yaml */
+
+/* Layout */
+.simple-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.simple-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.simple-col {
+    flex: 1;
+    min-width: 300px;
+}
+
+.simple-col-4 {
+    flex: 0 0 calc(33.333% - 0.67rem);
+    min-width: 250px;
+}
+
+.simple-col-6 {
+    flex: 0 0 calc(50% - 0.5rem);
+    min-width: 300px;
+}
+
+/* Cards */
+.simple-card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    background: #fff;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.simple-card-body {
+    padding: 1.25rem;
+}
+
+/* Buttons */
+.simple-btn {
+    display: inline-block;
+    padding: 0.375rem 0.75rem;
+    margin: 0.25rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: 0.375rem;
+    border: 1px solid transparent;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+}
+
+.simple-btn-primary {
+    color: #fff;
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.simple-btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+.simple-btn-secondary {
+    color: #fff;
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.simple-btn-success {
+    color: #fff;
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.simple-btn-warning {
+    color: #000;
+    background-color: #ffc107;
+    border-color: #ffc107;
+}
+
+.simple-btn-info {
+    color: #000;
+    background-color: #0dcaf0;
+    border-color: #0dcaf0;
+}
+
+.simple-btn-link {
+    color: #0d6efd;
+    background-color: transparent;
+    border-color: transparent;
+    text-decoration: underline;
+}
+
+/* Alerts */
+.simple-alert {
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.375rem;
+}
+
+.simple-alert-warning {
+    color: #664d03;
+    background-color: #fff3cd;
+    border-color: #ffecb5;
+}
+
+.simple-alert-info {
+    color: #055160;
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+}
+
+/* Badges */
+.simple-badge {
+    display: inline-block;
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.375rem;
+    margin-left: 0.5rem;
+}
+
+.simple-badge-primary {
+    color: #fff;
+    background-color: #0d6efd;
+}
+
+.simple-badge-success {
+    color: #fff;
+    background-color: #198754;
+}
+
+.simple-badge-danger {
+    color: #fff;
+    background-color: #dc3545;
+}
+
+.simple-badge-secondary {
+    color: #fff;
+    background-color: #6c757d;
+}
+
+.simple-badge-info {
+    color: #000;
+    background-color: #0dcaf0;
+}
+
+/* Tables */
+.simple-table {
+    width: 100%;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+}
+
+.simple-table th,
+.simple-table td {
+    padding: 0.5rem;
+    border-bottom: 1px solid #dee2e6;
+    text-align: left;
+}
+
+.simple-table th {
+    font-weight: bold;
+    background-color: #f8f9fa;
+}
+
+/* Form elements */
+.simple-input {
+    display: block;
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+}
+
+.simple-input:focus {
+    outline: 0;
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.simple-checkbox {
+    margin-right: 0.5rem;
+}
+
+/* Utility classes */
+.text-center {
+    text-align: center;
+}
+
+.text-success {
+    color: #198754;
+}
+
+.text-danger {
+    color: #dc3545;
+}
+
+.text-muted {
+    color: #6c757d;
+}
+
+.fw-bold {
+    font-weight: bold;
+}
+
+.fst-italic {
+    font-style: italic;
+}
+
+.mb-2 {
+    margin-bottom: 0.5rem;
+}
+
+.mb-3 {
+    margin-bottom: 1rem;
+}
+
+.me-2 {
+    margin-right: 0.5rem;
+}
+
+.ms-2 {
+    margin-left: 0.5rem;
+}
+
+.mt-4 {
+    margin-top: 1.5rem;
+}
+
+/* Accordion simple */
+.simple-accordion {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+}
+
+.simple-accordion-item {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.simple-accordion-item:last-child {
+    border-bottom: none;
+}
+
+.simple-accordion-header {
+    padding: 1rem;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    font-weight: bold;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.simple-accordion-body {
+    padding: 1rem;
+}
+
+@media (max-width: 768px) {
+    .simple-row {
+        flex-direction: column;
+    }
+    
+    .simple-col,
+    .simple-col-4,
+    .simple-col-6 {
+        flex: 1 1 100%;
+        min-width: auto;
+    }
+}
