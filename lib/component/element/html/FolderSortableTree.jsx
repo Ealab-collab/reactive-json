@@ -9,7 +9,7 @@ import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
 import { TemplateContext } from "../../../engine/TemplateContext.jsx";
 import { evaluateTemplateValue } from "../../../engine/TemplateSystem.jsx";
 import { View } from "../../../engine/View.jsx";
-import { propsDataLocationToPathAndValue } from "../form/formElementsCommon.jsx";
+import { propsDataLocationToPathAndValue } from "../../../engine/utility/formElementsCommon.jsx";
 
 export const FolderSortableTree = ({ props, path, datafield }) => {
     const globalDataContext = useContext(GlobalDataContext);

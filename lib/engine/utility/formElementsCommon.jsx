@@ -1,4 +1,4 @@
-import { dataLocationToPath, evaluateTemplateValue } from "../../../engine/TemplateSystem.jsx";
+import { dataLocationToPath, evaluateTemplateValue } from "../TemplateSystem.jsx";
 
 /**
  * Gets the path and the data for the specified dataLocation and contexts.

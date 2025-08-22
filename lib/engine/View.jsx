@@ -1,21 +1,21 @@
 import {useContext} from 'react';
 import { VariablesDebug } from '../component';
-import {CheckBoxField} from "../component/element/form/CheckBoxField.jsx";
-import {DateField} from "../component/element/form/DateField.jsx";
-import {NumberField} from "../component/element/form/NumberField.jsx";
-import {SelectField} from "../component/element/form/SelectField.jsx";
-import {TextAreaField} from "../component/element/form/TextAreaField.jsx";
-import {TextField} from "../component/element/form/TextField.jsx";
-import {AccordionItem} from "../component/element/html/AccordionItem.jsx";
+//import {CheckBoxField} from "../../../reactive-json-bootstrap/lib/component/element/form/CheckBoxField.js";
+//import {DateField} from "../../../reactive-json-bootstrap/lib/component/element/form/DateField.js";
+//import {NumberField} from "../../../reactive-json-bootstrap/lib/component/element/form/NumberField.js";
+//import {SelectField} from "../../../reactive-json-bootstrap/lib/component/element/form/SelectField.js";
+//import {TextAreaField} from "../../../reactive-json-bootstrap/lib/component/element/form/TextAreaField.js";
+//import {TextField} from "../../../reactive-json-bootstrap/lib/component/element/form/TextField.js";
+import {AccordionItem} from "../../../reactive-json-bootstrap/lib/component/element/html/AccordionItem.jsx";
 import {FolderSortableTree} from "../component/element/html/FolderSortableTree.jsx";
 import {FormatNumeral} from "../component/element/html/FormatNumeral.jsx";
 import {Html} from "../component/element/html/Html.jsx";
 import {LabelFromValue} from "../component/element/html/LabelFromValue.jsx";
-import {Modal} from "../component/element/html/Modal.jsx";
+import {Modal} from "../../../reactive-json-bootstrap/lib/component/element/html/Modal.jsx";
 import {PreformattedMarkup} from "../component/element/html/PreformattedMarkup.jsx";
 import {SortableTreeItemCollapseButton} from "../component/element/html/SortableTreeItemCollapseButton.jsx";
-import {Tabs} from "../component/element/html/Tabs.jsx";
-import {BootstrapElement} from "../component/element/special/BootstrapElement.jsx";
+import {Tabs} from "../../../reactive-json-bootstrap/lib/component/element/html/Tabs.jsx";
+//import {BootstrapElement} from "../../../reactive-json-bootstrap/lib/component/element/special/BootstrapElement.jsx";
 import {Count} from "../component/element/special/Count.jsx";
 import {DataFilter} from "../component/element/special/DataFilter.jsx";
 import {DelayedActions} from "../component/element/special/DelayedActions.jsx";
@@ -41,9 +41,9 @@ export function View({props, currentData, datafield, path}) {
 
     const components = {
         AccordionItem,
-        CheckBoxField,
+        //CheckBoxField,
         Count,
-        DateField,
+        //DateField,
         DataFilter,
         DelayedActions,
         FolderSortableTree,
@@ -51,17 +51,17 @@ export function View({props, currentData, datafield, path}) {
         Html,
         LabelFromValue,
         Modal,
-        NumberField,
+        //NumberField,
         PageControls,
         Phantom,
         PreformattedMarkup,
         ReactiveJsonSubroot,
-        SelectField,
+        //SelectField,
         SortableTreeItemCollapseButton,
         Switch,
         Tabs,
-        TextAreaField,
-        TextField,
+        //TextAreaField,
+        //TextField,
         VariablesDebug,
         ...plugins?.element,
     };
@@ -69,12 +69,12 @@ export function View({props, currentData, datafield, path}) {
     /**
      * Gives direct access to React Bootstrap components.
      */
-    const bootstrapComponents = {
+    /*const bootstrapComponents = {
         BsAccordion: Accordion,
         BsAlert: Alert,
         BsBadge: Badge,
         BsButton: Button,
-    };
+    };*/
 
     const {element} = globalDataContext;
 
@@ -87,10 +87,10 @@ export function View({props, currentData, datafield, path}) {
         // First, try to find a component matching the given type by name.
         // When not found, we map to a Html component as fallback.
         // TODO: make this generic by moving bootstrap related code outside View.
-        let componentRegistryId = undefined;
-        let ComponentToRender = undefined;
+        //let componentRegistryId = undefined;
+        let ComponentToRender = components[props.type] ?? undefined;
 
-        const componentRegistries = [
+        /*const componentRegistries = [
             {"registryId": "module", "components": components},
             {"registryId": "bootstrap", "components": bootstrapComponents},
         ];
@@ -104,22 +104,22 @@ export function View({props, currentData, datafield, path}) {
                 componentRegistryId = registryId;
                 break;
             }
-        }
+        }*/
 
         if (ComponentToRender === undefined) {
             // Use the module:Html component as fallback.
             ComponentToRender = Html;
-            componentRegistryId = "module";
+            //componentRegistryId = "module";
         }
 
-        if (componentRegistryId === "bootstrap") {
+        /*if (componentRegistryId === "bootstrap") {
             return <BootstrapElement
                 bsComponent={ComponentToRender}
                 path={path}
                 props={props}
                 currentData={currentData}
                 datafield={datafield}/>;
-        }
+        }*/
 
         if (Html === ComponentToRender) {
             // Either the user has specifically asked for a Html component,
