@@ -1,0 +1,93 @@
+.paginationContainer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.paginationFirst,
+.paginationPrev,
+.paginationItem,
+.paginationNext,
+.paginationLast {
+    position: relative;
+    display: block;
+    padding: 0.375rem 0.75rem;
+    margin-left: -1px;
+    line-height: 1.25;
+    color: #007bff;
+    text-decoration: none;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+.paginationFirst:hover:not(:disabled),
+.paginationPrev:hover:not(:disabled),
+.paginationItem:hover:not(:disabled),
+.paginationNext:hover:not(:disabled),
+.paginationLast:hover:not(:disabled) {
+    z-index: 2;
+    color: #0056b3;
+    text-decoration: none;
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
+.paginationFirst:focus,
+.paginationPrev:focus,
+.paginationItem:focus,
+.paginationNext:focus,
+.paginationLast:focus {
+    z-index: 3;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.paginationFirst:disabled,
+.paginationPrev:disabled,
+.paginationItem:disabled,
+.paginationNext:disabled,
+.paginationLast:disabled {
+    color: #6c757d;
+    pointer-events: none;
+    background-color: #fff;
+    border-color: #dee2e6;
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.paginationFirst {
+    border-top-left-radius: 0.25rem;
+    border-bottom-left-radius: 0.25rem;
+}
+
+.paginationItem.active {
+    z-index: 3;
+    color: #fff;
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.paginationLast {
+    border-top-right-radius: 0.25rem;
+    border-bottom-right-radius: 0.25rem;
+}
+
+.paginationEllipsis {
+    position: relative;
+    display: block;
+    padding: 0.375rem 0.75rem;
+    margin-left: -1px;
+    line-height: 1.25;
+    color: #6c757d;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    cursor: default;
+}

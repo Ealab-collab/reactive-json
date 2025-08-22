@@ -1,29 +1,49 @@
-import {Pagination} from "react-bootstrap";
-import {useState} from "react";
+import {useContext, useState} from "react";
+import {GlobalDataContext} from "../../engine/GlobalDataContext.jsx";
+import styles from "./usePagination.module.css";
 
 /**
- * Use this hook to create paginations.
+ * Use this hook to create paginations with customizable components.
  *
- * @param [Array] dataToPaginate The complete data to paginate.
- * @param [int] forcePaginationDisplay Set to true to force the pagination even when having less than 2 pages.
- * @param [int] maxPageButtonsCount The maximum page buttons count. Must be at least 1. Defaults to 5 when undefined.
- * @param [int] pageMaxItemCount The maximum item count per page. Defaults to 10 when undefined.
+ * @param {Object} customComponents Custom components to override defaults.
+ * @param {Object} containerProps Additional props for the container.
+ * @param {Array} dataToPaginate The complete data to paginate.
+ * @param {boolean} forcePaginationDisplay Set to true to force the pagination even when having less than 2 pages.
+ * @param {Object} itemProps Additional props for page items.
+ * @param {number} maxPageButtonsCount The maximum page buttons count. Must be at least 1. Defaults to 5 when undefined.
+ * @param {number} pageMaxItemCount The maximum item count per page. Defaults to 10 when undefined.
  *
  * @returns {{
  *     firstShownItemIndex: number,
  *     getPageCountForContent: (function(Array): number),
  *     maxShownItemIndexExcluded: number,
- *     PageControls: (function({pageCount: *})),
+ *     PageControls: (function()),
  *     pageMaxItemCount: number,
  *     sliceVisibleContent: ((function(Array): *)|*),
  * }}
  */
 export const usePagination = ({
+                                  customComponents = {},
+                                  containerProps = {},
                                   dataToPaginate = [],
                                   forcePaginationDisplay = false,
+                                  itemProps = {},
                                   maxPageButtonsCount = 5,
                                   pageMaxItemCount = 10,
                               }) => {
+    const globalDataContext = useContext(GlobalDataContext);
+    
+    // Resolution of components by priority: Custom > Plugin > Default.
+    const pluginComponents = globalDataContext?.plugins?.pagination ?? {};
+    
+    const PaginationContainer = customComponents.Container ?? pluginComponents.Container ?? DefaultPaginationContainer;
+    const PaginationFirst = customComponents.First ?? pluginComponents.First ?? DefaultPaginationFirst;
+    const PaginationPrev = customComponents.Prev ?? pluginComponents.Prev ?? DefaultPaginationPrev;
+    const PaginationItem = customComponents.Item ?? pluginComponents.Item ?? DefaultPaginationItem;
+    const PaginationEllipsis = customComponents.Ellipsis ?? pluginComponents.Ellipsis ?? DefaultPaginationEllipsis;
+    const PaginationNext = customComponents.Next ?? pluginComponents.Next ?? DefaultPaginationNext;
+    const PaginationLast = customComponents.Last ?? pluginComponents.Last ?? DefaultPaginationLast;
+
     // TODO: la pagination ne se met pas à jour quand les filtres sont changés (currentData).
     const [activePageNumber0, setActivePageNumber0] = useState(0);
 
@@ -109,19 +129,19 @@ export const usePagination = ({
             return null;
         }
 
-        return <Pagination>
-            <Pagination.First
+        return <PaginationContainer {...containerProps}>
+            <PaginationFirst
                 disabled={activePageNumber0 <= 0}
                 onClick={() => {
                     setActivePageNumber0(0);
                 }}/>
-            <Pagination.Prev
+            <PaginationPrev
                 disabled={activePageNumber0 <= 0}
                 onClick={() => {
                     setActivePageNumber0(activePageNumber0 - 1);
                 }}/>
             {Math.min(activePageNumber0 - buttonsBeforeAfterMaxCount, pageCount - maxPageButtonsCount) > 0 ?
-                <Pagination.Ellipsis disabled/> : null}
+                <PaginationEllipsis disabled/> : null}
             {(() => {
                 const intermediateButtons = [];
 
@@ -133,15 +153,16 @@ export const usePagination = ({
                 let remainingPagesToBuildButton = maxPageButtonsCount;
 
                 const insertPageButton = (currentPageButtonNumber0, remainingPagesToBuildButton) => {
-                    intermediateButtons.push(<Pagination.Item
+                    intermediateButtons.push(<PaginationItem
                         active={activePageNumber0 === currentPageButtonNumber0}
                         key={maxPageButtonsCount - remainingPagesToBuildButton}
                         onClick={() => {
                             setActivePageNumber0(currentPageButtonNumber0)
                         }}
+                        {...itemProps}
                     >
                         {currentPageButtonNumber0 + 1}
-                    </Pagination.Item>);
+                    </PaginationItem>);
                 };
 
                 while (remainingPagesToBuildButton) {
@@ -159,18 +180,18 @@ export const usePagination = ({
                 return intermediateButtons;
             })()}
             {pageCount > Math.max(buttonsBeforeAfterMaxCount, activePageNumber0) + Math.ceil(maxPageButtonsCount / 2) ?
-                <Pagination.Ellipsis disabled/> : null}
-            <Pagination.Next
+                <PaginationEllipsis disabled/> : null}
+            <PaginationNext
                 disabled={activePageNumber0 + 1 >= pageCount}
                 onClick={() => {
                     setActivePageNumber0(activePageNumber0 + 1);
                 }}/>
-            <Pagination.Last
+            <PaginationLast
                 disabled={activePageNumber0 + 1 >= pageCount}
                 onClick={() => {
                     setActivePageNumber0(pageCount - 1);
                 }}/>
-        </Pagination>
+        </PaginationContainer>
     };
 
     return {
@@ -182,3 +203,89 @@ export const usePagination = ({
         sliceVisibleContent,
     };
 };
+
+function DefaultPaginationContainer({ children, ...props }) {
+    return (
+        <nav aria-label="Pagination" {...props}>
+            <div className={styles.paginationContainer}>{children}</div>
+        </nav>
+    );
+}
+
+function DefaultPaginationFirst({ disabled, onClick, children, ...props }) {
+    return (
+        <button
+            disabled={disabled}
+            onClick={onClick}
+            className={styles.paginationFirst}
+            aria-label="Go to first page"
+            {...props}
+        >
+            {children ?? "«"}
+        </button>
+    );
+}
+
+function DefaultPaginationPrev({ disabled, onClick, children, ...props }) {
+    return (
+        <button
+            disabled={disabled}
+            onClick={onClick}
+            className={styles.paginationPrev}
+            aria-label="Go to previous page"
+            {...props}
+        >
+            {children ?? "‹"}
+        </button>
+    );
+}
+
+function DefaultPaginationItem({ active, disabled, onClick, children, ...props }) {
+    return (
+        <button
+            disabled={disabled}
+            onClick={onClick}
+            aria-current={active ? "page" : undefined}
+            className={`${styles.paginationItem} ${active ? styles.active : ""}`}
+            {...props}
+        >
+            {children}
+        </button>
+    );
+}
+
+function DefaultPaginationEllipsis({ children, ...props }) {
+    return (
+        <span className={styles.paginationEllipsis} {...props}>
+            {children ?? "…"}
+        </span>
+    );
+}
+
+function DefaultPaginationNext({ disabled, onClick, children, ...props }) {
+    return (
+        <button
+            disabled={disabled}
+            onClick={onClick}
+            className={styles.paginationNext}
+            aria-label="Go to next page"
+            {...props}
+        >
+            {children ?? "›"}
+        </button>
+    );
+}
+
+function DefaultPaginationLast({ disabled, onClick, children, ...props }) {
+    return (
+        <button
+            disabled={disabled}
+            onClick={onClick}
+            className={styles.paginationLast}
+            aria-label="Go to last page"
+            {...props}
+        >
+            {children ?? "»"}
+        </button>
+    );
+}
