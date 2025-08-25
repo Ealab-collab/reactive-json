@@ -3,7 +3,6 @@ import { ActionDependant, isValid } from "../../../engine/Actions.jsx";
 import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
 import { TemplateContext } from "../../../engine/TemplateContext.jsx";
 import { View } from "../../../engine/View.jsx";
-import { reactionFunctions } from "../../action/ReactOnEvent.jsx";
 
 /**
  * Provides a way to execute actions after a delay, at intervals, etc.
@@ -96,6 +95,16 @@ export const getReactionFunctionsToExecute = (actions, templateContexts) => {
     if (!Array.isArray(actions)) {
         // Not a supported actions structure.
         // Dev note: we may also allow objects in the future, to allow specific overrides.
+        return result;
+    }
+
+    // Get available reactions from merged plugins.
+    const { globalDataContext } = templateContexts;
+    const plugins = globalDataContext.plugins ?? {};
+    const reactionFunctions = plugins?.reaction ?? {};
+
+    if (!reactionFunctions) {
+        // No available reactions.
         return result;
     }
 

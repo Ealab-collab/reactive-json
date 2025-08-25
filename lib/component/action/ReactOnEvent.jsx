@@ -1,34 +1,6 @@
 import { Children, cloneElement, Fragment, isValidElement, useContext } from "react";
 import { GlobalDataContext } from "../../engine/GlobalDataContext.jsx";
 import { TemplateContext } from "../../engine/TemplateContext.jsx";
-import { addData } from "../reaction/addData.jsx";
-import { fetchData } from "../reaction/fetchData.jsx";
-import { moveData } from "../reaction/moveData.jsx";
-import { postMessage } from "../reaction/postMessage.jsx";
-import { redirectNow } from "../reaction/redirectNow.jsx";
-import { removeData } from "../reaction/removeData.jsx";
-import { setData } from "../reaction/setData.jsx";
-import { submitData } from "../reaction/submitData.jsx";
-import { triggerEvent } from "../reaction/triggerEvent.jsx";
-import { setClipboardData } from "../reaction/setClipboardData.jsx";
-
-/**
- * Functions that will be executed on specific events.
- *
- * @type {{}}
- */
-export const reactionFunctions = {
-    addData,
-    fetchData,
-    moveData,
-    postMessage,
-    redirectNow,
-    removeData,
-    setClipboardData,
-    setData,
-    submitData,
-    triggerEvent,
-};
 
 /**
  * Action component which will append one or more event listeners on the element.
@@ -40,6 +12,10 @@ export const reactionFunctions = {
 export const ReactOnEvent = (props) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
+
+    // Get available reactions from merged plugins.
+    const plugins = globalDataContext.plugins ?? {};
+    const reactionFunctions = plugins?.reaction ?? {};
 
     const { actionProps: reactionFunctionProps } = props;
 

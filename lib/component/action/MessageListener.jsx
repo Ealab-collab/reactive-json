@@ -4,7 +4,6 @@ import { EventDispatcherContext } from "../../engine/EventDispatcherContext.jsx"
 import { GlobalDataContext } from "../../engine/GlobalDataContext.jsx";
 import { TemplateContext } from "../../engine/TemplateContext.jsx";
 import { evaluateTemplateValueCollection } from "../../engine/TemplateSystem.jsx";
-import { reactionFunctions } from "./ReactOnEvent.jsx";
 
 /**
  * Listens to messages on the window object and executes a reaction function in response.
@@ -17,6 +16,10 @@ export const MessageListener = (props) => {
     const eventDispatcherContext = useContext(EventDispatcherContext);
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
+
+    // Get available reactions from merged plugins.
+    const plugins = globalDataContext.plugins ?? {};
+    const reactionFunctions = plugins?.reaction ?? {};
 
     const actionProps = props?.actionProps ?? undefined;
 

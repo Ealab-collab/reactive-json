@@ -1,7 +1,6 @@
 import JSONPath from "jsonpath";
 import { isEqual } from "lodash";
 import { useContext } from "react";
-import { reactionFunctions } from "../component/action/ReactOnEvent.jsx";
 import { GlobalDataContext } from "./GlobalDataContext.jsx";
 import { TemplateContext } from "./TemplateContext.jsx";
 import { evaluateTemplateValue, isTemplateValue } from "./TemplateSystem.jsx";
@@ -259,10 +258,11 @@ const getActionsToExecute = (actions, templateContexts) => {
         return result;
     }
 
-    // Get available actions from merged plugins (already merged in ReactiveJsonRoot)
+    // Get available actions and reactions from merged plugins (already merged in ReactiveJsonRoot)
     const { globalDataContext } = templateContexts;
     const plugins = globalDataContext.plugins ?? {};
     const actionsToEvaluate = plugins?.action ?? {};
+    const reactionsToEvaluate = plugins?.reaction ?? {};
 
     if (!actionsToEvaluate) {
         // No available actions.
@@ -281,7 +281,7 @@ const getActionsToExecute = (actions, templateContexts) => {
         }
 
         let Component = actionsToEvaluate[what] ?? undefined;
-        let reactionFunction = reactionFunctions[what] ?? undefined;
+        let reactionFunction = reactionsToEvaluate[what] ?? undefined;
 
         if (!Component && !reactionFunction) {
             // Retro-compatibility: try to find an action component by capitalizing the first letter.
