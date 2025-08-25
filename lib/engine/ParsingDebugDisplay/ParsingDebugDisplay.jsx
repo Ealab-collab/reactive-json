@@ -6,9 +6,7 @@ const ParsingDebugDisplay = ({ processedRjBuild, errorContext }) => {
     return (
         <div className={styles.container}>
             <h1>Parsing error</h1>
-            <p className={styles.subtitle}>
-                The {processedRjBuild.format} content could not be parsed.
-            </p>
+            <p className={styles.subtitle}>The {processedRjBuild.format} content could not be parsed.</p>
             <p className={styles.errorDetailsTitle}>Error details:</p>
             <pre className={styles.errorDetails}>{processedRjBuild.error.message}</pre>
             {errorContext && (

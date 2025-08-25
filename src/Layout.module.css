@@ -1,13 +1,12 @@
-/* Styles pour remplacer react-bootstrap */
+/* Styles used for the layout of the demo website. */
 
-/* Container */
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 15px;
 }
 
-/* Grid system simplifié */
+/* Simplified grid system */
 .row {
     display: flex;
     flex-wrap: wrap;
@@ -24,7 +23,6 @@
     max-width: calc(25% - 0.75rem);
 }
 
-/* Navbar */
 .navbar {
     background-color: #f8f9fa;
     padding: 0.5rem 1rem;
@@ -75,7 +73,6 @@
     margin-right: 0.5rem;
 }
 
-/* Debug styles */
 .debugData pre {
     background-color: #f8f9fa;
     padding: 1rem;
@@ -90,14 +87,15 @@
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .navbarNav {
         flex-direction: column;
         width: 100%;
         margin-top: 1rem;
     }
-    
-    .col9, .col3 {
+
+    .col9,
+    .col3 {
         flex: 0 0 100%;
         max-width: 100%;
     }

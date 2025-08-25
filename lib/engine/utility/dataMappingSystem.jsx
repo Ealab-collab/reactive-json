@@ -5,7 +5,7 @@
 
 /**
  * Applies the dataMapping system to a response.
- * 
+ *
  * @param {Object} params - Parameters
  * @param {Object} params.dataMapping - Configuration of the dataMapping.
  * @param {*} params.responseData - Response data to map.
@@ -13,7 +13,7 @@
  * @param {Object} params.templateContext - Template context.
  */
 export const applyDataMapping = ({ dataMapping, responseData, globalDataContext, templateContext }) => {
-    if (!dataMapping || typeof dataMapping !== 'object') {
+    if (!dataMapping || typeof dataMapping !== "object") {
         return;
     }
 
@@ -27,18 +27,16 @@ export const applyDataMapping = ({ dataMapping, responseData, globalDataContext,
     // Execute each processor.
     Object.entries(dataMapping).forEach(([processorName, config]) => {
         const processor = dataMappingProcessors[processorName];
-        
+
         if (!processor) {
             console.warn("dataMappingSystem: Unknown processor: ", processorName);
             return;
         }
 
         try {
-            processor({config, globalDataContext, responseData, templateContext});
+            processor({ config, globalDataContext, responseData, templateContext });
         } catch (error) {
             console.error("dataMappingSystem: Error in processor ", processorName, ":", error);
         }
     });
 };
-
- 

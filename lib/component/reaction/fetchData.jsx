@@ -1,4 +1,4 @@
-import {executeHttpRequest} from "./utility/httpRequestCommon.jsx";
+import { executeHttpRequest } from "./utility/httpRequestCommon.jsx";
 
 /**
  * Fetches data using configurable HTTP methods. Similar to submitData, but for data retrieval.
@@ -17,7 +17,7 @@ export const fetchData = (props) => {
     executeHttpRequest(
         props,
         {
-            method: props?.args?.httpMethod ?? "get"
+            method: props?.args?.httpMethod ?? "get",
         },
         "fetchData"
     );

@@ -1,4 +1,4 @@
-import {evaluateTemplateValue} from "../../engine/TemplateSystem.jsx";
+import { evaluateTemplateValue } from "../../engine/TemplateSystem.jsx";
 
 /**
  * Redirects to the specified URL.
@@ -6,12 +6,12 @@ import {evaluateTemplateValue} from "../../engine/TemplateSystem.jsx";
  * @param {{}} props
  */
 export const redirectNow = (props) => {
-    const {globalDataContext, templateContext} = props;
-    const {to} = props.args;
+    const { globalDataContext, templateContext } = props;
+    const { to } = props.args;
 
     if (!to || typeof to !== "string") {
         return;
     }
 
-    window.location.href = evaluateTemplateValue({valueToEvaluate: to, globalDataContext, templateContext});
+    window.location.href = evaluateTemplateValue({ valueToEvaluate: to, globalDataContext, templateContext });
 };

@@ -1,22 +1,16 @@
-// import styles from "./ReactiveJsonRoot.module.css"
+import axios from "axios";
+import { isEqual } from "lodash";
+import { useEffect, useReducer, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { coreComponentsPlugin } from "../coreComponentsPlugin.jsx";
 import { mergeComponentCollections } from "./ComponentCollector.jsx";
 import { EventDispatcherProvider } from "./EventDispatcherProvider.jsx";
 import { GlobalDataContextProvider } from "./GlobalDataContextProvider.jsx";
 import ParsingDebugDisplay from "./ParsingDebugDisplay/ParsingDebugDisplay.jsx";
 import { TemplateContext } from "./TemplateContext.jsx";
-import { View } from "./View.jsx";
-import {
-    alterData,
-    applyDataMapping,
-    parseRjBuild,
-    stringToBoolean,
-} from "./utility";
 import { dataLocationToPath } from "./TemplateSystem.jsx";
-import axios from "axios";
-import { isEqual } from "lodash";
-import { useEffect, useReducer, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { alterData, applyDataMapping, parseRjBuild, stringToBoolean } from "./utility";
+import { View } from "./View.jsx";
 
 /**
  * Production ready app root.
@@ -99,9 +93,7 @@ export const ReactiveJsonRoot = ({
         // Show a warning in this format: oldValue -> newValue, oldValue -> newValue, ...
         console.warn(
             "A ReactiveJsonRoot component got the following deprecated properties that must be replaced: " +
-                deprecatedProperties
-                    .map((p) => p.deprecatedProperty + " -> " + p.newProperty)
-                    .join(", ")
+                deprecatedProperties.map((p) => p.deprecatedProperty + " -> " + p.newProperty).join(", ")
         );
     }
 
@@ -117,12 +109,7 @@ export const ReactiveJsonRoot = ({
                     return { updateId: 0, realCurrentData: dispatched.data };
 
                 case "updateData":
-                    return updateDataObject(
-                        prevState,
-                        dispatched.path,
-                        dispatched.value,
-                        dispatched.updateMode
-                    );
+                    return updateDataObject(prevState, dispatched.path, dispatched.value, dispatched.updateMode);
 
                 default:
                     // Unknown type.
@@ -152,33 +139,22 @@ export const ReactiveJsonRoot = ({
     // Cleanup this instance's error container on unmount.
     useEffect(() => {
         return () => {
-            if (
-                typeof document !== "undefined" &&
-                errorContainerRef.current &&
-                errorContainerRef.current.parentNode
-            ) {
-                errorContainerRef.current.parentNode.removeChild(
-                    errorContainerRef.current
-                );
+            if (typeof document !== "undefined" && errorContainerRef.current && errorContainerRef.current.parentNode) {
+                errorContainerRef.current.parentNode.removeChild(errorContainerRef.current);
                 errorContainerRef.current = null;
             }
         };
     }, []);
 
     // Merge core plugins with user-provided plugins.
-    const mergedPlugins = plugins
-        ? mergeComponentCollections([coreComponentsPlugin, plugins])
-        : coreComponentsPlugin;
+    const mergedPlugins = plugins ? mergeComponentCollections([coreComponentsPlugin, plugins]) : coreComponentsPlugin;
 
     useEffect(() => {
         if (!rjBuildUrl) {
             return;
         }
 
-        if (
-            typeof rjBuildFetchMethod === "string" &&
-            rjBuildFetchMethod.toLowerCase() === "post"
-        ) {
+        if (typeof rjBuildFetchMethod === "string" && rjBuildFetchMethod.toLowerCase() === "post") {
             // TODO: support form data.
             axios
                 .post(rjBuildUrl, {
@@ -221,7 +197,7 @@ export const ReactiveJsonRoot = ({
                 maybeRawAppRjBuild,
                 dataOverride,
             });
-            console.debug("Error details:",processedRjBuild.error);
+            console.debug("Error details:", processedRjBuild.error);
             console.groupEnd();
 
             // Create or reuse a global container for parsing errors.
@@ -249,7 +225,8 @@ export const ReactiveJsonRoot = ({
                                 rjBuildFetchMethod,
                                 headersForRjBuild,
                                 maybeRawAppRjBuild,
-                            }} />,
+                            }}
+                        />,
                         errorContainerRef.current,
                         () => {
                             // Cleanup this instance's error container.
@@ -269,14 +246,8 @@ export const ReactiveJsonRoot = ({
             // Remove the error portal and its container.
             setErrorPortal(null);
 
-            if (
-                typeof document !== "undefined" &&
-                errorContainerRef.current &&
-                errorContainerRef.current.parentNode
-            ) {
-                errorContainerRef.current.parentNode.removeChild(
-                    errorContainerRef.current
-                );
+            if (typeof document !== "undefined" && errorContainerRef.current && errorContainerRef.current.parentNode) {
+                errorContainerRef.current.parentNode.removeChild(errorContainerRef.current);
                 errorContainerRef.current = null;
             }
         }
@@ -292,16 +263,12 @@ export const ReactiveJsonRoot = ({
         }
 
         // Apply dataOverride if provided.
-        let finalData =
-            dataOverride === undefined ? parsedData.data : dataOverride;
+        let finalData = dataOverride === undefined ? parsedData.data : dataOverride;
 
         // Process additionalDataSource if present.
         const additionalDataSource = parsedData.additionalDataSource;
 
-        if (
-            !Array.isArray(additionalDataSource) ||
-            additionalDataSource.length === 0
-        ) {
+        if (!Array.isArray(additionalDataSource) || additionalDataSource.length === 0) {
             // No additionalDataSource, use data as-is.
             // noinspection JSCheckFunctionSignatures
             dispatchCurrentData({ type: "setData", data: finalData });
@@ -328,24 +295,15 @@ export const ReactiveJsonRoot = ({
         };
 
         // Separate blocking and non-blocking sources.
-        const blockingSources = additionalDataSource.filter(
-            (source) => source.blocking === true
-        );
-        const nonBlockingSources = additionalDataSource.filter(
-            (source) => source.blocking !== true
-        );
+        const blockingSources = additionalDataSource.filter((source) => source.blocking === true);
+        const nonBlockingSources = additionalDataSource.filter((source) => source.blocking !== true);
 
         // Fetches a single data source and merges it into the current data.
         const fetchDataSource = async (source, index) => {
             try {
                 if (!source.src) {
                     // Ignore this source.
-                    console.warn(
-                        "additionalDataSource item number " +
-                            index +
-                            " missing 'src' property.",
-                        source
-                    );
+                    console.warn("additionalDataSource item number " + index + " missing 'src' property.", source);
                     return;
                 }
 
@@ -356,10 +314,7 @@ export const ReactiveJsonRoot = ({
                 };
 
                 // Add headers if available.
-                if (
-                    headersForRjBuild &&
-                    Object.keys(headersForRjBuild).length > 0
-                ) {
+                if (headersForRjBuild && Object.keys(headersForRjBuild).length > 0) {
                     config.headers = headersForRjBuild;
                 }
 
@@ -404,10 +359,7 @@ export const ReactiveJsonRoot = ({
                         // we don't continue with the traditional path logic.
                         return;
                     } catch (error) {
-                        console.error(
-                            "Error applying dataMapping for additionalDataSource:",
-                            error
-                        );
+                        console.error("Error applying dataMapping for additionalDataSource:", error);
                         // Continue with traditional logic on error
                     }
                 }
@@ -415,10 +367,7 @@ export const ReactiveJsonRoot = ({
                 // Merge data immediately when this source completes.
                 if (!source.path) {
                     // No path specified, merge at root level.
-                    if (
-                        typeof fetchedData !== "object" ||
-                        Array.isArray(fetchedData)
-                    ) {
+                    if (typeof fetchedData !== "object" || Array.isArray(fetchedData)) {
                         console.warn(
                             "additionalDataSource data cannot be merged at root - must be an object:",
                             fetchedData
@@ -470,19 +419,11 @@ export const ReactiveJsonRoot = ({
                         value: fetchedData,
                     });
                 } catch (error) {
-                    console.error(
-                        "Error evaluating additionalDataSource path:",
-                        source.path,
-                        error
-                    );
+                    console.error("Error evaluating additionalDataSource path:", source.path, error);
                 }
             } catch (error) {
                 // Fail silently but log the error.
-                console.error(
-                    "Error fetching additional data source:",
-                    source.src,
-                    error
-                );
+                console.error("Error fetching additional data source:", source.src, error);
             }
         };
 
@@ -494,16 +435,11 @@ export const ReactiveJsonRoot = ({
         const processSources = async () => {
             if (blockingSources.length > 0) {
                 // Process blocking sources first - use allSettled for robustness.
-                const blockingPromises = blockingSources.map((source, index) =>
-                    fetchDataSource(source, index)
-                );
+                const blockingPromises = blockingSources.map((source, index) => fetchDataSource(source, index));
 
                 await Promise.allSettled(blockingPromises).catch((error) => {
                     // Even if some blocking sources fail, we should still render the view.
-                    console.error(
-                        "Error processing blocking additionalDataSource:",
-                        error
-                    );
+                    console.error("Error processing blocking additionalDataSource:", error);
                 });
             }
 
@@ -513,9 +449,8 @@ export const ReactiveJsonRoot = ({
 
             if (nonBlockingSources.length > 0) {
                 // Process non-blocking sources in background.
-                const nonBlockingPromises = nonBlockingSources.map(
-                    (source, index) =>
-                        fetchDataSource(source, blockingSources.length + index)
+                const nonBlockingPromises = nonBlockingSources.map((source, index) =>
+                    fetchDataSource(source, blockingSources.length + index)
                 );
 
                 // Non-blocking sources don't need to be awaited.
@@ -541,23 +476,13 @@ export const ReactiveJsonRoot = ({
 
         // Upstream update callbacks have been set. Let's check if there is one
         // that matches the path to update.
-        for (const [
-            pathInDataOverride,
-            upstreamCallback,
-        ] of upstreamUpdateCallbacks) {
+        for (const [pathInDataOverride, upstreamCallback] of upstreamUpdateCallbacks) {
             // Check if the updated path matches or is a sub-path of pathInDataOverride.
             // "pathInDataOverride" does not contain the "data." prefix.
-            if (
-                path === pathInDataOverride ||
-                path.startsWith(pathInDataOverride + ".") ||
-                pathInDataOverride === ""
-            ) {
+            if (path === pathInDataOverride || path.startsWith(pathInDataOverride + ".") || pathInDataOverride === "") {
                 // The value to update is located in a template reference of the parent rjBuild.
                 // Calculate the relative path from pathInDataOverride.
-                const relativePath =
-                    pathInDataOverride === ""
-                        ? path
-                        : path.substring(pathInDataOverride.length + 1);
+                const relativePath = pathInDataOverride === "" ? path : path.substring(pathInDataOverride.length + 1);
 
                 try {
                     // Use the upstream callback instead of updating locally.
@@ -667,11 +592,7 @@ export const ReactiveJsonRoot = ({
 
                         const newIndex = Math.min(
                             pointer.length,
-                            Math.max(
-                                0,
-                                parseInt(currentNodeKey) +
-                                    parseInt(value.increment)
-                            )
+                            Math.max(0, parseInt(currentNodeKey) + parseInt(value.increment))
                         );
 
                         if (newIndex === parseInt(currentNodeKey)) {
@@ -715,9 +636,7 @@ export const ReactiveJsonRoot = ({
 
                 return {
                     // Using modulo in case of massive update counts in long frontend sessions.
-                    updateId:
-                        ((data.updateId ?? 0) % (Number.MAX_SAFE_INTEGER - 1)) +
-                        1,
+                    updateId: ((data.updateId ?? 0) % (Number.MAX_SAFE_INTEGER - 1)) + 1,
                     realCurrentData: data.realCurrentData,
                 };
             }
@@ -726,10 +645,7 @@ export const ReactiveJsonRoot = ({
                 // The pointer already has the specified key.
 
                 // Dig deeper.
-                if (
-                    typeof pointer[currentNodeKey] !== "object" ||
-                    pointer[currentNodeKey] === null
-                ) {
+                if (typeof pointer[currentNodeKey] !== "object" || pointer[currentNodeKey] === null) {
                     // Ensure the data is writable.
                     pointer[currentNodeKey] = {};
                 }
@@ -787,9 +703,7 @@ export const ReactiveJsonRoot = ({
                     }}
                 >
                     {debugMode_bool && DebugModeContentWrapper ? (
-                        <DebugModeContentWrapper>
-                            {rootViews}
-                        </DebugModeContentWrapper>
+                        <DebugModeContentWrapper>{rootViews}</DebugModeContentWrapper>
                     ) : (
                         rootViews
                     )}
@@ -797,11 +711,7 @@ export const ReactiveJsonRoot = ({
                 {debugMode_bool
                     ? DebugModeDataWrapper && (
                           <DebugModeDataWrapper>
-                              {JSON.stringify(
-                                  currentData.realCurrentData,
-                                  null,
-                                  "  "
-                              )}
+                              {JSON.stringify(currentData.realCurrentData, null, "  ")}
                           </DebugModeDataWrapper>
                       )
                     : null}

@@ -1,5 +1,5 @@
-import {memo} from "react";
-import {EventDispatcherContext} from "./EventDispatcherContext.jsx";
+import { memo } from "react";
+import { EventDispatcherContext } from "./EventDispatcherContext.jsx";
 
 /**
  * Contains the registered listeners. It's shared between all the components.
@@ -72,7 +72,9 @@ export const removeEventListener = (type, listener) => {
  */
 // TODO: evaluate if memo is useful here.
 export const EventDispatcherProvider = memo((props) => {
-    return <EventDispatcherContext.Provider value={{addEventListener, removeEventListener}}>
-        {props.children}
-    </EventDispatcherContext.Provider>;
+    return (
+        <EventDispatcherContext.Provider value={{ addEventListener, removeEventListener }}>
+            {props.children}
+        </EventDispatcherContext.Provider>
+    );
 });

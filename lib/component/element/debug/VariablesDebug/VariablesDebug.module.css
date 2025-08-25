@@ -24,8 +24,7 @@
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
     cursor: pointer;
     border: 1px solid #374151;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-        "Liberation Mono", "Courier New", monospace;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     z-index: 9999;
     width: 100%;
     overflow: hidden;

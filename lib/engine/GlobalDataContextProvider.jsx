@@ -1,4 +1,4 @@
-import {GlobalDataContext} from "./GlobalDataContext.jsx";
+import { GlobalDataContext } from "./GlobalDataContext.jsx";
 
 /**
  * Standard implementation of the provider for GlobalDataContext.
@@ -11,7 +11,7 @@ import {GlobalDataContext} from "./GlobalDataContext.jsx";
  */
 export const GlobalDataContextProvider = (props) => {
     // Shallow copy. This will help to keep the original data representation.
-    const valueCopy = {...props.value};
+    const valueCopy = { ...props.value };
 
     if (valueCopy.getRootContext === undefined) {
         // The root context is unset.
@@ -25,7 +25,5 @@ export const GlobalDataContextProvider = (props) => {
         };
     }
 
-    return <GlobalDataContext.Provider value={valueCopy}>
-        {props.children}
-    </GlobalDataContext.Provider>;
-}
+    return <GlobalDataContext.Provider value={valueCopy}>{props.children}</GlobalDataContext.Provider>;
+};

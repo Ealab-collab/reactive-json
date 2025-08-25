@@ -2,7 +2,7 @@ import { cloneDeep } from "lodash";
 
 /**
  * Alters response data using registered data processors.
- * 
+ *
  * @param {Object} params - The parameters object
  * @param {Object} params.requestContext - Information about the request
  * @param {string} params.requestContext.url - The URL of the request
@@ -18,7 +18,13 @@ import { cloneDeep } from "lodash";
  * @param {Object} params.dataProcessors - Data processors from plugins as an object (already sorted)
  * @returns {*} The altered response body
  */
-export const alterData = ({ requestContext, responseContext, responseBody, isRjBuild = false, dataProcessors = {} }) => {    
+export const alterData = ({
+    requestContext,
+    responseContext,
+    responseBody,
+    isRjBuild = false,
+    dataProcessors = {},
+}) => {
     if (Object.keys(dataProcessors).length === 0) {
         // No data processors, return original response.
         return responseBody;
@@ -30,16 +36,16 @@ export const alterData = ({ requestContext, responseContext, responseBody, isRjB
     // Extract the data to process.
     const originalDataToProcess = isRjBuild ? responseBodyClone.data : responseBodyClone;
     let processedData = cloneDeep(originalDataToProcess);
-    
+
     // Apply each data processor in order (already sorted).
     for (const [processorId, processorConfig] of Object.entries(dataProcessors)) {
-        if (typeof processorConfig.callback === 'function') {
+        if (typeof processorConfig.callback === "function") {
             try {
                 processedData = processorConfig.callback({
                     requestContext,
                     responseContext,
                     dataToProcess: processedData,
-                    originalDataToProcess
+                    originalDataToProcess,
                 });
             } catch (error) {
                 console.error(`Error in dataProcessor "${processorId}":`, error);
@@ -55,4 +61,4 @@ export const alterData = ({ requestContext, responseContext, responseBody, isRjB
     }
 
     return processedData;
-}; 
+};

@@ -1,4 +1,4 @@
-import {dataLocationToPath} from "../../engine/TemplateSystem.jsx";
+import { dataLocationToPath } from "../../engine/TemplateSystem.jsx";
 
 /**
  * Removes data at the specified path.
@@ -6,8 +6,8 @@ import {dataLocationToPath} from "../../engine/TemplateSystem.jsx";
  * @param {{}} props
  */
 export const removeData = (props) => {
-    const {globalDataContext, templateContext} = props;
-    const {path, target} = props.args;
+    const { globalDataContext, templateContext } = props;
+    const { path, target } = props.args;
 
     if (path === undefined && target !== "currentTemplateData") {
         return;
@@ -20,7 +20,7 @@ export const removeData = (props) => {
             currentPath: templateContext.templatePath,
             dataLocation: path,
             globalDataContext,
-            templateContext
+            templateContext,
         });
     } else {
         // Target mode.
@@ -33,7 +33,7 @@ export const removeData = (props) => {
             --parentLevel;
 
             // Remove a level from the path.
-            const lastIndex = dataAbsolutePath.lastIndexOf('.');
+            const lastIndex = dataAbsolutePath.lastIndexOf(".");
 
             if (lastIndex < 1) {
                 // No valid path to remove. Is there a valid use case where we should remove everything?

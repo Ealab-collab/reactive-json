@@ -1,8 +1,8 @@
-import {isTemplateValue} from "../TemplateSystem.jsx";
+import { isTemplateValue } from "../TemplateSystem.jsx";
 
 /**
  * Recursively analyze the dataOverride to detect references to parent data.
- * 
+ *
  * @param {any} dataOverride - The dataOverride object to analyze.
  * @param {string} currentPath - The current path in the tree of the dataOverride object. Usually empty.
  * @param {object} options - The options for the analysis.
@@ -27,19 +27,23 @@ export const analyzeDataOverrideReferences = (dataOverride, currentPath = "", op
     const MAX_DEPTH = parseInt(options.maxDepth) || 50;
 
     /**
-     * Traverses the dataOverrideobject recursively. 
+     * Traverses the dataOverrideobject recursively.
      * @param {any} obj - The object to traverse.
      * @param {string} path - The current path in the tree (for recursion).
      * @param {Set<object>} traversedObjects - The set of objects that have already been traversed.
      */
     const traverseObject = (obj, path, traversedObjects = new Set(), currentDepth = 0) => {
         if (currentDepth > MAX_DEPTH) {
-            console.warn("Reactive-JSON: Maximum depth reached in dataOverride references analysis (traverseObject). Stopped the analysis.");
+            console.warn(
+                "Reactive-JSON: Maximum depth reached in dataOverride references analysis (traverseObject). Stopped the analysis."
+            );
             return;
         }
 
         if (traversedObjects.has(obj)) {
-            console.warn("Reactive-JSON: Infinite recursion detected in dataOverride references analysis (traverseObject). Stopped the analysis.");
+            console.warn(
+                "Reactive-JSON: Infinite recursion detected in dataOverride references analysis (traverseObject). Stopped the analysis."
+            );
             return;
         }
 
@@ -49,7 +53,7 @@ export const analyzeDataOverrideReferences = (dataOverride, currentPath = "", op
             references.set(path, obj);
             return;
         }
-        
+
         if (!obj || typeof obj !== "object") {
             // Not a valid traversable object.
             return;
@@ -75,7 +79,3 @@ export const analyzeDataOverrideReferences = (dataOverride, currentPath = "", op
     traverseObject(dataOverride, currentPath);
     return references;
 };
-
-
-
- 

@@ -1,9 +1,8 @@
 import {
     dataLocationToPath,
-    evaluateTemplateValue,
-    evaluateTemplateValueCollection
+    evaluateTemplateValueCollection,
 } from "../../engine/TemplateSystem.jsx";
-import {cloneDeep} from "lodash";
+import { cloneDeep } from "lodash";
 
 /**
  * Adds data at the specified path.
@@ -11,17 +10,30 @@ import {cloneDeep} from "lodash";
  * @param {{}} props
  */
 export const addData = (props) => {
-    const {globalDataContext, templateContext} = props;
-    const {path, value} = props.args;
+    const { globalDataContext, templateContext } = props;
+    const { path, value } = props.args;
 
     if (path === undefined) {
         return;
     }
 
-    const dataAbsolutePath = dataLocationToPath({currentPath: templateContext.templatePath, dataLocation: path, globalDataContext, templateContext});
+    const dataAbsolutePath = dataLocationToPath({
+        currentPath: templateContext.templatePath,
+        dataLocation: path,
+        globalDataContext,
+        templateContext,
+    });
 
-    const evaluatedValue = evaluateTemplateValueCollection({valueToEvaluate: value, globalDataContext, templateContext});
+    const evaluatedValue = evaluateTemplateValueCollection({
+        valueToEvaluate: value,
+        globalDataContext,
+        templateContext,
+    });
 
     // We clone the value to have distinct instances when the value is an object.
-    globalDataContext?.updateData(typeof evaluatedValue !== "object" ? evaluatedValue : cloneDeep(evaluatedValue), dataAbsolutePath, "add");
+    globalDataContext?.updateData(
+        typeof evaluatedValue !== "object" ? evaluatedValue : cloneDeep(evaluatedValue),
+        dataAbsolutePath,
+        "add"
+    );
 };

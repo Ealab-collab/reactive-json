@@ -1,10 +1,10 @@
 import axios from "axios";
-import {dataLocationToPath, evaluateTemplateValue} from "../../../engine/TemplateSystem.jsx";
-import {alterData, applyDataMapping} from "../../../engine/utility";
+import { dataLocationToPath, evaluateTemplateValue } from "../../../engine/TemplateSystem.jsx";
+import { alterData, applyDataMapping } from "../../../engine/utility";
 
 /**
  * Handles the common logic of HTTP requests for fetchData and submitData.
- * 
+ *
  * @param {Object} props - The properties of the reaction.
  * @param {Object} props.args - The arguments of the reaction.
  * @param {Object} props.args.dataMapping - Configuration for selective data dispatch using mapping processors.
@@ -53,7 +53,7 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
 
     /**
      * Clean up the state of the request.
-     * 
+     *
      * @param {HTMLElement} body - The body of the HTML element.
      * @param {HTMLElement} currentTarget - The target of the reaction.
      */
@@ -67,7 +67,7 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
         if (currentTarget?.dataset) {
             delete currentTarget.dataset.isSubmitting;
         }
-    }; 
+    };
 
     const currentTarget = reactionEvent?.currentTarget;
 
@@ -76,13 +76,14 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
         currentTarget.dataset.isSubmitting = "true";
     }
 
-    const {globalDataContext: _globalDataContext, templateContext} = props;
+    const { globalDataContext: _globalDataContext, templateContext } = props;
 
     // Use the root context when submitting data,
     // not the maybe-filtered one that the DataFilter component may have edited.
     // This could be made configurable if ever needed.
-    const globalDataContext = _globalDataContext.getRootContext ? 
-        _globalDataContext.getRootContext() : _globalDataContext;
+    const globalDataContext = _globalDataContext.getRootContext
+        ? _globalDataContext.getRootContext()
+        : _globalDataContext;
 
     /**
      * Configuration for selective data dispatch using mapping processors.
@@ -113,9 +114,9 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
     const updateDataAtLocation = props?.args?.updateDataAtLocation;
 
     const url = evaluateTemplateValue({
-        valueToEvaluate: props?.args?.url, 
-        globalDataContext, 
-        templateContext
+        valueToEvaluate: props?.args?.url,
+        globalDataContext,
+        templateContext,
     });
 
     if (!url) {
@@ -124,7 +125,7 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
     }
 
     const headers = globalDataContext.headersForRjBuild ?? {};
-    const {setData, setRawAppRjBuild, updateData} = globalDataContext;
+    const { setData, setRawAppRjBuild, updateData } = globalDataContext;
 
     const config = {
         method: requestConfig.method,
@@ -155,7 +156,7 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
                 const responseContext = {
                     headers: value.headers || {},
                     status: value.status,
-                    data: value.data
+                    data: value.data,
                 };
 
                 // Determine if this is an RjBuild response.
@@ -169,7 +170,7 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
                     responseContext,
                     responseBody: value.data,
                     isRjBuild,
-                    dataProcessors
+                    dataProcessors,
                 });
 
                 if (updateOnlyData) {
@@ -187,7 +188,7 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
                             return;
                         } catch (error) {
                             console.error(`reactionFunction:${errorPrefix} : Error applying dataMapping:`, error);
-                            
+
                             // Don't continue with the traditional updateDataAtLocation logic
                             // even if updateDataAtLocation is set.
                             // Using dataMapping means that we don't use updateDataAtLocation.
@@ -208,11 +209,16 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
                         dataLocation: updateDataAtLocation,
                         currentPath: "data",
                         globalDataContext,
-                        templateContext
+                        templateContext,
                     });
 
                     if (typeof evaluatedPath !== "string" || !evaluatedPath.startsWith("data")) {
-                        console.warn(`reactionFunction:${errorPrefix} : updateDataAtLocation evaluation did not result in a valid locationstring:`, updateDataAtLocation, "->", evaluatedPath);
+                        console.warn(
+                            `reactionFunction:${errorPrefix} : updateDataAtLocation evaluation did not result in a valid locationstring:`,
+                            updateDataAtLocation,
+                            "->",
+                            evaluatedPath
+                        );
                         return;
                     }
 
