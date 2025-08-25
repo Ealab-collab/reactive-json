@@ -1,5 +1,4 @@
 import { useContext } from "react";
-import { Html } from "../component/element/html/Html.jsx";
 import { GlobalDataContext } from "./GlobalDataContext.jsx";
 import { TemplateContext } from "./TemplateContext.jsx";
 import TemplateValue, { dataLocationToPath, evaluateTemplateValue } from "./TemplateSystem.jsx";
@@ -27,13 +26,20 @@ export function View({ props, currentData, datafield, path }) {
         // A type is specified.
         // First, try to find a component matching the given type by name.
         let ComponentToRender = components[props.type] ?? undefined;
+        const maybeHtmlComponent = components.Html;
 
         if (ComponentToRender === undefined) {
-            // Use the Html component as fallback.
-            ComponentToRender = components.Html ?? Html;
+            // Use the Html component as fallback from plugins.
+            ComponentToRender = maybeHtmlComponent;
         }
 
-        if ((components.Html ?? Html) === ComponentToRender) {
+        if (!ComponentToRender) {
+            // The requested component is not available, nor is the Html fallback component.
+            console.warn(`No component found for type "${props.type}" and no Html fallback available.`);
+            return null;
+        }
+
+        if (maybeHtmlComponent === ComponentToRender) {
             // Either the user has specifically asked for a Html component,
             // or this is a fallback for an unknown type.
             // Make sure the tag is set.
