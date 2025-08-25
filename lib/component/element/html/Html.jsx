@@ -1,32 +1,10 @@
+import { useContext, useRef } from "react";
+import { ActionDependant } from "../../../engine/Actions.jsx";
+import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
+import { normalizeAttributesForReactJsx } from "../../../engine/utility/reactJsxHelpers.jsx";
+import { TemplateContext } from "../../../engine/TemplateContext.jsx";
 import { evaluateAttributes } from "../../../engine/TemplateSystem.jsx";
 import { View } from "../../../engine/View.jsx";
-import { ActionDependant } from "../../../engine/Actions.jsx";
-import { useContext, useRef } from "react";
-import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
-import { TemplateContext } from "../../../engine/TemplateContext.jsx";
-
-export const normalizeAttributesForReactJsx = (maybeAttributesObj) => {
-    if (typeof maybeAttributesObj !== "object" || Object.keys(maybeAttributesObj).length === 0) {
-        // Not a valid attributes object.
-        return {};
-    }
-
-    const mapping = {
-        class: "className",
-        // TODO: checked to defaultChecked seems incorrect. Commented out for removal.
-        // "checked": "defaultChecked",
-    };
-
-    // Recreate a shallow copy with the normalized attribute keys.
-    const attributesObj = {};
-
-    for (const [attributeName, attributeValue] of Object.entries(maybeAttributesObj)) {
-        const finalAttributeName = mapping.hasOwnProperty(attributeName) ? mapping[attributeName] : attributeName;
-        attributesObj[finalAttributeName] = attributeValue;
-    }
-
-    return attributesObj;
-};
 
 export const Html = ({ props, currentData, datafield, path }) => {
     const globalDataContext = useContext(GlobalDataContext);

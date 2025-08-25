@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { GlobalDataContext } from "./GlobalDataContext.jsx";
 import { TemplateContext } from "./TemplateContext.jsx";
-import { normalizeAttributesForReactJsx } from "../component/element/html/Html.jsx";
+import { normalizeAttributesForReactJsx } from "./utility/reactJsxHelpers.jsx";
 
 /**
  * Transforms a data location string to a path to be used in the UI components.
