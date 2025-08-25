@@ -1,18 +1,5 @@
 import { useContext } from "react";
-import { VariablesDebug } from "../component";
-import { FolderSortableTree } from "../component/element/html/FolderSortableTree.jsx";
-import { FormatNumeral } from "../component/element/html/FormatNumeral.jsx";
 import { Html } from "../component/element/html/Html.jsx";
-import { LabelFromValue } from "../component/element/html/LabelFromValue.jsx";
-import { PreformattedMarkup } from "../component/element/html/PreformattedMarkup.jsx";
-import { SortableTreeItemCollapseButton } from "../component/element/html/SortableTreeItemCollapseButton.jsx";
-import { Count } from "../component/element/special/Count.jsx";
-import { DataFilter } from "../component/element/special/DataFilter.jsx";
-import { DelayedActions } from "../component/element/special/DelayedActions.jsx";
-import { PageControls } from "../component/element/special/PageControls.jsx";
-import { Phantom } from "../component/element/special/Phantom.jsx";
-import { ReactiveJsonSubroot } from "../component/element/special/ReactiveJsonSubroot.jsx";
-import { Switch } from "../component/element/special/Switch.jsx";
 import { GlobalDataContext } from "./GlobalDataContext.jsx";
 import { TemplateContext } from "./TemplateContext.jsx";
 import TemplateValue, { dataLocationToPath, evaluateTemplateValue } from "./TemplateSystem.jsx";
@@ -21,25 +8,14 @@ export function View({ props, currentData, datafield, path }) {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
 
+    // Get available elements from merged plugins.
     const plugins = globalDataContext.plugins ?? {};
+    const components = plugins?.element ?? {};
 
-    const components = {
-        Count,
-        DataFilter,
-        DelayedActions,
-        FolderSortableTree,
-        FormatNumeral,
-        Html,
-        LabelFromValue,
-        PageControls,
-        Phantom,
-        PreformattedMarkup,
-        ReactiveJsonSubroot,
-        SortableTreeItemCollapseButton,
-        Switch,
-        VariablesDebug,
-        ...plugins?.element,
-    };
+    if (!components) {
+        // No available elements.
+        return null;
+    }
 
     const { element } = globalDataContext;
 
@@ -54,10 +30,10 @@ export function View({ props, currentData, datafield, path }) {
 
         if (ComponentToRender === undefined) {
             // Use the Html component as fallback.
-            ComponentToRender = Html;
+            ComponentToRender = components.Html ?? Html;
         }
 
-        if (Html === ComponentToRender) {
+        if ((components.Html ?? Html) === ComponentToRender) {
             // Either the user has specifically asked for a Html component,
             // or this is a fallback for an unknown type.
             // Make sure the tag is set.
