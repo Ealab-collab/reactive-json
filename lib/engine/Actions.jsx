@@ -1,33 +1,10 @@
 import JSONPath from "jsonpath";
 import { isEqual } from "lodash";
 import { useContext } from "react";
-import { HashChangeListener } from "../component/action/HashChangeListener.jsx";
-import { Hide } from "../component/action/Hide.jsx";
-import { MessageListener } from "../component/action/MessageListener.jsx";
-import { ReactOnEvent, reactionFunctions } from "../component/action/ReactOnEvent.jsx";
-import { Redirect } from "../component/action/Redirect.jsx";
-import { SetAttributeValue } from "../component/action/SetAttributeValue.jsx";
-import { ToggleAttributeValue } from "../component/action/ToggleAttributeValue.jsx";
-import { UnsetAttribute } from "../component/action/UnsetAttribute.jsx";
-import { UnsetAttributeValue } from "../component/action/UnsetAttributeValue.jsx";
-import { VisuallyHide } from "../component/action/VisuallyHide.jsx";
+import { reactionFunctions } from "../component/action/ReactOnEvent.jsx";
 import { GlobalDataContext } from "./GlobalDataContext.jsx";
 import { TemplateContext } from "./TemplateContext.jsx";
 import { evaluateTemplateValue, isTemplateValue } from "./TemplateSystem.jsx";
-
-/**
- * Contains the list of available actions in config.
- * @type {{}}
- */
-const actionsToEvaluate = {
-    hide: Hide,
-    redirect: Redirect,
-    setAttributeValue: SetAttributeValue,
-    toggleAttributeValue: ToggleAttributeValue,
-    unsetAttribute: UnsetAttribute,
-    unsetAttributeValue: UnsetAttributeValue,
-    visuallyHide: VisuallyHide,
-};
 
 /**
  * Capitalizes the first letter.
@@ -282,6 +259,16 @@ const getActionsToExecute = (actions, templateContexts) => {
         return result;
     }
 
+    // Get available actions from merged plugins (already merged in ReactiveJsonRoot)
+    const { globalDataContext } = templateContexts;
+    const plugins = globalDataContext.plugins ?? {};
+    const actionsToEvaluate = plugins?.action ?? {};
+
+    if (!actionsToEvaluate) {
+        // No available actions.
+        return result;
+    }
+
     // The index is useful to build the data path for the components created by the actions.
     // This is a requirement of the View components.
     // Dev note: could it be like the components, where we can specify string keys,
@@ -293,13 +280,17 @@ const getActionsToExecute = (actions, templateContexts) => {
             continue;
         }
 
-        const Component = actionsToEvaluate[what];
-        let reactionFunction = undefined;
+        let Component = actionsToEvaluate[what] ?? undefined;
+        let reactionFunction = reactionFunctions[what] ?? undefined;
+
+        if (!Component && !reactionFunction) {
+            // Retro-compatibility: try to find an action component by capitalizing the first letter.
+            // This happens when old apps do "what: hide" instead of "what: Hide".
+            Component = actionsToEvaluate[capitalizeFirstLetter(what)];
+        }
 
         if (!Component) {
-            // This is not a component. Maybe it's a reaction function...
-            reactionFunction = reactionFunctions[what] ?? undefined;
-
+            // This is not an action component.
             if (!reactionFunction) {
                 // The component is unknown or not registered,
                 // and it's not a reaction function.
@@ -322,13 +313,25 @@ const getActionsToExecute = (actions, templateContexts) => {
                 // "message" has a special handling. It adds the special MessageListener action component.
                 // This is because the message event can only be listened to on the window object,
                 // so it adds event listeners on the window object (not the current component).
-                result.push({ ActionComponent: MessageListener, actionProps: item, actionIndex: index });
+                if (!actionsToEvaluate.MessageListener) {
+                    // No MessageListener action component.
+                    // Some plugin may have disabled it.
+                    continue;
+                }
+
+                result.push({ ActionComponent: actionsToEvaluate.MessageListener, actionProps: item, actionIndex: index });
                 continue;
             }
 
             if (item.on === "hashchange") {
                 // "hashchange" works in the same way than "message": it must be added on the window object.
-                result.push({ ActionComponent: HashChangeListener, actionProps: item, actionIndex: index });
+                if (!actionsToEvaluate.HashChangeListener) {
+                    // No HashChangeListener action component.
+                    // Some plugin may have disabled it.
+                    continue;
+                }
+
+                result.push({ ActionComponent: actionsToEvaluate.HashChangeListener, actionProps: item, actionIndex: index });
                 continue;
             }
 
@@ -362,8 +365,14 @@ const getActionsToExecute = (actions, templateContexts) => {
         // It's added at the end because it will collect all definitions
         // and apply the reaction function properties on the real rendered element.
         // TODO: evaluate if the _reactOnEvent actionIndex may create issues.
+        if (!actionsToEvaluate.ReactOnEvent) {
+            // No ReactOnEvent action component.
+            // Some plugin may have disabled it.
+            return result;
+        }
+
         result.push({
-            ActionComponent: ReactOnEvent,
+            ActionComponent: actionsToEvaluate.ReactOnEvent,
             actionProps: reactionFunctionProps,
             actionIndex: "_reactOnEvent",
         });
