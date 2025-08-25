@@ -144,11 +144,9 @@ This project was bootstrapped with [Vite](https://vite.dev/).
 This is where the main component code is located.
 
 We provided a basic set of components that people will mostly need.
-Those components usually wrap around famous third-party libs such as
-*React-Bootstrap* and *Chart.js*.
 
 Of course, you can add your own components in your React project,
-by following the same pattern.
+by following the same pattern, or extend by using plugins.
 
 #### Actions `/lib/component/action`
 

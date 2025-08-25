@@ -4,12 +4,10 @@ import { useContext } from "react";
 import { HashChangeListener } from "../component/action/HashChangeListener.jsx";
 import { Hide } from "../component/action/Hide.jsx";
 import { MessageListener } from "../component/action/MessageListener.jsx";
-import { Popover } from "../component/action/Popover.jsx";
 import { ReactOnEvent, reactionFunctions } from "../component/action/ReactOnEvent.jsx";
 import { Redirect } from "../component/action/Redirect.jsx";
 import { SetAttributeValue } from "../component/action/SetAttributeValue.jsx";
 import { ToggleAttributeValue } from "../component/action/ToggleAttributeValue.jsx";
-import { Tooltip } from "../component/action/Tooltip.jsx";
 import { UnsetAttribute } from "../component/action/UnsetAttribute.jsx";
 import { UnsetAttributeValue } from "../component/action/UnsetAttributeValue.jsx";
 import { VisuallyHide } from "../component/action/VisuallyHide.jsx";
@@ -23,11 +21,9 @@ import { evaluateTemplateValue, isTemplateValue } from "./TemplateSystem.jsx";
  */
 const actionsToEvaluate = {
     hide: Hide,
-    popover: Popover,
     redirect: Redirect,
     setAttributeValue: SetAttributeValue,
     toggleAttributeValue: ToggleAttributeValue,
-    tooltip: Tooltip,
     unsetAttribute: UnsetAttribute,
     unsetAttributeValue: UnsetAttributeValue,
     visuallyHide: VisuallyHide,
