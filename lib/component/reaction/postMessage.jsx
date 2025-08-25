@@ -1,4 +1,4 @@
-import {evaluateTemplateValueCollection} from "../../engine/TemplateSystem.jsx";
+import { evaluateTemplateValueCollection } from "../../engine/TemplateSystem.jsx";
 
 /**
  * Posts a message to the specified target.
@@ -21,10 +21,15 @@ export const postMessage = (props) => {
     const message_evaluated = evaluateTemplateValueCollection({
         globalDataContext: props.globalDataContext,
         templateContext: props.templateContext,
-        valueToEvaluate: props?.args?.message
+        valueToEvaluate: props?.args?.message,
     });
 
-    if (props?.args?.on === "change" && typeof message_evaluated === "object" && props?.args?.includeChangedValue && props?.event?.target?.nodeName === "INPUT") {
+    if (
+        props?.args?.on === "change" &&
+        typeof message_evaluated === "object" &&
+        props?.args?.includeChangedValue &&
+        props?.event?.target?.nodeName === "INPUT"
+    ) {
         let changedValue;
 
         switch (props?.event?.target?.type) {
@@ -39,5 +44,5 @@ export const postMessage = (props) => {
         message_evaluated["changedValue"] = changedValue;
     }
 
-    (messageTarget && messageTargetOrigin) && messageTarget.postMessage(message_evaluated, messageTargetOrigin);
+    messageTarget && messageTargetOrigin && messageTarget.postMessage(message_evaluated, messageTargetOrigin);
 };

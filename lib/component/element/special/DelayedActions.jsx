@@ -1,9 +1,9 @@
-import {ActionDependant, isValid} from "../../../engine/Actions.jsx";
-import {GlobalDataContext} from "../../../engine/GlobalDataContext.jsx";
-import {TemplateContext} from "../../../engine/TemplateContext.jsx";
-import {View} from "../../../engine/View.jsx";
-import {reactionFunctions} from "../../action/ReactOnEvent.jsx";
-import {useContext, useEffect} from "react";
+import { useContext, useEffect } from "react";
+import { ActionDependant, isValid } from "../../../engine/Actions.jsx";
+import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
+import { TemplateContext } from "../../../engine/TemplateContext.jsx";
+import { View } from "../../../engine/View.jsx";
+import { reactionFunctions } from "../../action/ReactOnEvent.jsx";
 
 /**
  * Provides a way to execute actions after a delay, at intervals, etc.
@@ -14,12 +14,12 @@ import {useContext, useEffect} from "react";
  *
  * @constructor
  */
-export const DelayedActions = ({props, currentData, path}) => {
+export const DelayedActions = ({ props, currentData, path }) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
 
     const delayedActions = Array.isArray(props.delayedActions) ? props.delayedActions : [];
-    const templateContexts = {globalDataContext, templateContext};
+    const templateContexts = { globalDataContext, templateContext };
 
     useEffect(() => {
         if (!props.interval) {
@@ -34,7 +34,11 @@ export const DelayedActions = ({props, currentData, path}) => {
             // The events (on change, on click, etc.) are ignored because
             // it does not make sense to have to wait for a delay AND a specific event.
             // The time is already an event.
-            for (let reactionFunctionPropsIndex = 0; reactionFunctionPropsIndex < reactionFunctionsToExecute.length; ++reactionFunctionPropsIndex) {
+            for (
+                let reactionFunctionPropsIndex = 0;
+                reactionFunctionPropsIndex < reactionFunctionsToExecute.length;
+                ++reactionFunctionPropsIndex
+            ) {
                 const singleReactionFunctionProps = reactionFunctionsToExecute[reactionFunctionPropsIndex];
 
                 if (!singleReactionFunctionProps) {
@@ -42,7 +46,8 @@ export const DelayedActions = ({props, currentData, path}) => {
                     continue;
                 }
 
-                const reactionFunction = singleReactionFunctionProps.what && (reactionFunctions[singleReactionFunctionProps.what] ?? null);
+                const reactionFunction =
+                    singleReactionFunctionProps.what && (reactionFunctions[singleReactionFunctionProps.what] ?? null);
 
                 if (!reactionFunction) {
                     continue;
@@ -51,7 +56,7 @@ export const DelayedActions = ({props, currentData, path}) => {
                 // Call the reaction function with the props and context data.
                 // This differs from the ReactOnEvent implementation by not including event data,
                 // because we did not trigger an event.
-                reactionFunction({args: singleReactionFunctionProps, globalDataContext, templateContext});
+                reactionFunction({ args: singleReactionFunctionProps, globalDataContext, templateContext });
             }
 
             if (props.once) {
@@ -62,15 +67,19 @@ export const DelayedActions = ({props, currentData, path}) => {
         return () => clearInterval(interval);
     }, [globalDataContext, templateContext]);
 
-    return <ActionDependant {...props}>
-        {props.content && <View
-            props={props.content}
-            currentData={currentData?.content ?? undefined}
-            datafield={"content"}
-            path={path + ".content"}/>}
-    </ActionDependant>;
+    return (
+        <ActionDependant {...props}>
+            {props.content && (
+                <View
+                    props={props.content}
+                    currentData={currentData?.content ?? undefined}
+                    datafield={"content"}
+                    path={path + ".content"}
+                />
+            )}
+        </ActionDependant>
+    );
 };
-
 
 /**
  * Gets the reaction functions to execute.

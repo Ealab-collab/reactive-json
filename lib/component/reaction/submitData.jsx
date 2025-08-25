@@ -1,5 +1,5 @@
-import {executeHttpRequest} from "./utility/httpRequestCommon.jsx";
-import {evaluateTemplateValue} from "../../engine/TemplateSystem.jsx";
+import { executeHttpRequest } from "./utility/httpRequestCommon.jsx";
+import { evaluateTemplateValue } from "../../engine/TemplateSystem.jsx";
 
 /**
  * Submits the current state of this app data.
@@ -17,7 +17,7 @@ import {evaluateTemplateValue} from "../../engine/TemplateSystem.jsx";
  * @param {string} props.args.url URL to submit data to.
  */
 export const submitData = (props) => {
-    const {globalDataContext: _globalDataContext, templateContext} = props;
+    const { globalDataContext: _globalDataContext, templateContext } = props;
 
     // Use the root context when submitting data,
     // not the maybe-filtered one that the DataFilter component may have edited.
@@ -36,21 +36,19 @@ export const submitData = (props) => {
         const applyFilter = (value, filterFn) => {
             if (Array.isArray(value)) {
                 return value.map(filterFn);
-            } else if (typeof value === 'object' && value !== null) {
+            } else if (typeof value === "object" && value !== null) {
                 const entries = Object.entries(value).map(([key, val]) => {
                     return [key, filterFn(val)];
                 });
 
-                return Object.fromEntries(
-                    entries
-                );
+                return Object.fromEntries(entries);
             } else {
                 return filterFn(value);
             }
-        }
+        };
 
         payload = applyFilter(payload, (value) => {
-            return evaluateTemplateValue({valueToEvaluate: value, globalDataContext, templateContext})
+            return evaluateTemplateValue({ valueToEvaluate: value, globalDataContext, templateContext });
         });
 
         if (globalDataContext.templateData.__state !== undefined) {
@@ -71,7 +69,7 @@ export const submitData = (props) => {
         {
             method: props?.args?.httpMethod ?? "post",
             data: payload,
-            submitSilently: props?.args?.submitSilently
+            submitSilently: props?.args?.submitSilently,
         },
         "submitData"
     );

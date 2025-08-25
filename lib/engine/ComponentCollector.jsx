@@ -5,13 +5,13 @@
  */
 export function mergeComponentCollections(collections) {
     const mergedCollections = {
-        "action": {},
-        "dataMapping": {},
-        "dataProcessor": {},
-        "element": {},
-        "hook": {},
-        "reaction": {},
-        "utility": {},
+        action: {},
+        dataMapping: {},
+        dataProcessor: {},
+        element: {},
+        hook: {},
+        reaction: {},
+        utility: {},
     };
 
     collections.forEach((collection) => {
@@ -29,12 +29,12 @@ export function mergeComponentCollections(collections) {
 
     // Sort dataProcessor items by the "order" property, and their name when the order is the same.
     const dataProcessorEntries = Object.entries(mergedCollections.dataProcessor);
-    
+
     // Sort by order, then by name when the order is the same.
     dataProcessorEntries.sort((a, b) => {
         const [nameA, processorA] = a;
         const [nameB, processorB] = b;
-        
+
         // Sort by order first.
         const orderA = processorA?.order || 0;
         const orderB = processorB?.order || 0;
@@ -42,11 +42,11 @@ export function mergeComponentCollections(collections) {
         if (orderComparison !== 0) {
             return orderComparison;
         }
-        
+
         // Sort by name when the order is the same.
         return nameA.localeCompare(nameB);
     });
-    
+
     // Rebuild the object with the sorted entries.
     mergedCollections.dataProcessor = Object.fromEntries(dataProcessorEntries);
 

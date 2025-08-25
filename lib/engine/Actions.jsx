@@ -1,22 +1,21 @@
-import {useContext} from "react";
-import {GlobalDataContext} from "./GlobalDataContext.jsx";
-import {TemplateContext} from "./TemplateContext.jsx";
-import {evaluateTemplateValue, isTemplateValue} from "./TemplateSystem.jsx";
-
-import {HashChangeListener} from "../component/action/HashChangeListener.jsx";
-import {Hide} from "../component/action/Hide.jsx";
-import {MessageListener} from "../component/action/MessageListener.jsx";
-import {Popover} from "../component/action/Popover.jsx";
-import {ReactOnEvent, reactionFunctions} from "../component/action/ReactOnEvent.jsx";
-import {Redirect} from "../component/action/Redirect.jsx";
-import {SetAttributeValue} from "../component/action/SetAttributeValue.jsx";
-import {ToggleAttributeValue} from "../component/action/ToggleAttributeValue.jsx";
-import {Tooltip} from "../component/action/Tooltip.jsx";
-import {UnsetAttribute} from "../component/action/UnsetAttribute.jsx";
-import {UnsetAttributeValue} from "../component/action/UnsetAttributeValue.jsx";
-import {VisuallyHide} from "../component/action/VisuallyHide.jsx";
-import {isEqual} from "lodash";
 import JSONPath from "jsonpath";
+import { isEqual } from "lodash";
+import { useContext } from "react";
+import { HashChangeListener } from "../component/action/HashChangeListener.jsx";
+import { Hide } from "../component/action/Hide.jsx";
+import { MessageListener } from "../component/action/MessageListener.jsx";
+import { Popover } from "../component/action/Popover.jsx";
+import { ReactOnEvent, reactionFunctions } from "../component/action/ReactOnEvent.jsx";
+import { Redirect } from "../component/action/Redirect.jsx";
+import { SetAttributeValue } from "../component/action/SetAttributeValue.jsx";
+import { ToggleAttributeValue } from "../component/action/ToggleAttributeValue.jsx";
+import { Tooltip } from "../component/action/Tooltip.jsx";
+import { UnsetAttribute } from "../component/action/UnsetAttribute.jsx";
+import { UnsetAttributeValue } from "../component/action/UnsetAttributeValue.jsx";
+import { VisuallyHide } from "../component/action/VisuallyHide.jsx";
+import { GlobalDataContext } from "./GlobalDataContext.jsx";
+import { TemplateContext } from "./TemplateContext.jsx";
+import { evaluateTemplateValue, isTemplateValue } from "./TemplateSystem.jsx";
 
 /**
  * Contains the list of available actions in config.
@@ -50,16 +49,13 @@ const capitalizeFirstLetter = (str) => str && str.charAt(0).toUpperCase() + str.
  * @returns {*}
  */
 export const isValid = (condition, templateContexts, additionalConditionHandlers) => {
-    const {globalDataContext, templateContext} = templateContexts;
+    const { globalDataContext, templateContext } = templateContexts;
 
     if (Array.isArray(condition.andConditions)) {
-        return condition.andConditions.reduce(
-            (acc, cur) => {
-                // All sub conditions must be true.
-                return acc && isValid(cur, templateContexts, additionalConditionHandlers);
-            },
-            true
-        );
+        return condition.andConditions.reduce((acc, cur) => {
+            // All sub conditions must be true.
+            return acc && isValid(cur, templateContexts, additionalConditionHandlers);
+        }, true);
     }
 
     if (Array.isArray(condition.orConditions)) {
@@ -85,7 +81,7 @@ export const isValid = (condition, templateContexts, additionalConditionHandlers
             templateContext: templateContext,
             valueToEvaluate: toEvaluate,
         });
-    }
+    };
 
     let valueToCompare;
 
@@ -120,7 +116,7 @@ export const isValid = (condition, templateContexts, additionalConditionHandlers
                             templateContexts,
                             evaluateAgainstTemplates: (value) => {
                                 return evaluateTemplateValueLocal(value);
-                            }
+                            },
                         });
                     }
                 }
@@ -164,11 +160,17 @@ export const isValid = (condition, templateContexts, additionalConditionHandlers
     const compareAsDates = condition.compareAsDates;
 
     if (condition.hasOwnProperty("isNot")) {
-        return maybeDate(compareAsDates, valueToCompare) !== maybeDate(compareAsDates, evaluateTemplateValueLocal(condition.isNot));
+        return (
+            maybeDate(compareAsDates, valueToCompare) !==
+            maybeDate(compareAsDates, evaluateTemplateValueLocal(condition.isNot))
+        );
     }
 
     if (condition.hasOwnProperty("is")) {
-        return maybeDate(compareAsDates, valueToCompare) === maybeDate(compareAsDates, evaluateTemplateValueLocal(condition.is));
+        return (
+            maybeDate(compareAsDates, valueToCompare) ===
+            maybeDate(compareAsDates, evaluateTemplateValueLocal(condition.is))
+        );
     }
 
     if (condition.hasOwnProperty("containsNot") || condition.hasOwnProperty("contains")) {
@@ -234,19 +236,31 @@ export const isValid = (condition, templateContexts, additionalConditionHandlers
     }
 
     if (condition.hasOwnProperty(">")) {
-        return maybeDate(compareAsDates, valueToCompare) > maybeDate(compareAsDates, evaluateTemplateValueLocal(condition[">"]));
+        return (
+            maybeDate(compareAsDates, valueToCompare) >
+            maybeDate(compareAsDates, evaluateTemplateValueLocal(condition[">"]))
+        );
     }
 
     if (condition.hasOwnProperty(">=")) {
-        return maybeDate(compareAsDates, valueToCompare) >= maybeDate(compareAsDates, evaluateTemplateValueLocal(condition[">="]));
+        return (
+            maybeDate(compareAsDates, valueToCompare) >=
+            maybeDate(compareAsDates, evaluateTemplateValueLocal(condition[">="]))
+        );
     }
 
     if (condition.hasOwnProperty("<")) {
-        return maybeDate(compareAsDates, valueToCompare) < maybeDate(compareAsDates, evaluateTemplateValueLocal(condition["<"]));
+        return (
+            maybeDate(compareAsDates, valueToCompare) <
+            maybeDate(compareAsDates, evaluateTemplateValueLocal(condition["<"]))
+        );
     }
 
     if (condition.hasOwnProperty("<=")) {
-        return maybeDate(compareAsDates, valueToCompare) <= maybeDate(compareAsDates, evaluateTemplateValueLocal(condition["<="]));
+        return (
+            maybeDate(compareAsDates, valueToCompare) <=
+            maybeDate(compareAsDates, evaluateTemplateValueLocal(condition["<="]))
+        );
     }
 
     // No condition means always valid.
@@ -312,13 +326,13 @@ const getActionsToExecute = (actions, templateContexts) => {
                 // "message" has a special handling. It adds the special MessageListener action component.
                 // This is because the message event can only be listened to on the window object,
                 // so it adds event listeners on the window object (not the current component).
-                result.push({ActionComponent: MessageListener, actionProps: item, actionIndex: index});
+                result.push({ ActionComponent: MessageListener, actionProps: item, actionIndex: index });
                 continue;
             }
 
             if (item.on === "hashchange") {
                 // "hashchange" works in the same way than "message": it must be added on the window object.
-                result.push({ActionComponent: HashChangeListener, actionProps: item, actionIndex: index});
+                result.push({ ActionComponent: HashChangeListener, actionProps: item, actionIndex: index });
                 continue;
             }
 
@@ -344,7 +358,7 @@ const getActionsToExecute = (actions, templateContexts) => {
             continue;
         }
 
-        result.push({ActionComponent: Component, actionProps: item, actionIndex: index});
+        result.push({ ActionComponent: Component, actionProps: item, actionIndex: index });
     }
 
     if (requiresReactionComponent) {
@@ -352,7 +366,11 @@ const getActionsToExecute = (actions, templateContexts) => {
         // It's added at the end because it will collect all definitions
         // and apply the reaction function properties on the real rendered element.
         // TODO: evaluate if the _reactOnEvent actionIndex may create issues.
-        result.push({ActionComponent: ReactOnEvent, actionProps: reactionFunctionProps, actionIndex: "_reactOnEvent"});
+        result.push({
+            ActionComponent: ReactOnEvent,
+            actionProps: reactionFunctionProps,
+            actionIndex: "_reactOnEvent",
+        });
     }
 
     return result;
@@ -390,17 +408,20 @@ export const ActionDependant = (props) => {
         return null;
     }
 
-    const result = getActionsToExecute(props?.actions ?? [], {globalDataContext, templateContext});
+    const result = getActionsToExecute(props?.actions ?? [], { globalDataContext, templateContext });
 
     // Encapsulate into actions.
-    return result.reverse().reduce((acc, {ActionComponent, actionProps, actionIndex}) => {
+    return result.reverse().reduce((acc, { ActionComponent, actionProps, actionIndex }) => {
         // actionProps contains only the info that is related to the action.
-        return <ActionComponent
-            componentProps={props}
-            actionProps={actionProps}
-            actionIndex={actionIndex}
-            attributesHolderRef={props.attributesHolderRef}>
-            {acc}
-        </ActionComponent>;
+        return (
+            <ActionComponent
+                componentProps={props}
+                actionProps={actionProps}
+                actionIndex={actionIndex}
+                attributesHolderRef={props.attributesHolderRef}
+            >
+                {acc}
+            </ActionComponent>
+        );
     }, props?.children ?? null);
 };

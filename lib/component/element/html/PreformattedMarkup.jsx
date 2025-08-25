@@ -1,9 +1,9 @@
-import {ActionDependant} from "../../../engine/Actions.jsx";
-import {GlobalDataContext} from "../../../engine/GlobalDataContext.jsx";
-import {TemplateContext} from "../../../engine/TemplateContext.jsx";
-import {evaluateTemplateValue} from "../../../engine/TemplateSystem.jsx";
-import parse from 'html-react-parser';
-import {useContext} from 'react';
+import parse from "html-react-parser";
+import { useContext } from "react";
+import { ActionDependant } from "../../../engine/Actions.jsx";
+import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
+import { TemplateContext } from "../../../engine/TemplateContext.jsx";
+import { evaluateTemplateValue } from "../../../engine/TemplateSystem.jsx";
 
 /**
  * List of tags that are allowed by default.
@@ -11,19 +11,46 @@ import {useContext} from 'react';
  * @type {string[]}
  */
 const defaultHtmlTagAllowList = [
-    "abbr", "acronym", "b", "blockquote", "br", "caption", "code", "div", "em", "h1", "h2", "h3", "h4", "h5", "h6",
-    "i", "li", "ol", "p", "span", "sup", "strong", "table", "tbody",
-    "td", "tfoot", "th", "thead", "tr", "ul",
+    "abbr",
+    "acronym",
+    "b",
+    "blockquote",
+    "br",
+    "caption",
+    "code",
+    "div",
+    "em",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "i",
+    "li",
+    "ol",
+    "p",
+    "span",
+    "sup",
+    "strong",
+    "table",
+    "tbody",
+    "td",
+    "tfoot",
+    "th",
+    "thead",
+    "tr",
+    "ul",
 ];
 
 /**
  * Preformatted markup component that takes content and inserts it as HTML.
  */
-export const PreformattedMarkup = ({props}) => {
+export const PreformattedMarkup = ({ props }) => {
     const templateContext = useContext(TemplateContext);
     const globalDataContext = useContext(GlobalDataContext);
 
-    const html = evaluateTemplateValue({valueToEvaluate: props.content, templateContext, globalDataContext});
+    const html = evaluateTemplateValue({ valueToEvaluate: props.content, templateContext, globalDataContext });
 
     if (typeof html !== "string") {
         console.error("PreformattedMarkup: the given content is not a string.");
@@ -34,7 +61,7 @@ export const PreformattedMarkup = ({props}) => {
     const htmlTagAllowList = Array.isArray(props.htmlTagAllowList) ? props.htmlTagAllowList : defaultHtmlTagAllowList;
 
     // Allow the list to be extended with the additionalAllowedTags component property.
-    const completeTagAllowList = [...htmlTagAllowList, ...(props.additionalAllowedTags ?? [])]
+    const completeTagAllowList = [...htmlTagAllowList, ...(props.additionalAllowedTags ?? [])];
 
     return (
         <ActionDependant {...props}>
@@ -50,8 +77,8 @@ export const PreformattedMarkup = ({props}) => {
                         // Replace by a fragment which will effectively replace by nothing.
                         return <></>;
                     }
-                }
+                },
             })}
         </ActionDependant>
-    )
-}
+    );
+};

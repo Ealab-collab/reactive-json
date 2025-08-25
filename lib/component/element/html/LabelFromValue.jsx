@@ -1,9 +1,9 @@
-import {ActionDependant} from "../../../engine/Actions.jsx";
-import {GlobalDataContext} from "../../../engine/GlobalDataContext.jsx";
-import {TemplateContext} from "../../../engine/TemplateContext.jsx";
-import {evaluateTemplateValue} from "../../../engine/TemplateSystem.jsx";
-import {View} from "../../../engine/View.jsx";
-import {useContext} from "react";
+import { useContext } from "react";
+import { ActionDependant } from "../../../engine/Actions.jsx";
+import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
+import { TemplateContext } from "../../../engine/TemplateContext.jsx";
+import { evaluateTemplateValue } from "../../../engine/TemplateSystem.jsx";
+import { View } from "../../../engine/View.jsx";
 
 /**
  * Shows the label associated to a value.
@@ -20,7 +20,7 @@ import {useContext} from "react";
  * @returns {JSX.Element}
  * @constructor
  */
-export const LabelFromValue = ({currentData, datafield, path, props}) => {
+export const LabelFromValue = ({ currentData, datafield, path, props }) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
 
@@ -30,7 +30,7 @@ export const LabelFromValue = ({currentData, datafield, path, props}) => {
 
     if (dynamicOptions) {
         // Build the options through the given data.
-        options = evaluateTemplateValue({valueToEvaluate: dynamicOptions, globalDataContext, templateContext}) ?? [];
+        options = evaluateTemplateValue({ valueToEvaluate: dynamicOptions, globalDataContext, templateContext }) ?? [];
     } else {
         options = props.options ?? [];
     }
@@ -45,16 +45,18 @@ export const LabelFromValue = ({currentData, datafield, path, props}) => {
 
     if (dataLocation) {
         // A custom data location has been specified.
-        formData = evaluateTemplateValue({
-            globalDataContext: globalDataContext,
-            templateContext: templateContext,
-            valueToEvaluate: dataLocation,
-        }) ?? defaultFieldValue;
+        formData =
+            evaluateTemplateValue({
+                globalDataContext: globalDataContext,
+                templateContext: templateContext,
+                valueToEvaluate: dataLocation,
+            }) ?? defaultFieldValue;
     } else {
         // Use the template data.
         if ((templateContext.templateData[datafield] ?? undefined) === undefined) {
             // Initialize the data for this component.
-            templateContext.templateData = (typeof templateContext.templateData === "object") ? templateContext.templateData : {};
+            templateContext.templateData =
+                typeof templateContext.templateData === "object" ? templateContext.templateData : {};
             templateContext.templateData[datafield] = defaultFieldValue;
         }
 
@@ -77,11 +79,7 @@ export const LabelFromValue = ({currentData, datafield, path, props}) => {
 
     return (
         <ActionDependant {...props}>
-            <View
-                currentData={currentData}
-                datafield={datafield}
-                path={path}
-                props={finalValue.label}/>
+            <View currentData={currentData} datafield={datafield} path={path} props={finalValue.label} />
         </ActionDependant>
     );
 };

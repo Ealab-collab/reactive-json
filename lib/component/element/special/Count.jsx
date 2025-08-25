@@ -1,8 +1,8 @@
 import JSONPath from "jsonpath";
-import {useContext} from "react";
-import {GlobalDataContext} from "../../../engine/GlobalDataContext.jsx";
-import {TemplateContext} from "../../../engine/TemplateContext.jsx";
-import {maybeFormatString} from "../../../engine/utility";
+import { useContext } from "react";
+import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
+import { TemplateContext } from "../../../engine/TemplateContext.jsx";
+import { maybeFormatString } from "../../../engine/utility";
 
 /**
  * Returns a count for something to count.
@@ -13,14 +13,11 @@ import {maybeFormatString} from "../../../engine/utility";
  *
  * @constructor
  */
-export const Count = ({props}) => {
+export const Count = ({ props }) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
 
-    const {
-        context = "global",
-        jsonPathPattern: _jsonPathPattern,
-    } = props;
+    const { context = "global", jsonPathPattern: _jsonPathPattern } = props;
 
     const _selectedContext = context === "template" ? TemplateContext : GlobalDataContext;
     const selectedContext = useContext(_selectedContext);
@@ -29,14 +26,18 @@ export const Count = ({props}) => {
         return null;
     }
 
-    const jsonPathPattern = maybeFormatString({
-        templateContexts: {
-            globalDataContext,
-            templateContext
-        }
-    }, _jsonPathPattern);
+    const jsonPathPattern = maybeFormatString(
+        {
+            templateContexts: {
+                globalDataContext,
+                templateContext,
+            },
+        },
+        _jsonPathPattern
+    );
 
-    const selectedContextData = context === "root" ? selectedContext.getRootContext().templateData : selectedContext.templateData;
+    const selectedContextData =
+        context === "root" ? selectedContext.getRootContext().templateData : selectedContext.templateData;
 
     const result = JSONPath.query(selectedContextData, jsonPathPattern);
 

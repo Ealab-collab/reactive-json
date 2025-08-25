@@ -1,4 +1,4 @@
-import {evaluateTemplateValue} from "../TemplateSystem.jsx";
+import { evaluateTemplateValue } from "../TemplateSystem.jsx";
 
 /**
  * Pseudo sprintf implementation.
@@ -13,9 +13,8 @@ import {evaluateTemplateValue} from "../TemplateSystem.jsx";
  *
  * @returns {*}
  */
-const sprintf = (str, ...argv) => !argv.length
-    ? str
-    : sprintf(str = str.replace(sprintf.token || "$token", argv.shift()), ...argv);
+const sprintf = (str, ...argv) =>
+    !argv.length ? str : sprintf((str = str.replace(sprintf.token || "$token", argv.shift())), ...argv);
 
 /**
  * Formats the given string with replacement arguments.
@@ -24,16 +23,14 @@ const sprintf = (str, ...argv) => !argv.length
  * @param {string} toFormat The string to format.
  * @param {...string} argv The replacement arguments.
  */
-export const formatString = ({templateContexts}, toFormat, ...argv) => {
-    const evaluatedArgs = argv.map(
-        (toEvaluate) => {
-            return evaluateTemplateValue({
-                globalDataContext: templateContexts.globalDataContext,
-                templateContext: templateContexts.templateContext,
-                valueToEvaluate: toEvaluate
-            });
-        }
-    )
+export const formatString = ({ templateContexts }, toFormat, ...argv) => {
+    const evaluatedArgs = argv.map((toEvaluate) => {
+        return evaluateTemplateValue({
+            globalDataContext: templateContexts.globalDataContext,
+            templateContext: templateContexts.templateContext,
+            valueToEvaluate: toEvaluate,
+        });
+    });
     return sprintf(toFormat, ...evaluatedArgs);
 };
 

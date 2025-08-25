@@ -2,7 +2,7 @@ import { ActionDependant, useEvaluatedAttributes, View } from "../../../engine";
 
 /**
  * Wraps around a React component to make it work with Reactive JSON.
- * 
+ *
  * Adds the attributes evaluation and actions execution.
  * The "content" property is used to render a sub-element, if the component supports it.
  */

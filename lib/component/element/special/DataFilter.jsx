@@ -1,8 +1,8 @@
-import {useContext} from "react";
-import {isValid} from "../../../engine/Actions.jsx";
-import {GlobalDataContext} from "../../../engine/GlobalDataContext.jsx";
-import {TemplateContext} from "../../../engine/TemplateContext.jsx";
-import {View} from "../../../engine/View.jsx";
+import { useContext } from "react";
+import { isValid } from "../../../engine/Actions.jsx";
+import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
+import { TemplateContext } from "../../../engine/TemplateContext.jsx";
+import { View } from "../../../engine/View.jsx";
 
 /**
  * Use DataFilter to filter data from the global or template data.
@@ -16,12 +16,9 @@ import {View} from "../../../engine/View.jsx";
 export const DataFilter = (args) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
-    const templateContexts = {globalDataContext, templateContext};
+    const templateContexts = { globalDataContext, templateContext };
 
-    const {
-        contextToFilter = "global",
-        filters = [],
-    } = args.props;
+    const { contextToFilter = "global", filters = [] } = args.props;
 
     const filterData = (data) => {
         if (!data) {
@@ -40,29 +37,27 @@ export const DataFilter = (args) => {
                 continue;
             }
 
-            const additionalConditionHandlers = new Map(
+            const additionalConditionHandlers = new Map([
                 [
-                    [
-                        "whenFilterableData",
-                        ({condition}) => {
-                            // Walk through the data.
-                            const path = condition["whenFilterableData"];
-                            const pathArray = path.split('.');
-                            let current = data;
+                    "whenFilterableData",
+                    ({ condition }) => {
+                        // Walk through the data.
+                        const path = condition["whenFilterableData"];
+                        const pathArray = path.split(".");
+                        let current = data;
 
-                            for (const segment of pathArray) {
-                                const index = parseInt(segment);
-                                current = current[isNaN(index) ? segment : index];
-                                if (current === undefined) {
-                                    return undefined;
-                                }
+                        for (const segment of pathArray) {
+                            const index = parseInt(segment);
+                            current = current[isNaN(index) ? segment : index];
+                            if (current === undefined) {
+                                return undefined;
                             }
-
-                            return current;
                         }
-                    ]
-                ]
-            );
+
+                        return current;
+                    },
+                ],
+            ]);
 
             // The item may be filtered out by this filter definition.
             // Now, check the activation conditions.
@@ -75,32 +70,37 @@ export const DataFilter = (args) => {
         return true;
     };
 
-
     switch (contextToFilter) {
         case "template":
             templateContext.templateData = cloneAndFilter(templateContext.templateData, filterData);
             templateContext.templatePath = args.path;
 
-            return <TemplateContext.Provider value={templateContext}>
-                <View
-                    props={args.props.content}
-                    path={args.path + ".content"}
-                    datafield={"content"}
-                    currentData={args.currentData?.["content"] ?? undefined}/>
-            </TemplateContext.Provider>;
+            return (
+                <TemplateContext.Provider value={templateContext}>
+                    <View
+                        props={args.props.content}
+                        path={args.path + ".content"}
+                        datafield={"content"}
+                        currentData={args.currentData?.["content"] ?? undefined}
+                    />
+                </TemplateContext.Provider>
+            );
 
         case "global":
         default:
             // We rewrite the template data.
             globalDataContext.templateData = cloneAndFilter(globalDataContext.templateData, filterData);
 
-            return <GlobalDataContext.Provider value={globalDataContext}>
-                <View
-                    props={args.props.content}
-                    path={args.path + ".content"}
-                    datafield={"content"}
-                    currentData={args.currentData?.["content"] ?? undefined}/>
-            </GlobalDataContext.Provider>;
+            return (
+                <GlobalDataContext.Provider value={globalDataContext}>
+                    <View
+                        props={args.props.content}
+                        path={args.path + ".content"}
+                        datafield={"content"}
+                        currentData={args.currentData?.["content"] ?? undefined}
+                    />
+                </GlobalDataContext.Provider>
+            );
     }
 };
 
@@ -133,7 +133,7 @@ const cloneAndFilter = (data, filterData) => {
         });
 
         return obj;
-    } else if (typeof data === 'object' && data !== null) {
+    } else if (typeof data === "object" && data !== null) {
         const obj = {};
 
         for (const key in data) {
@@ -151,4 +151,4 @@ const cloneAndFilter = (data, filterData) => {
     } else {
         return data;
     }
-}
+};

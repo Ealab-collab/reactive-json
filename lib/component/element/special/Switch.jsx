@@ -1,18 +1,18 @@
-import {createElement, useContext} from 'react';
-import {ActionDependant} from "../../../engine/Actions.jsx";
-import {GlobalDataContext} from "../../../engine/GlobalDataContext.jsx";
-import {PaginationContext} from "../../../engine/PaginationContext.jsx";
-import {TemplateContext} from "../../../engine/TemplateContext.jsx";
+import { createElement, useContext } from "react";
+import { ActionDependant } from "../../../engine/Actions.jsx";
+import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
+import { PaginationContext } from "../../../engine/PaginationContext.jsx";
+import { TemplateContext } from "../../../engine/TemplateContext.jsx";
 import {
     dataLocationToPath,
     evaluateAttributes,
     evaluateTemplateValue,
-    isTemplateValue
+    isTemplateValue,
 } from "../../../engine/TemplateSystem.jsx";
-import {View} from "../../../engine/View.jsx";
-import {usePagination} from "../../hook/usePagination.jsx";
+import { View } from "../../../engine/View.jsx";
+import { usePagination } from "../../hook/usePagination.jsx";
 
-export const Switch = ({props, currentData, path}) => {
+export const Switch = ({ props, currentData, path }) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
 
@@ -30,80 +30,86 @@ export const Switch = ({props, currentData, path}) => {
     // This is not mandatory; the data can still set the selected value(s)
     // by the usual overwrite by using the same render array structure.
     const maybeContent = props?.content ?? null;
-    const evaluatedContent = maybeContent && evaluateTemplateValue({
-        globalDataContext: globalDataContext,
-        templateContext: templateContext,
-        valueToEvaluate: maybeContent,
-    });
+    const evaluatedContent =
+        maybeContent &&
+        evaluateTemplateValue({
+            globalDataContext: globalDataContext,
+            templateContext: templateContext,
+            valueToEvaluate: maybeContent,
+        });
     const finalDataSource = typeof evaluatedContent === "object" ? evaluatedContent : currentData;
 
     // This will limit the values count by the config in case the data is wrong.
-    const limitedContent = Object
-        .entries(finalDataSource)
-        .map(([dataIndex, dataEntry]) => {
-            const realIndex = dataIndex;
+    const limitedContent = Object.entries(finalDataSource).map(([dataIndex, dataEntry]) => {
+        const realIndex = dataIndex;
 
-            if (cardinality >= 1 && realIndex >= cardinality) {
-                // Ignore the data entry.
-                return null;
-            }
+        if (cardinality >= 1 && realIndex >= cardinality) {
+            // Ignore the data entry.
+            return null;
+        }
 
-            if (!dataEntry || typeof dataEntry !== "object") {
-                // Invalid entries count in the cardinality check.
-                // If we don't want them counted, we need to change the cardinality check itself
-                // which is currently based on the data index.
-                return null;
-            }
+        if (!dataEntry || typeof dataEntry !== "object") {
+            // Invalid entries count in the cardinality check.
+            // If we don't want them counted, we need to change the cardinality check itself
+            // which is currently based on the data index.
+            return null;
+        }
 
-            let dataKey;
-            let dataValue;
-            let selectedOption;
+        let dataKey;
+        let dataValue;
+        let selectedOption;
 
-            if (useSingleOption) {
-                dataValue = dataEntry;
-                selectedOption = singleOption;
-            } else {
-                dataKey = Object.keys(dataEntry)[0] ?? undefined;
+        if (useSingleOption) {
+            dataValue = dataEntry;
+            selectedOption = singleOption;
+        } else {
+            dataKey = Object.keys(dataEntry)[0] ?? undefined;
 
-                if (dataKey === undefined) {
-                    // Render nothing.
-                    return null;
-                }
-
-                dataValue = Object.values(dataEntry)[0] ?? undefined;
-                selectedOption = options[dataKey] ?? undefined;
-            }
-
-            if (selectedOption === undefined) {
+            if (dataKey === undefined) {
                 // Render nothing.
                 return null;
             }
 
-            let finalPath = ((isTemplateValue(maybeContent) && dataLocationToPath({
-                dataLocation: maybeContent,
-                currentPath: templateContext.templatePath,
-                globalDataContext,
-                templateContext
-            })) || path) + "." + realIndex;
+            dataValue = Object.values(dataEntry)[0] ?? undefined;
+            selectedOption = options[dataKey] ?? undefined;
+        }
 
-            if (!useSingleOption) {
-                finalPath += "." + dataKey;
-            }
+        if (selectedOption === undefined) {
+            // Render nothing.
+            return null;
+        }
 
-            return <View
+        let finalPath =
+            ((isTemplateValue(maybeContent) &&
+                dataLocationToPath({
+                    dataLocation: maybeContent,
+                    currentPath: templateContext.templatePath,
+                    globalDataContext,
+                    templateContext,
+                })) ||
+                path) +
+            "." +
+            realIndex;
+
+        if (!useSingleOption) {
+            finalPath += "." + dataKey;
+        }
+
+        return (
+            <View
                 currentData={dataValue}
                 datafield={realIndex}
                 key={realIndex}
                 path={finalPath}
                 props={selectedOption}
-            />;
-        });
+            />
+        );
+    });
 
-    const pagination = usePagination(
-        {
-            dataToPaginate: limitedContent,
-            ...(props?.paginationProps ?? {})
-        });
+    const pagination = usePagination({
+        dataToPaginate: limitedContent,
+        ...(props?.paginationProps ?? {}),
+    });
 
     // Slice for the pagination if in effect.
     const contentAsViews = props?.paginated
@@ -113,34 +119,46 @@ export const Switch = ({props, currentData, path}) => {
     // Wrap the content if specified.
     const maybeWrappedContent = props?.contentWrapper
         ? createElement(
-            props.contentWrapper.tag ?? "div",
-            evaluateAttributes({
-                attrs: props.contentWrapper.attributes ?? {},
-                globalDataContext,
-                options: {normalizeBeforeEvaluation: true},
-                templateContext
-            }), contentAsViews)
+              props.contentWrapper.tag ?? "div",
+              evaluateAttributes({
+                  attrs: props.contentWrapper.attributes ?? {},
+                  globalDataContext,
+                  options: { normalizeBeforeEvaluation: true },
+                  templateContext,
+              }),
+              contentAsViews
+          )
         : contentAsViews;
 
-    const toRender = <>
-        {props?.before && <View
-            currentData={currentData?.["before"] ?? undefined}
-            path={path + ".before"}
-            datafield={"before"}
-            props={props?.before}/>}
-        {maybeWrappedContent}
-        {props?.after && <View
-            currentData={currentData?.["after"] ?? undefined}
-            path={path + ".after"}
-            datafield={"after"}
-            props={props?.after}/>}
-    </>
+    const toRender = (
+        <>
+            {props?.before && (
+                <View
+                    currentData={currentData?.["before"] ?? undefined}
+                    path={path + ".before"}
+                    datafield={"before"}
+                    props={props?.before}
+                />
+            )}
+            {maybeWrappedContent}
+            {props?.after && (
+                <View
+                    currentData={currentData?.["after"] ?? undefined}
+                    path={path + ".after"}
+                    datafield={"after"}
+                    props={props?.after}
+                />
+            )}
+        </>
+    );
 
-    return <ActionDependant {...props}>
-        {props?.paginated
-            ? <PaginationContext.Provider value={{pagination}}>
-                {toRender}
-            </PaginationContext.Provider>
-            : toRender}
-    </ActionDependant>
+    return (
+        <ActionDependant {...props}>
+            {props?.paginated ? (
+                <PaginationContext.Provider value={{ pagination }}>{toRender}</PaginationContext.Provider>
+            ) : (
+                toRender
+            )}
+        </ActionDependant>
+    );
 };

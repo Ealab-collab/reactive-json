@@ -1,5 +1,5 @@
-import {useContext, useState} from "react";
-import {GlobalDataContext} from "../../engine/GlobalDataContext.jsx";
+import { useContext, useState } from "react";
+import { GlobalDataContext } from "../../engine/GlobalDataContext.jsx";
 import styles from "./usePagination.module.css";
 
 /**
@@ -23,19 +23,19 @@ import styles from "./usePagination.module.css";
  * }}
  */
 export const usePagination = ({
-                                  customComponents = {},
-                                  containerProps = {},
-                                  dataToPaginate = [],
-                                  forcePaginationDisplay = false,
-                                  itemProps = {},
-                                  maxPageButtonsCount = 5,
-                                  pageMaxItemCount = 10,
-                              }) => {
+    customComponents = {},
+    containerProps = {},
+    dataToPaginate = [],
+    forcePaginationDisplay = false,
+    itemProps = {},
+    maxPageButtonsCount = 5,
+    pageMaxItemCount = 10,
+}) => {
     const globalDataContext = useContext(GlobalDataContext);
-    
+
     // Resolution of components by priority: Custom > Plugin > Default.
     const pluginComponents = globalDataContext?.plugins?.pagination ?? {};
-    
+
     const PaginationContainer = customComponents.Container ?? pluginComponents.Container ?? DefaultPaginationContainer;
     const PaginationFirst = customComponents.First ?? pluginComponents.First ?? DefaultPaginationFirst;
     const PaginationPrev = customComponents.Prev ?? pluginComponents.Prev ?? DefaultPaginationPrev;
@@ -125,73 +125,87 @@ export const usePagination = ({
     const PageControls = () => {
         const pageCount = getPageCountForContent(dataToPaginate);
 
-        if (!forcePaginationDisplay && (pageCount <= 1)) {
+        if (!forcePaginationDisplay && pageCount <= 1) {
             return null;
         }
 
-        return <PaginationContainer {...containerProps}>
-            <PaginationFirst
-                disabled={activePageNumber0 <= 0}
-                onClick={() => {
-                    setActivePageNumber0(0);
-                }}/>
-            <PaginationPrev
-                disabled={activePageNumber0 <= 0}
-                onClick={() => {
-                    setActivePageNumber0(activePageNumber0 - 1);
-                }}/>
-            {Math.min(activePageNumber0 - buttonsBeforeAfterMaxCount, pageCount - maxPageButtonsCount) > 0 ?
-                <PaginationEllipsis disabled/> : null}
-            {(() => {
-                const intermediateButtons = [];
+        return (
+            <PaginationContainer {...containerProps}>
+                <PaginationFirst
+                    disabled={activePageNumber0 <= 0}
+                    onClick={() => {
+                        setActivePageNumber0(0);
+                    }}
+                />
+                <PaginationPrev
+                    disabled={activePageNumber0 <= 0}
+                    onClick={() => {
+                        setActivePageNumber0(activePageNumber0 - 1);
+                    }}
+                />
+                {Math.min(activePageNumber0 - buttonsBeforeAfterMaxCount, pageCount - maxPageButtonsCount) > 0 ? (
+                    <PaginationEllipsis disabled />
+                ) : null}
+                {(() => {
+                    const intermediateButtons = [];
 
-                // The first button is the leftmost visible button.
-                // It is either 0,
-                // or the current page minus buttonsBeforeAfterMaxCount,
-                // or maxPageButtonsCount starting from the end.
-                let currentPageButtonNumber0 = Math.min(Math.max(0, pageCount - maxPageButtonsCount), Math.max(0, activePageNumber0 - buttonsBeforeAfterMaxCount));
-                let remainingPagesToBuildButton = maxPageButtonsCount;
+                    // The first button is the leftmost visible button.
+                    // It is either 0,
+                    // or the current page minus buttonsBeforeAfterMaxCount,
+                    // or maxPageButtonsCount starting from the end.
+                    let currentPageButtonNumber0 = Math.min(
+                        Math.max(0, pageCount - maxPageButtonsCount),
+                        Math.max(0, activePageNumber0 - buttonsBeforeAfterMaxCount)
+                    );
+                    let remainingPagesToBuildButton = maxPageButtonsCount;
 
-                const insertPageButton = (currentPageButtonNumber0, remainingPagesToBuildButton) => {
-                    intermediateButtons.push(<PaginationItem
-                        active={activePageNumber0 === currentPageButtonNumber0}
-                        key={maxPageButtonsCount - remainingPagesToBuildButton}
-                        onClick={() => {
-                            setActivePageNumber0(currentPageButtonNumber0)
-                        }}
-                        {...itemProps}
-                    >
-                        {currentPageButtonNumber0 + 1}
-                    </PaginationItem>);
-                };
+                    const insertPageButton = (currentPageButtonNumber0, remainingPagesToBuildButton) => {
+                        intermediateButtons.push(
+                            <PaginationItem
+                                active={activePageNumber0 === currentPageButtonNumber0}
+                                key={maxPageButtonsCount - remainingPagesToBuildButton}
+                                onClick={() => {
+                                    setActivePageNumber0(currentPageButtonNumber0);
+                                }}
+                                {...itemProps}
+                            >
+                                {currentPageButtonNumber0 + 1}
+                            </PaginationItem>
+                        );
+                    };
 
-                while (remainingPagesToBuildButton) {
-                    insertPageButton(currentPageButtonNumber0, remainingPagesToBuildButton);
+                    while (remainingPagesToBuildButton) {
+                        insertPageButton(currentPageButtonNumber0, remainingPagesToBuildButton);
 
-                    ++currentPageButtonNumber0;
-                    --remainingPagesToBuildButton;
+                        ++currentPageButtonNumber0;
+                        --remainingPagesToBuildButton;
 
-                    if (currentPageButtonNumber0 >= pageCount) {
-                        // Reached the end of the pages.
-                        break;
+                        if (currentPageButtonNumber0 >= pageCount) {
+                            // Reached the end of the pages.
+                            break;
+                        }
                     }
-                }
 
-                return intermediateButtons;
-            })()}
-            {pageCount > Math.max(buttonsBeforeAfterMaxCount, activePageNumber0) + Math.ceil(maxPageButtonsCount / 2) ?
-                <PaginationEllipsis disabled/> : null}
-            <PaginationNext
-                disabled={activePageNumber0 + 1 >= pageCount}
-                onClick={() => {
-                    setActivePageNumber0(activePageNumber0 + 1);
-                }}/>
-            <PaginationLast
-                disabled={activePageNumber0 + 1 >= pageCount}
-                onClick={() => {
-                    setActivePageNumber0(pageCount - 1);
-                }}/>
-        </PaginationContainer>
+                    return intermediateButtons;
+                })()}
+                {pageCount >
+                Math.max(buttonsBeforeAfterMaxCount, activePageNumber0) + Math.ceil(maxPageButtonsCount / 2) ? (
+                    <PaginationEllipsis disabled />
+                ) : null}
+                <PaginationNext
+                    disabled={activePageNumber0 + 1 >= pageCount}
+                    onClick={() => {
+                        setActivePageNumber0(activePageNumber0 + 1);
+                    }}
+                />
+                <PaginationLast
+                    disabled={activePageNumber0 + 1 >= pageCount}
+                    onClick={() => {
+                        setActivePageNumber0(pageCount - 1);
+                    }}
+                />
+            </PaginationContainer>
+        );
     };
 
     return {

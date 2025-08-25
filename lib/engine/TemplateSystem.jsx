@@ -1,7 +1,7 @@
-import {useContext} from "react";
-import {GlobalDataContext} from "./GlobalDataContext.jsx";
-import {TemplateContext} from "./TemplateContext.jsx";
-import {normalizeAttributesForReactJsx} from "../component/element/html/Html.jsx";
+import { useContext } from "react";
+import { GlobalDataContext } from "./GlobalDataContext.jsx";
+import { TemplateContext } from "./TemplateContext.jsx";
+import { normalizeAttributesForReactJsx } from "../component/element/html/Html.jsx";
 
 /**
  * Transforms a data location string to a path to be used in the UI components.
@@ -14,8 +14,16 @@ import {normalizeAttributesForReactJsx} from "../component/element/html/Html.jsx
  * @constructor
  * @throws {Error} The path cannot be determined.
  */
-export const dataLocationToPath = ({dataLocation, currentPath, globalDataContext, templateContext}) => {
-    if (!(typeof dataLocation === "string") || !(dataLocation.startsWith("~.") || dataLocation.startsWith("~~.") || dataLocation.startsWith("~>") || dataLocation.startsWith("~~>"))) {
+export const dataLocationToPath = ({ dataLocation, currentPath, globalDataContext, templateContext }) => {
+    if (
+        !(typeof dataLocation === "string") ||
+        !(
+            dataLocation.startsWith("~.") ||
+            dataLocation.startsWith("~~.") ||
+            dataLocation.startsWith("~>") ||
+            dataLocation.startsWith("~~>")
+        )
+    ) {
         if ("~" === dataLocation) {
             // The data location is the template root.
             return templateContext.templatePath;
@@ -43,15 +51,20 @@ export const dataLocationToPath = ({dataLocation, currentPath, globalDataContext
     } else if (dataLocation.startsWith("~>") || dataLocation.startsWith("~~>")) {
         // Build the path starting from an ascendant of the current template path.
         const prefix = dataLocation.startsWith("~>") ? "~>" : "~~>";
-        
+
         // First, determine the base key.
         const dotIndex = dataLocation.indexOf(".");
-        const baseKeyToFind = dotIndex === -1
-            ? dataLocation.substring(prefix.length)  // "~>key" => "key".
-            : dataLocation.substring(prefix.length, dotIndex); // "~>key.prop" => "key".
+        const baseKeyToFind =
+            dotIndex === -1
+                ? dataLocation.substring(prefix.length) // "~>key" => "key".
+                : dataLocation.substring(prefix.length, dotIndex); // "~>key.prop" => "key".
 
         if (!templateContext.templatePath.includes(baseKeyToFind)) {
-            throw new Error(baseKeyToFind + " not found in the current template path. The current template path is: " + templateContext.templatePath);
+            throw new Error(
+                baseKeyToFind +
+                    " not found in the current template path. The current template path is: " +
+                    templateContext.templatePath
+            );
         }
 
         let baseKeyToFindIndex;
@@ -59,8 +72,7 @@ export const dataLocationToPath = ({dataLocation, currentPath, globalDataContext
         if (prefix === "~>") {
             // Build the path that starts from the last key found in the current template path.
             baseKeyToFindIndex = templateContext.templatePath.lastIndexOf(baseKeyToFind);
-        }
-        else {
+        } else {
             // Build the path that starts from the first key found in the current template path.
             baseKeyToFindIndex = templateContext.templatePath.indexOf(baseKeyToFind);
         }
@@ -75,9 +87,7 @@ export const dataLocationToPath = ({dataLocation, currentPath, globalDataContext
     // Remove the template value detection character.
     locationRemainder.shift();
 
-    return locationRemainder.length
-        ? pathBase + "." + locationRemainder.join(".")
-        : pathBase;
+    return locationRemainder.length ? pathBase + "." + locationRemainder.join(".") : pathBase;
 };
 
 /**
@@ -90,7 +100,7 @@ export const dataLocationToPath = ({dataLocation, currentPath, globalDataContext
  *
  * @returns {{}}
  */
-export const evaluateAttributes = ({attrs, globalDataContext, templateContext, options = {}}) => {
+export const evaluateAttributes = ({ attrs, globalDataContext, templateContext, options = {} }) => {
     const evaluated = {};
 
     if (!attrs) {
@@ -105,7 +115,7 @@ export const evaluateAttributes = ({attrs, globalDataContext, templateContext, o
         const evaluatedAttr = evaluateTemplateValueCollection({
             globalDataContext: globalDataContext,
             templateContext: templateContext,
-            valueToEvaluate: normalized[attrName]
+            valueToEvaluate: normalized[attrName],
         });
 
         // We only keep the attribute if it can be represented as an attribute value
@@ -135,7 +145,7 @@ export const evaluateAttributes = ({attrs, globalDataContext, templateContext, o
     }
 
     return evaluated;
-}
+};
 
 /**
  * Evaluates the template value using the given template and global context.
@@ -145,7 +155,7 @@ export const evaluateAttributes = ({attrs, globalDataContext, templateContext, o
  * @param templateContext The template context.
  * @returns {undefined|*}
  */
-export const evaluateTemplateValue = ({valueToEvaluate, globalDataContext, templateContext}) => {
+export const evaluateTemplateValue = ({ valueToEvaluate, globalDataContext, templateContext }) => {
     if (!isTemplateValue(valueToEvaluate)) {
         // This value does not use the template context data.
         // Render what is given as is.
@@ -222,7 +232,7 @@ export const evaluateTemplateValue = ({valueToEvaluate, globalDataContext, templ
     }
 
     return currentNode;
-}
+};
 
 /**
  * Evaluates an array or object containing values to evaluate.
@@ -236,7 +246,12 @@ export const evaluateTemplateValue = ({valueToEvaluate, globalDataContext, templ
  *
  * @returns {*} The evaluated value. It tries to keep the same structure (array, object, single) as the given value.
  */
-export const evaluateTemplateValueCollection = ({valueToEvaluate, globalDataContext, templateContext, evaluationDepth = 1}) => {
+export const evaluateTemplateValueCollection = ({
+    valueToEvaluate,
+    globalDataContext,
+    templateContext,
+    evaluationDepth = 1,
+}) => {
     // If evaluationDepth is 0, return the value as-is without any evaluation.
     if (evaluationDepth === 0) {
         return valueToEvaluate;
@@ -261,16 +276,20 @@ export const evaluateTemplateValueCollection = ({valueToEvaluate, globalDataCont
             const evaluatedItem = evaluateTemplateValue({
                 globalDataContext,
                 templateContext,
-                valueToEvaluate: itemContent
+                valueToEvaluate: itemContent,
             });
 
-            if ((evaluationDepth > 1 || evaluationDepth < 0) && typeof evaluatedItem === "object" && evaluatedItem !== null) {
+            if (
+                (evaluationDepth > 1 || evaluationDepth < 0) &&
+                typeof evaluatedItem === "object" &&
+                evaluatedItem !== null
+            ) {
                 // We still have depth to evaluate.
                 evaluated[key] = evaluateTemplateValueCollection({
                     valueToEvaluate: evaluatedItem,
                     globalDataContext,
                     templateContext,
-                    evaluationDepth: evaluationDepth - 1
+                    evaluationDepth: evaluationDepth - 1,
                 });
             } else {
                 evaluated[key] = evaluatedItem;
@@ -281,7 +300,7 @@ export const evaluateTemplateValueCollection = ({valueToEvaluate, globalDataCont
         evaluated = evaluateTemplateValue({
             globalDataContext,
             templateContext,
-            valueToEvaluate
+            valueToEvaluate,
         });
 
         if ((evaluationDepth > 1 || evaluationDepth < 0) && typeof evaluated === "object" && evaluated !== null) {
@@ -291,13 +310,13 @@ export const evaluateTemplateValueCollection = ({valueToEvaluate, globalDataCont
                 valueToEvaluate: evaluated,
                 globalDataContext,
                 templateContext,
-                evaluationDepth: evaluationDepth - 1
+                evaluationDepth: evaluationDepth - 1,
             });
         }
     }
 
     return evaluated;
-}
+};
 
 /**
  * Checks if the given value is a value which can be replaced by the template system.
@@ -305,7 +324,17 @@ export const evaluateTemplateValueCollection = ({valueToEvaluate, globalDataCont
  * @returns {string|boolean}
  */
 export const isTemplateValue = (valueToEvaluate) => {
-    if (!(typeof valueToEvaluate === "string") || !(valueToEvaluate.startsWith("~.") || valueToEvaluate.startsWith("~~.") || valueToEvaluate.startsWith("~>") || valueToEvaluate.startsWith("~~>") || "~" === valueToEvaluate || "~~" === valueToEvaluate)) {
+    if (
+        !(typeof valueToEvaluate === "string") ||
+        !(
+            valueToEvaluate.startsWith("~.") ||
+            valueToEvaluate.startsWith("~~.") ||
+            valueToEvaluate.startsWith("~>") ||
+            valueToEvaluate.startsWith("~~>") ||
+            "~" === valueToEvaluate ||
+            "~~" === valueToEvaluate
+        )
+    ) {
         // This value does not use the template context data.
         return false;
     }
@@ -323,7 +352,7 @@ export const isTemplateValue = (valueToEvaluate) => {
  *
  * @constructor
  */
-const TemplateValue = ({valueToEvaluate}) => {
+const TemplateValue = ({ valueToEvaluate }) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
 
@@ -348,14 +377,11 @@ export const useEvaluatedAttributes = (attrs, options = {}) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
 
-    return evaluateAttributes(
-        {
-            attrs,
-            globalDataContext,
-            templateContext,
-            options: options.normalizeBeforeEvaluation === undefined
-                ? {...options, normalizeBeforeEvaluation: true}
-                : options,
-        }
-    );
+    return evaluateAttributes({
+        attrs,
+        globalDataContext,
+        templateContext,
+        options:
+            options.normalizeBeforeEvaluation === undefined ? { ...options, normalizeBeforeEvaluation: true } : options,
+    });
 };

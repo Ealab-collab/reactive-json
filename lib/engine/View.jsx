@@ -1,23 +1,23 @@
-import {useContext} from 'react';
-import { VariablesDebug } from '../component';
-import {FolderSortableTree} from "../component/element/html/FolderSortableTree.jsx";
-import {FormatNumeral} from "../component/element/html/FormatNumeral.jsx";
-import {Html} from "../component/element/html/Html.jsx";
-import {LabelFromValue} from "../component/element/html/LabelFromValue.jsx";
-import {PreformattedMarkup} from "../component/element/html/PreformattedMarkup.jsx";
-import {SortableTreeItemCollapseButton} from "../component/element/html/SortableTreeItemCollapseButton.jsx";
-import {Count} from "../component/element/special/Count.jsx";
-import {DataFilter} from "../component/element/special/DataFilter.jsx";
-import {DelayedActions} from "../component/element/special/DelayedActions.jsx";
-import {PageControls} from "../component/element/special/PageControls.jsx";
-import {Phantom} from "../component/element/special/Phantom.jsx";
-import {ReactiveJsonSubroot} from "../component/element/special/ReactiveJsonSubroot.jsx";
-import {Switch} from "../component/element/special/Switch.jsx";
-import {GlobalDataContext} from "./GlobalDataContext.jsx";
-import {TemplateContext} from "./TemplateContext.jsx";
-import TemplateValue, {dataLocationToPath, evaluateTemplateValue} from "./TemplateSystem.jsx";
+import { useContext } from "react";
+import { VariablesDebug } from "../component";
+import { FolderSortableTree } from "../component/element/html/FolderSortableTree.jsx";
+import { FormatNumeral } from "../component/element/html/FormatNumeral.jsx";
+import { Html } from "../component/element/html/Html.jsx";
+import { LabelFromValue } from "../component/element/html/LabelFromValue.jsx";
+import { PreformattedMarkup } from "../component/element/html/PreformattedMarkup.jsx";
+import { SortableTreeItemCollapseButton } from "../component/element/html/SortableTreeItemCollapseButton.jsx";
+import { Count } from "../component/element/special/Count.jsx";
+import { DataFilter } from "../component/element/special/DataFilter.jsx";
+import { DelayedActions } from "../component/element/special/DelayedActions.jsx";
+import { PageControls } from "../component/element/special/PageControls.jsx";
+import { Phantom } from "../component/element/special/Phantom.jsx";
+import { ReactiveJsonSubroot } from "../component/element/special/ReactiveJsonSubroot.jsx";
+import { Switch } from "../component/element/special/Switch.jsx";
+import { GlobalDataContext } from "./GlobalDataContext.jsx";
+import { TemplateContext } from "./TemplateContext.jsx";
+import TemplateValue, { dataLocationToPath, evaluateTemplateValue } from "./TemplateSystem.jsx";
 
-export function View({props, currentData, datafield, path}) {
+export function View({ props, currentData, datafield, path }) {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
 
@@ -41,7 +41,7 @@ export function View({props, currentData, datafield, path}) {
         ...plugins?.element,
     };
 
-    const {element} = globalDataContext;
+    const { element } = globalDataContext;
 
     if (currentData === undefined) {
         currentData = "";
@@ -64,11 +64,7 @@ export function View({props, currentData, datafield, path}) {
             props.tag = props.tag ?? props.type;
         }
 
-        return <ComponentToRender
-            path={path}
-            props={props}
-            currentData={currentData}
-            datafield={datafield}/>;
+        return <ComponentToRender path={path} props={props} currentData={currentData} datafield={datafield} />;
     }
 
     if (props?.load) {
@@ -79,18 +75,23 @@ export function View({props, currentData, datafield, path}) {
 
         // Determine which data to use.
         const finalCurrentData = _customDataLocation
-            // The data is located somewhere in the current data.
-            ? evaluateTemplateValue({
-                globalDataContext: globalDataContext,
-                templateContext: templateContext,
-                valueToEvaluate: _customDataLocation,
-            })
-            // The data is the current data.
-            : currentData;
+            ? // The data is located somewhere in the current data.
+              evaluateTemplateValue({
+                  globalDataContext: globalDataContext,
+                  templateContext: templateContext,
+                  valueToEvaluate: _customDataLocation,
+              })
+            : // The data is the current data.
+              currentData;
 
         // The data path must be set accordingly.
         const finalDataPath = _customDataLocation
-            ? dataLocationToPath({dataLocation: _customDataLocation, currentPath: path, globalDataContext, templateContext})
+            ? dataLocationToPath({
+                  dataLocation: _customDataLocation,
+                  currentPath: path,
+                  globalDataContext,
+                  templateContext,
+              })
             : path;
 
         // This external source can return a single component to render,
@@ -106,8 +107,8 @@ export function View({props, currentData, datafield, path}) {
 
         // Override any values of the registry render array with the current render array,
         // without the properties specific to the "load" method.
-        const {load, customDataLocation, ...propsWithoutLoadKey} = props;
-        loadedRenderArray = {...loadedRenderArray, ...propsWithoutLoadKey};
+        const { load, customDataLocation, ...propsWithoutLoadKey } = props;
+        loadedRenderArray = { ...loadedRenderArray, ...propsWithoutLoadKey };
 
         // Now that we have our render array, recurse on the View component.
         if (props.keepTemplateContext) {
@@ -124,7 +125,7 @@ export function View({props, currentData, datafield, path}) {
 
         // We open a new template context in the process.
         return (
-            <TemplateContext.Provider value={{templateData: finalCurrentData, templatePath: finalDataPath}}>
+            <TemplateContext.Provider value={{ templateData: finalCurrentData, templatePath: finalDataPath }}>
                 <View
                     currentData={finalCurrentData}
                     datafield={datafield}
@@ -137,7 +138,7 @@ export function View({props, currentData, datafield, path}) {
 
     // Try to go deeper to render something.
     if (Array.isArray(props)) {
-        return props.map((item, index) =>
+        return props.map((item, index) => (
             <View
                 currentData={currentData[index] ?? undefined}
                 datafield={index}
@@ -145,20 +146,21 @@ export function View({props, currentData, datafield, path}) {
                 path={path + "." + index}
                 props={item ?? undefined}
             />
-        );
+        ));
     }
 
     if (typeof props === "object") {
         return Object.entries(props).map(([itemKey, item]) => {
-                return <View
+            return (
+                <View
                     currentData={currentData[itemKey] ?? undefined}
                     datafield={itemKey ?? undefined}
                     key={path + "." + itemKey}
                     path={path + "." + itemKey}
                     props={item}
                 />
-            }
-        );
+            );
+        });
     }
 
     // Display the content directly.
@@ -166,5 +168,5 @@ export function View({props, currentData, datafield, path}) {
     // If not available, we simply use the given props, which is usually a string, which can
     // also be a reference to a template context data.
     // If no props is available, do not render anything.
-    return <TemplateValue valueToEvaluate={currentData || (props ?? null)}/>;
+    return <TemplateValue valueToEvaluate={currentData || (props ?? null)} />;
 }

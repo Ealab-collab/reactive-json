@@ -1,5 +1,5 @@
-import {useContext} from "react";
-import {PaginationContext} from "../../../engine/PaginationContext.jsx";
+import { useContext } from "react";
+import { PaginationContext } from "../../../engine/PaginationContext.jsx";
 
 /**
  * Displays the PageControls found in the PaginationContext, if any.
@@ -9,9 +9,7 @@ import {PaginationContext} from "../../../engine/PaginationContext.jsx";
  * @constructor
  */
 export const PageControls = () => {
-    const {pagination} = useContext(PaginationContext);
+    const { pagination } = useContext(PaginationContext);
 
-    return pagination.PageControls
-        ? <pagination.PageControls/>
-        : null;
+    return pagination.PageControls ? <pagination.PageControls /> : null;
 };
