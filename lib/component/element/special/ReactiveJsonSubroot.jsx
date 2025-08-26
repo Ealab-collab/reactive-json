@@ -1,13 +1,9 @@
-import {
-    ActionDependant,
-    evaluateTemplateValueCollection,
-    GlobalDataContext,
-    ReactiveJsonRoot,
-    TemplateContext,
-} from "../../../engine/index.js";
 import { useContext } from "react";
+import { ActionDependant } from "../../../engine/Actions.jsx";
+import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
+import { TemplateContext } from "../../../engine/TemplateContext.jsx";
+import { dataLocationToPath, evaluateTemplateValueCollection } from "../../../engine/TemplateSystem.jsx";
 import { analyzeDataOverrideReferences } from "../../../engine/utility";
-import { dataLocationToPath } from "../../../engine/TemplateSystem.jsx";
 
 /**
  * Allows a subroot of reactive-json.
@@ -17,6 +13,13 @@ import { dataLocationToPath } from "../../../engine/TemplateSystem.jsx";
 export const ReactiveJsonSubroot = ({ props }) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
+
+    const ReactiveJsonRoot = globalDataContext.ReactiveJsonRoot;
+
+    if (!ReactiveJsonRoot) {
+        // Cannot render without the ReactiveJsonRoot component.
+        return null;
+    }
 
     const rjOptions =
         evaluateTemplateValueCollection({

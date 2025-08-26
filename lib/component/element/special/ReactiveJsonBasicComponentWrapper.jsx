@@ -1,4 +1,6 @@
-import { ActionDependant, useEvaluatedAttributes, View } from "../../../engine";
+import { ActionDependant } from "../../../engine/Actions.jsx";
+import { useEvaluatedAttributes } from "../../../engine/TemplateSystem.jsx";
+import { View } from "../../../engine/View.jsx";
 
 /**
  * Wraps around a React component to make it work with Reactive JSON.

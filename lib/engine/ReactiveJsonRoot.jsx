@@ -689,6 +689,8 @@ export const ReactiveJsonRoot = ({
                     element: templates,
                     headersForRjBuild,
                     plugins: mergedPlugins,
+                    // Expose the root component to avoid import cycles in core plugins.
+                    ReactiveJsonRoot,
                     setData,
                     setRawAppRjBuild,
                     templateData: currentData.realCurrentData,
