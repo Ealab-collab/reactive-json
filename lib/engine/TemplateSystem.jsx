@@ -216,7 +216,7 @@ export const evaluateTemplateValue = ({ valueToEvaluate, globalDataContext, temp
     splitValueArray.shift();
 
     while (splitValueArray.length) {
-        if (typeof currentNode !== "object") {
+        if (typeof currentNode !== "object" || currentNode === null) {
             // Not an object, so there is no need to continue.
             // Return an undefined value.
             return undefined;
@@ -267,7 +267,7 @@ export const evaluateTemplateValueCollection = ({
 
     let evaluated;
 
-    if (typeof valueToEvaluate === "object") {
+    if (typeof valueToEvaluate === "object" && valueToEvaluate !== null) {
         // Evaluate values at the current level.
         evaluated = Array.isArray(valueToEvaluate) ? [] : {};
 
