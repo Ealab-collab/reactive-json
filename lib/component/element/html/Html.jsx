@@ -39,6 +39,21 @@ export const Html = ({ props, currentData, datafield, path }) => {
 
     const evaluatedAttrs = evaluateAttributes({ attrs, globalDataContext, templateContext });
 
+    if (props.tag === "input" || props.tag === "textarea" || props.tag === "select") {
+        // Fix for React controlled/uncontrolled input warning.
+        // Ensure form elements always have a defined value to prevent React warnings.
+        if (evaluatedAttrs.value === undefined) {
+            evaluatedAttrs.value = "";
+        }
+
+        // Special handling for checkbox/radio inputs - ensure 'checked' is always defined.
+        if (props.tag === "input" && (evaluatedAttrs.type === "checkbox" || evaluatedAttrs.type === "radio")) {
+            if (evaluatedAttrs.checked === undefined) {
+                evaluatedAttrs.checked = false;
+            }
+        }
+    }
+
     const isVoidTag = (tag) => {
         const voidTagList = [
             "area",
