@@ -3,7 +3,7 @@ import { ActionDependant } from "../../../engine/Actions.jsx";
 import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
 import { normalizeAttributesForReactJsx } from "../../../engine/utility/reactJsxHelpers.jsx";
 import { TemplateContext } from "../../../engine/TemplateContext.jsx";
-import { evaluateAttributes } from "../../../engine/TemplateSystem.jsx";
+import { evaluateAttributes, evaluateTemplateValue } from "../../../engine/TemplateSystem.jsx";
 import { View } from "../../../engine/View.jsx";
 
 export const Html = ({ props, currentData, datafield, path }) => {
@@ -38,6 +38,28 @@ export const Html = ({ props, currentData, datafield, path }) => {
     }
 
     const evaluatedAttrs = evaluateAttributes({ attrs, globalDataContext, templateContext });
+
+    if (props.tag === "option" && props.content && evaluatedAttrs.value === undefined) {
+        // Special handling for option elements. Try to use the content as the value.
+        if (typeof props.content !== "string") {
+            // Content is not a simple string - discard this option.
+            return null;
+        }
+
+        // Use the simple string content as the value.
+        const evaluatedOptionValue = evaluateTemplateValue({
+            valueToEvaluate: props.content,
+            globalDataContext,
+            templateContext,
+        });
+
+        if (typeof evaluatedOptionValue !== "string") {
+            // Discard this option.
+            return null;
+        }
+
+        evaluatedAttrs.value = evaluatedOptionValue;
+    }
 
     if (props.tag === "input" || props.tag === "textarea" || props.tag === "select") {
         // Fix for React controlled/uncontrolled input warning.
