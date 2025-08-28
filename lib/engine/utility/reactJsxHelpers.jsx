@@ -19,6 +19,7 @@ export const normalizeAttributesForReactJsx = (maybeAttributesObj) => {
 
     const mapping = {
         class: "className",
+        for: "htmlFor",
     };
 
     // Recreate a shallow copy with the normalized attribute keys.
