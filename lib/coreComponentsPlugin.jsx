@@ -3,6 +3,7 @@ import { coreAttributeTransformerComponents } from "./component/attributeTransfo
 import { coreDataMappingComponents } from "./component/dataMapping";
 import { coreDataProcessorComponents } from "./component/dataProcessor";
 import { coreElementComponents } from "./component/element";
+import { coreHookComponents } from "./component/hook";
 import { coreReactionComponents } from "./component/reaction";
 
 /**
@@ -14,5 +15,6 @@ export const coreComponentsPlugin = {
     dataMapping: coreDataMappingComponents,
     dataProcessor: coreDataProcessorComponents,
     element: coreElementComponents,
+    hook: coreHookComponents,
     reaction: coreReactionComponents,
 };

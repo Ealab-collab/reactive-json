@@ -10,11 +10,17 @@ import {
     isTemplateValue,
 } from "../../../engine/TemplateSystem.jsx";
 import { View } from "../../../engine/View.jsx";
-import { usePagination } from "../../hook/usePagination.jsx";
 
 export const Switch = ({ props, currentData, path }) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
+
+    const { usePagination } = globalDataContext.plugins?.hook ?? {};
+
+    if (!usePagination) {
+        // No pagination hook found.
+        return null;
+    }
 
     // The allowed item count. Any value less than 1 means infinite.
     const cardinality = props?.cardinality ?? -1;
