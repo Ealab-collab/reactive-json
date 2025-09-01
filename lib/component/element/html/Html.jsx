@@ -5,6 +5,7 @@ import { normalizeAttributesForReactJsx } from "../../../engine/utility/reactJsx
 import { TemplateContext } from "../../../engine/TemplateContext.jsx";
 import { evaluateAttributes, evaluateTemplateValue } from "../../../engine/TemplateSystem.jsx";
 import { View } from "../../../engine/View.jsx";
+import { useTransformedAttributes } from "../../hook/useTransformedAttributes.js";
 
 export const Html = ({ props, currentData, datafield, path }) => {
     const globalDataContext = useContext(GlobalDataContext);
@@ -76,6 +77,8 @@ export const Html = ({ props, currentData, datafield, path }) => {
         }
     }
 
+    const transformedAttrs = useTransformedAttributes(evaluatedAttrs, props.attributeTransforms ?? []);
+
     const isVoidTag = (tag) => {
         const voidTagList = [
             "area",
@@ -100,12 +103,12 @@ export const Html = ({ props, currentData, datafield, path }) => {
         <ActionDependant {...props} attributesHolderRef={mainAttributesHolderRef}>
             {isVoidTag(props.tag) ? (
                 <>
-                    <Tag ref={mainAttributesHolderRef} {...evaluatedAttrs} />
+                    <Tag ref={mainAttributesHolderRef} {...transformedAttrs} />
                     {Object.keys(extra).length ? <View props={extra} /> : ""}
                 </>
             ) : (
                 <>
-                    <Tag ref={mainAttributesHolderRef} {...evaluatedAttrs}>
+                    <Tag ref={mainAttributesHolderRef} {...transformedAttrs}>
                         {props.content && (
                             <View
                                 currentData={currentData.content ?? undefined}
