@@ -283,6 +283,7 @@ export const ReactiveJsonRoot = ({
         // dispatcher that works with the real final data.
         const globalDataContext = {
             headersForRjBuild,
+            plugins: mergedPlugins,
             templateData: finalData,
             templatePath: "data",
             setData,
