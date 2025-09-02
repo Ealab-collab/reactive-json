@@ -335,6 +335,19 @@ const getActionsToExecute = (actions, templateContexts) => {
                 continue;
             }
 
+            if (item.on === "response") {
+                // "response" has a special handling. It adds the special ResponseListener action component.
+                // This is because the response event is a custom event dispatched by HTTP reactions like fetchData.
+                if (!actionsToEvaluate.ResponseListener) {
+                    // No ResponseListener action component.
+                    // Some plugin may have disabled it.
+                    continue;
+                }
+
+                result.push({ ActionComponent: actionsToEvaluate.ResponseListener, actionProps: item, actionIndex: index });
+                continue;
+            }
+
             requiresReactionComponent = true;
 
             const normalizedEventName = "on" + capitalizeFirstLetter(item.on);

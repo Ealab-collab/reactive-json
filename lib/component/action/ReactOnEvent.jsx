@@ -1,5 +1,6 @@
 import { Children, cloneElement, Fragment, isValidElement, useContext } from "react";
 import { GlobalDataContext } from "../../engine/GlobalDataContext.jsx";
+import { replaceEventPlaceholders } from "../../engine/index.js";
 import { TemplateContext } from "../../engine/TemplateContext.jsx";
 
 /**
@@ -21,7 +22,7 @@ export const ReactOnEvent = (props) => {
 
     // Event attributes to inject.
     const eventPropsForAttributes = {};
-
+/*
     // ---------------------------------------------------------------------------
     //  Event placeholders reference system
     // ---------------------------------------------------------------------------
@@ -84,7 +85,7 @@ export const ReactOnEvent = (props) => {
      * @param {*} value The value to inspect. If it's a string beginning with the placeholder prefix, it will be replaced.
      * @param {Event} event The DOM or custom event object that triggered the action.
      * @returns {*} The original value or the resolved value extracted from the event.
-     */
+     *//*
     const evaluateEventPlaceholder = (value, event) => {
         // Special constant shortcut
         if (value === EVENT_NEW_VALUE_PLACEHOLDER) {
@@ -118,7 +119,7 @@ export const ReactOnEvent = (props) => {
      * @param {*} source The source value (object, array, or primitive).
      * @param {Event} event The event to read values from.
      * @returns {*} A new structure with placeholders resolved.
-     */
+     *//*
     const replaceEventPlaceholders = (source, event) => {
         if (Array.isArray(source)) {
             return source.map((item) => replaceEventPlaceholders(item, event));
@@ -134,7 +135,7 @@ export const ReactOnEvent = (props) => {
 
         // Primitive values (string/number/etc.)
         return evaluateEventPlaceholder(source, event);
-    };
+    };*/
 
     for (const [eventName, eventReactionFunctionProps] of Object.entries(reactionFunctionProps)) {
         // Prepare the callback.

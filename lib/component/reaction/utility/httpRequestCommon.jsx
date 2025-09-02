@@ -143,36 +143,36 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
 
     axios(config)
         .then((value) => {
+            // Create request context for data processors.
+            const requestContext = {
+                url: config.url,
+                method: config.method,
+                headers: config.headers || {},
+                body: config.data,
+            };
+
+            // Create response context for data processors.
+            const responseContext = {
+                headers: value.headers || {},
+                status: value.status,
+                data: value.data,
+            };
+
+            // Determine if this is an RjBuild response.
+            // RjBuild when updateOnlyData is false (meaning we're processing a complete RjBuild).
+            // When updateOnlyData is true, we're only processing data.
+            const isRjBuild = updateOnlyData === false;
+
+            // Apply data processors to alter the response.
+            const alteredResponse = alterData({
+                requestContext,
+                responseContext,
+                responseBody: value.data,
+                isRjBuild,
+                dataProcessors,
+            });
+
             if (refreshAppOnResponse) {
-                // Create request context for data processors.
-                const requestContext = {
-                    url: config.url,
-                    method: config.method,
-                    headers: config.headers || {},
-                    body: config.data,
-                };
-
-                // Create response context for data processors.
-                const responseContext = {
-                    headers: value.headers || {},
-                    status: value.status,
-                    data: value.data,
-                };
-
-                // Determine if this is an RjBuild response.
-                // RjBuild when updateOnlyData is false (meaning we're processing a complete RjBuild).
-                // When updateOnlyData is true, we're only processing data.
-                const isRjBuild = updateOnlyData === false;
-
-                // Apply data processors to alter the response.
-                const alteredResponse = alterData({
-                    requestContext,
-                    responseContext,
-                    responseBody: value.data,
-                    isRjBuild,
-                    dataProcessors,
-                });
-
                 if (updateOnlyData) {
                     if (dataMapping) {
                         try {
@@ -235,6 +235,15 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
                     setRawAppRjBuild(alteredResponse);
                 }
             }
+
+            const event = new CustomEvent("response", {
+                bubbles: true,
+                cancelable: true,
+                composed: true,
+                detail: { responseData: alteredResponse, responseContext },
+            });
+
+            currentTarget?.dispatchEvent(event);
         })
         .catch((reason) => {
             console.log(`reactionFunction:${errorPrefix} : Could not execute request. Reason: ${reason.message}`);
