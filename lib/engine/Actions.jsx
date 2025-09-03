@@ -392,6 +392,15 @@ const getActionsToExecute = (actions, templateContexts) => {
         result.push({ ActionComponent: Component, actionProps: item, actionIndex: index });
     }
 
+    if (globalDataContext.debugMode && actionComponents.DebugInfo) {
+        // Add debug info component if debug mode is enabled.
+        result.push({
+            ActionComponent: actionComponents.DebugInfo,
+            actionProps: {},
+            actionIndex: "_debugInfo",
+        });
+    }
+
     if (requiresReactionComponent) {
         // Add the final component for reaction.
         // It's added at the end because it will collect all definitions

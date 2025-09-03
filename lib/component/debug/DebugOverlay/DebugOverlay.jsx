@@ -41,6 +41,8 @@ export const DebugOverlay = () => {
         };
     }, []);
 
+
+    return null;
     return (
         <div className={styles.overlayRoot}>
             <div className={styles.infoPanel}>
