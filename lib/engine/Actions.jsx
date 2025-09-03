@@ -4,6 +4,7 @@ import { useContext } from "react";
 import { GlobalDataContext } from "./GlobalDataContext.jsx";
 import { TemplateContext } from "./TemplateContext.jsx";
 import { evaluateTemplateValue, isTemplateValue } from "./TemplateSystem.jsx";
+import { reactEventProps } from "./utility/reactEventProps.js";
 
 /**
  * Capitalizes the first letter.
@@ -261,10 +262,10 @@ const getActionsToExecute = (actions, templateContexts) => {
     // Get available actions and reactions from merged plugins (already merged in ReactiveJsonRoot)
     const { globalDataContext } = templateContexts;
     const plugins = globalDataContext.plugins ?? {};
-    const actionsToEvaluate = plugins?.action ?? {};
-    const reactionsToEvaluate = plugins?.reaction ?? {};
+    const actionComponents = plugins?.action ?? {};
+    const reactionComponents = plugins?.reaction ?? {};
 
-    if (!actionsToEvaluate) {
+    if (!actionComponents) {
         // No available actions.
         return result;
     }
@@ -280,13 +281,13 @@ const getActionsToExecute = (actions, templateContexts) => {
             continue;
         }
 
-        let Component = actionsToEvaluate[what] ?? undefined;
-        let reactionFunction = reactionsToEvaluate[what] ?? undefined;
+        let Component = actionComponents[what] ?? undefined;
+        let reactionFunction = reactionComponents[what] ?? undefined;
 
         if (!Component && !reactionFunction) {
             // Retro-compatibility: try to find an action component by capitalizing the first letter.
             // This happens when old apps do "what: hide" instead of "what: Hide".
-            Component = actionsToEvaluate[capitalizeFirstLetter(what)];
+            Component = actionComponents[capitalizeFirstLetter(what)];
         }
 
         if (!Component) {
@@ -313,56 +314,74 @@ const getActionsToExecute = (actions, templateContexts) => {
                 // "message" has a special handling. It adds the special MessageListener action component.
                 // This is because the message event can only be listened to on the window object,
                 // so it adds event listeners on the window object (not the current component).
-                if (!actionsToEvaluate.MessageListener) {
+                if (!actionComponents.MessageListener) {
                     // No MessageListener action component.
                     // Some plugin may have disabled it.
                     continue;
                 }
 
-                result.push({ ActionComponent: actionsToEvaluate.MessageListener, actionProps: item, actionIndex: index });
+                result.push({
+                    ActionComponent: actionComponents.MessageListener,
+                    actionProps: item,
+                    actionIndex: index,
+                });
+
                 continue;
             }
 
             if (item.on === "hashchange") {
                 // "hashchange" works in the same way than "message": it must be added on the window object.
-                if (!actionsToEvaluate.HashChangeListener) {
+                if (!actionComponents.HashChangeListener) {
                     // No HashChangeListener action component.
                     // Some plugin may have disabled it.
                     continue;
                 }
 
-                result.push({ ActionComponent: actionsToEvaluate.HashChangeListener, actionProps: item, actionIndex: index });
+                result.push({
+                    ActionComponent: actionComponents.HashChangeListener,
+                    actionProps: item,
+                    actionIndex: index,
+                });
+
                 continue;
             }
 
-            if (item.on === "response") {
-                // "response" has a special handling. It adds the special ResponseListener action component.
-                // This is because the response event is a custom event dispatched by HTTP reactions like fetchData.
-                if (!actionsToEvaluate.ResponseListener) {
-                    // No ResponseListener action component.
-                    // Some plugin may have disabled it.
-                    continue;
+            if (reactEventProps.has(item.on)) {
+                // This is a standard event that React can handle on the props directly.
+                // This will trigger the ReactOnEvent component to be added at the end of the actions chain.
+                requiresReactionComponent = true;
+
+                const normalizedEventName = "on" + capitalizeFirstLetter(item.on);
+
+                if (!Array.isArray(reactionFunctionProps[normalizedEventName])) {
+                    // Initialize the key.
+                    reactionFunctionProps[normalizedEventName] = [];
                 }
 
-                result.push({ ActionComponent: actionsToEvaluate.ResponseListener, actionProps: item, actionIndex: index });
+                // Append the reaction function definition that will be read
+                // later by the ReactOnEvent action component.
+                reactionFunctionProps[normalizedEventName].push(item);
+
+                // Do not add the ReactOnEvent component yet in the result array.
+                // It will be added at the end of the actions chain.
                 continue;
             }
 
-            requiresReactionComponent = true;
-
-            const normalizedEventName = "on" + capitalizeFirstLetter(item.on);
-
-            if (!Array.isArray(reactionFunctionProps[normalizedEventName])) {
-                // Initialize the key.
-                reactionFunctionProps[normalizedEventName] = [];
+            // This is an event that is not handled by React.
+            // Dev note: we can make event handling plugin-based if needed,
+            // i.e. allow the user to map their own handlers to custom events.
+            if (!actionComponents.CustomEventListener) {
+                // No CustomEventListener action component.
+                // Some plugin may have disabled it.
+                continue;
             }
 
-            // Append the reaction function definition that will be read
-            // later by the ReactOnEvent action component.
-            reactionFunctionProps[normalizedEventName].push(item);
+            result.push({
+                ActionComponent: actionComponents.CustomEventListener,
+                actionProps: item,
+                actionIndex: index,
+            });
 
-            // Do not add the ReactOnEvent component yet in the result array.
-            // It will be added at the end of the actions chain.
             continue;
         }
 
@@ -378,14 +397,14 @@ const getActionsToExecute = (actions, templateContexts) => {
         // It's added at the end because it will collect all definitions
         // and apply the reaction function properties on the real rendered element.
         // TODO: evaluate if the _reactOnEvent actionIndex may create issues.
-        if (!actionsToEvaluate.ReactOnEvent) {
+        if (!actionComponents.ReactOnEvent) {
             // No ReactOnEvent action component.
             // Some plugin may have disabled it.
             return result;
         }
 
         result.push({
-            ActionComponent: actionsToEvaluate.ReactOnEvent,
+            ActionComponent: actionComponents.ReactOnEvent,
             actionProps: reactionFunctionProps,
             actionIndex: "_reactOnEvent",
         });

@@ -240,7 +240,7 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
                 bubbles: true,
                 cancelable: true,
                 composed: true,
-                detail: { responseData: alteredResponse, responseContext },
+                detail: { requestContext, value: alteredResponse, responseContext },
             });
 
             currentTarget?.dispatchEvent(event);

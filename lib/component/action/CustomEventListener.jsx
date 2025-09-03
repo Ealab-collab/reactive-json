@@ -4,17 +4,16 @@ import { TemplateContext } from "../../engine/TemplateContext.jsx";
 import { replaceEventPlaceholders } from "../../engine/index.js";
 
 /**
- * Listens to "response" custom events on DOM elements and executes a reaction function in response.
- * This component is used to handle responses from fetchData and similar HTTP reactions.
+ * Listens to custom events on DOM elements and executes a reaction function in response.
  *
- * Unlike MessageListener and HashChangeListener which listen on the window object,
- * ResponseListener listens directly on the target element where the reaction was defined.
+ * CustomEventListener listens directly on the target element
+ * specified by the attributesHolderRef.
  *
  * @param {{}} props
  * @returns {JSX.Element}
  * @constructor
  */
-export const ResponseListener = (props) => {
+export const CustomEventListener = (props) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
     const elementRef = props.attributesHolderRef;
@@ -43,10 +42,10 @@ export const ResponseListener = (props) => {
         const elementToListen = elementRef.current;
         
         if (elementToListen) {
-            elementToListen.addEventListener("response", listener);
+            elementToListen.addEventListener(actionProps.on, listener);
             
             return () => {
-                elementToListen.removeEventListener("response", listener);
+                elementToListen.removeEventListener(actionProps.on, listener);
             };
         }
     }, [globalDataContext, actionProps, templateContext]);
