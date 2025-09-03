@@ -23,6 +23,21 @@ renderView:
       class: simple-accordion
     content:
       - type: div
+        content: "<reactive-json:env>.VITE_FOO"
+      - type: div
+        content: "<reactive-json:localStorage>key"
+      - type: div
+        content: "<reactive-json:sessionStorage>key"
+      - type: div
+        content: "<reactive-json:url>"
+      - type: div
+        content: "<reactive-json:url:path>"
+      - type: div
+        content: "<reactive-json:url:queryParams>"
+      - type: div
+        content: "<reactive-json:url:queryParam>foo"
+
+      - type: div
         attributes:
           class: simple-accordion-item
         content:

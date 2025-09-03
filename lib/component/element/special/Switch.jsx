@@ -7,9 +7,9 @@ import {
     dataLocationToPath,
     evaluateAttributes,
     evaluateTemplateValue,
-    isTemplateValue,
 } from "../../../engine/TemplateSystem.jsx";
 import { View } from "../../../engine/View.jsx";
+import { isDataLocation } from "../../../engine/utility/utilsRegex.jsx";
 
 export const Switch = ({ props, currentData, path }) => {
     const globalDataContext = useContext(GlobalDataContext);
@@ -86,7 +86,7 @@ export const Switch = ({ props, currentData, path }) => {
         }
 
         let finalPath =
-            ((isTemplateValue(maybeContent) &&
+            ((isDataLocation(maybeContent) &&
                 dataLocationToPath({
                     dataLocation: maybeContent,
                     currentPath: templateContext.templatePath,

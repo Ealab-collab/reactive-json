@@ -2,6 +2,31 @@ import { useContext } from "react";
 import { GlobalDataContext } from "./GlobalDataContext.jsx";
 import { TemplateContext } from "./TemplateContext.jsx";
 import { normalizeAttributesForReactJsx } from "./utility/reactJsxHelpers.jsx";
+import {
+    getEnvironmentVariable,
+    getGlobalPathReferenceKey,
+    getGlobalUrl,
+    getLocalStorageValue,
+    getSessionStorageValue,
+    getTemplatePathReferenceKey,
+    getUrlPath,
+    getUrlQueryParam,
+    getUrlQueryParams,
+    isDataLocation,
+    isGetEnvironmentVariableReactFeature,
+    isGetGlobalUrlFeature,
+    isGetLocalAndSessionStorageFeature,
+    isGetLocalStorageFeature,
+    isGetUrlPathFeature,
+    isGetUrlQueryParamFeature,
+    isGetUrlQueryParamsFeature,
+    isGlobalContextReference,
+    isGlobalPathReference,
+    isReactiveJsonReactFeature,
+    isTemplateContextReference,
+    isTemplatePathReference,
+    isUrlFeature,
+} from "./utility/utilsRegex.jsx";
 
 /**
  * Transforms a data location string to a path to be used in the UI components.
@@ -15,15 +40,7 @@ import { normalizeAttributesForReactJsx } from "./utility/reactJsxHelpers.jsx";
  * @throws {Error} The path cannot be determined.
  */
 export const dataLocationToPath = ({ dataLocation, currentPath, globalDataContext, templateContext }) => {
-    if (
-        !(typeof dataLocation === "string") ||
-        !(
-            dataLocation.startsWith("~.") ||
-            dataLocation.startsWith("~~.") ||
-            dataLocation.startsWith("~>") ||
-            dataLocation.startsWith("~~>")
-        )
-    ) {
+    if (!(typeof dataLocation === "string") || !isDataLocation(dataLocation)) {
         if ("~" === dataLocation) {
             // The data location is the template root.
             return templateContext.templatePath;
@@ -42,22 +59,17 @@ export const dataLocationToPath = ({ dataLocation, currentPath, globalDataContex
     // This tells if we check in the current template context, the global data, or the current path.
     let pathBase;
 
-    if (dataLocation.startsWith("~~.")) {
+    if (isGlobalContextReference(dataLocation)) {
         // Build the path starting from the global data context path (in theory, just "data").
         pathBase = globalDataContext.templatePath;
-    } else if (dataLocation.startsWith("~.")) {
+    } else if (isTemplateContextReference(dataLocation)) {
         // Build the path starting from the current template path.
         pathBase = templateContext.templatePath;
-    } else if (dataLocation.startsWith("~>") || dataLocation.startsWith("~~>")) {
-        // Build the path starting from an ascendant of the current template path.
-        const prefix = dataLocation.startsWith("~>") ? "~>" : "~~>";
-
+    } else if (isTemplatePathReference(dataLocation) || isGlobalPathReference(dataLocation)) {
         // First, determine the base key.
-        const dotIndex = dataLocation.indexOf(".");
-        const baseKeyToFind =
-            dotIndex === -1
-                ? dataLocation.substring(prefix.length) // "~>key" => "key".
-                : dataLocation.substring(prefix.length, dotIndex); // "~>key.prop" => "key".
+        const baseKeyToFind = isTemplatePathReference(dataLocation)
+            ? getTemplatePathReferenceKey(dataLocation)
+            : getGlobalPathReferenceKey(dataLocation);
 
         if (!templateContext.templatePath.includes(baseKeyToFind)) {
             throw new Error(
@@ -69,7 +81,7 @@ export const dataLocationToPath = ({ dataLocation, currentPath, globalDataContex
 
         let baseKeyToFindIndex;
 
-        if (prefix === "~>") {
+        if (isTemplatePathReference(dataLocation)) {
             // Build the path that starts from the last key found in the current template path.
             baseKeyToFindIndex = templateContext.templatePath.lastIndexOf(baseKeyToFind);
         } else {
@@ -156,7 +168,7 @@ export const evaluateAttributes = ({ attrs, globalDataContext, templateContext, 
  * @returns {undefined|*}
  */
 export const evaluateTemplateValue = ({ valueToEvaluate, globalDataContext, templateContext }) => {
-    if (!isTemplateValue(valueToEvaluate)) {
+    if (!isDataLocation(valueToEvaluate) && !isReactiveJsonReactFeature(valueToEvaluate)) {
         // This value does not use the template context data.
         // Render what is given as is.
         return valueToEvaluate;
@@ -180,10 +192,10 @@ export const evaluateTemplateValue = ({ valueToEvaluate, globalDataContext, temp
 
     let currentNode;
 
-    if (valueToEvaluate.startsWith("~~.")) {
+    if (isGlobalContextReference(valueToEvaluate)) {
         // Start from the global data context node.
         currentNode = globalDataContext?.templateData;
-    } else if (valueToEvaluate.startsWith("~>") || valueToEvaluate.startsWith("~~>")) {
+    } else if (isTemplatePathReference(valueToEvaluate) || isGlobalPathReference(valueToEvaluate)) {
         // Special syntax that searches for a location in the current template path.
         // ~> : Searches toward root (lastIndexOf).
         // ~~> : Searches from root (indexOf).
@@ -199,6 +211,42 @@ export const evaluateTemplateValue = ({ valueToEvaluate, globalDataContext, temp
         });
 
         currentNode = globalDataContext?.templateData;
+    } else if (isReactiveJsonReactFeature(valueToEvaluate)) {
+        if (isGetEnvironmentVariableReactFeature(valueToEvaluate)) {
+            const envValue = getEnvironmentVariable(valueToEvaluate);
+            currentNode = envValue;
+        }
+        if (isGetLocalAndSessionStorageFeature(valueToEvaluate)) {
+            const storageValue = isGetLocalStorageFeature(valueToEvaluate)
+                ? getLocalStorageValue(valueToEvaluate)
+                : getSessionStorageValue(valueToEvaluate);
+            currentNode = storageValue;
+        }
+        if (isUrlFeature(valueToEvaluate)) {
+            if (isGetGlobalUrlFeature(valueToEvaluate)) {
+                const urlValue = getGlobalUrl(valueToEvaluate);
+                currentNode = urlValue;
+            }
+            else if (isGetUrlPathFeature(valueToEvaluate)) {
+                const urlValue = getUrlPath(valueToEvaluate);
+                currentNode = urlValue;
+            }
+            else if (isGetUrlQueryParamsFeature(valueToEvaluate)) {
+                const urlValue = getUrlQueryParams(valueToEvaluate);
+                currentNode = urlValue;
+            }
+            else if (isGetUrlQueryParamFeature(valueToEvaluate)) {
+                const urlValue = getUrlQueryParam(valueToEvaluate);
+                currentNode = urlValue;
+            }
+            else {
+                console.error('Invalid URL feature:', valueToEvaluate);
+                return undefined;
+            }
+        }
+        if (currentNode) {
+            return currentNode;
+        }
     } else {
         // Start from the current template context node.
         currentNode = templateContext?.templateData;
@@ -319,31 +367,6 @@ export const evaluateTemplateValueCollection = ({
 };
 
 /**
- * Checks if the given value is a value which can be replaced by the template system.
- * @param valueToEvaluate
- * @returns {string|boolean}
- */
-export const isTemplateValue = (valueToEvaluate) => {
-    if (
-        !(typeof valueToEvaluate === "string") ||
-        !(
-            valueToEvaluate.startsWith("~.") ||
-            valueToEvaluate.startsWith("~~.") ||
-            valueToEvaluate.startsWith("~>") ||
-            valueToEvaluate.startsWith("~~>") ||
-            "~" === valueToEvaluate ||
-            "~~" === valueToEvaluate
-        )
-    ) {
-        // This value does not use the template context data.
-        return false;
-    }
-
-    // Render what is given as is for chaining.
-    return valueToEvaluate;
-};
-
-/**
  * A template value is a value that is retrieved from the current template data.
  *
  * @param valueToEvaluate
@@ -352,18 +375,18 @@ export const isTemplateValue = (valueToEvaluate) => {
  *
  * @constructor
  */
-const TemplateValue = ({ valueToEvaluate }) => {
+const templateValue = ({ valueToEvaluate }) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
 
     return evaluateTemplateValue({
-        globalDataContext: globalDataContext,
-        templateContext: templateContext,
-        valueToEvaluate: valueToEvaluate,
+        globalDataContext,
+        templateContext,
+        valueToEvaluate,
     });
 };
 
-export default TemplateValue;
+export default templateValue;
 
 /**
  * Evaluates the given attributes with the given contexts.

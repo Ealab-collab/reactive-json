@@ -1,4 +1,4 @@
-import { isTemplateValue } from "../TemplateSystem.jsx";
+import { isDataLocation } from "./utilsRegex.jsx";
 
 /**
  * Recursively analyze the dataOverride to detect references to parent data.
@@ -17,7 +17,7 @@ export const analyzeDataOverrideReferences = (dataOverride, currentPath = "", op
         return references;
     }
 
-    if (typeof dataOverride === "string" && isTemplateValue(dataOverride)) {
+    if (typeof dataOverride === "string" && isDataLocation(dataOverride)) {
         // The reference is the value itself, for example: "~~.value".
         // Map it to the empty (root) path.
         references.set("", dataOverride);
@@ -49,7 +49,7 @@ export const analyzeDataOverrideReferences = (dataOverride, currentPath = "", op
 
         traversedObjects.add(obj);
 
-        if (typeof obj === "string" && isTemplateValue(obj)) {
+        if (typeof obj === "string" && isDataLocation(obj)) {
             references.set(path, obj);
             return;
         }
