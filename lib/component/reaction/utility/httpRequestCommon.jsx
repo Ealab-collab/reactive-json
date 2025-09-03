@@ -237,7 +237,7 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
             }
 
             const event = new CustomEvent("response", {
-                bubbles: true,
+                bubbles: false,
                 cancelable: true,
                 composed: true,
                 detail: { requestContext, value: alteredResponse, responseContext },
