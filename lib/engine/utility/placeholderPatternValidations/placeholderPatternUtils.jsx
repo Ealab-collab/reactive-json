@@ -1,24 +1,5 @@
 // ————————————————————————————————————————————————————————————————
-// 1) Data-location (~ / ~~) grammar
-// ————————————————————————————————————————————————————————————————
-export const DATA_LOCATION_ANY              = /^~{1,2}[>.].+$/;
-export const TEMPLATE_CONTEXT_REFERENCE_RX  = /^~\.(?<key>.+)$/;
-export const GLOBAL_CONTEXT_REFERENCE_RX    = /^~~\.(?<key>.+)$/;
-export const TEMPLATE_PATH_REFERENCE_RX     = /^~>.(?<key>.+)$/;
-export const GLOBAL_PATH_REFERENCE_RX       = /^~~>.(?<key>.+)$/;
-
-export const isDataLocation = (v) => DATA_LOCATION_ANY.test(v);
-export const isTemplateContextReference = (v) => TEMPLATE_CONTEXT_REFERENCE_RX.test(v);
-export const isGlobalContextReference   = (v) => GLOBAL_CONTEXT_REFERENCE_RX.test(v);
-export const isTemplatePathReference    = (v) => TEMPLATE_PATH_REFERENCE_RX.test(v);
-export const isGlobalPathReference      = (v) => GLOBAL_PATH_REFERENCE_RX.test(v);
-export const getTemplateContextReferenceKey = (v) => TEMPLATE_CONTEXT_REFERENCE_RX.exec(v)?.groups?.key;
-export const getGlobalContextReferenceKey = (v) => GLOBAL_CONTEXT_REFERENCE_RX.exec(v)?.groups?.key;
-export const getTemplatePathReferenceKey = (v) => TEMPLATE_PATH_REFERENCE_RX.exec(v)?.groups?.key;
-export const getGlobalPathReferenceKey = (v) => GLOBAL_PATH_REFERENCE_RX.exec(v)?.groups?.key;
-
-// ————————————————————————————————————————————————————————————————
-// 2) reactive-json mini-parser (single source of truth)
+// reactive-json mini-parser (single source of truth)
 //    Supported forms (examples):
 //      <reactive-json:env>.FOO
 //      <reactive-json:localStorage>.key        // Get a local storage item
@@ -28,11 +9,11 @@ export const getGlobalPathReferenceKey = (v) => GLOBAL_PATH_REFERENCE_RX.exec(v)
 //      <reactive-json:url:queryParams>         // array of query params
 //      <reactive-json:url:queryParam>.foo      // Get a query param
 // ————————————————————————————————————————————————————————————————
-export const REACTIVE_JSON_RX =
+export const REACTIVE_JSON_PLACEHOLDER_PATTERN =
   /^<reactive-json:(?<domain>env|localStorage|sessionStorage|url(?::path|:queryParams|:queryParam)?)>(?<tail>.*)$/;
 
-export const parseReactiveJson = (value) => {
-  const m = REACTIVE_JSON_RX.exec(value);
+export const parseReactiveJsonPlaceholder = (value) => {
+  const m = REACTIVE_JSON_PLACEHOLDER_PATTERN.exec(value);
   if (!m || !m.groups) return null;
 
   const domain = m.groups.domain;        // e.g. 'url', 'url:path', 'env'
@@ -50,23 +31,23 @@ export const parseReactiveJson = (value) => {
 };
 
 // Presence check
-export const isReactiveJsonReactFeature = (v) => !!parseReactiveJson(v);
+export const isReactiveJsonPlaceholderPattern = (v) => !!parseReactiveJsonPlaceholder(v);
 
-export const getReactiveJsonReactFeatureKey = (v) => {
-  const r = parseReactiveJson(v);
+export const getReactiveJsonPlaceholderKey = (v) => {
+  const r = parseReactiveJsonPlaceholder(v);
   return r.tail;
 };
 
 
 // ENV
-export const isGetEnvironmentVariableReactFeature = (v) => {
-  const r = parseReactiveJson(v);
+export const isGetEnvironmentVariablePlaceholder = (v) => {
+  const r = parseReactiveJsonPlaceholder(v);
   // env requires a dotted path, no op
   return !!r && r.root === 'env' && r.hasDotPath;
 };
 
-export const getEnvironmentVariable = (v) => {
-  let key = getReactiveJsonReactFeatureKey(v);
+export const getEnvironmentVariableFromPlaceholder = (v) => {
+  let key = getReactiveJsonPlaceholderKey(v);
   if (key.startsWith('.')) {
     key = key.slice(1);
   }
@@ -80,13 +61,13 @@ export const getEnvironmentVariable = (v) => {
 
 
 // localStorage / sessionStorage
-export const isGetLocalAndSessionStorageFeature = (v) => {
-  const r = parseReactiveJson(v);
+export const isGetLocalAndSessionStoragePlaceholder = (v) => {
+  const r = parseReactiveJsonPlaceholder(v);
   return !!r && (r.root === 'localStorage' || r.root === 'sessionStorage');
 };
 
-export const isGetLocalStorageFeature = (v) => {
-  const r = parseReactiveJson(v);
+export const isGetLocalStoragePlaceholder = (v) => {
+  const r = parseReactiveJsonPlaceholder(v);
   // requires op (get/set/remove) + dotted key
   return (
     !!r &&
@@ -94,21 +75,21 @@ export const isGetLocalStorageFeature = (v) => {
   );
 };
 
-export const isGetSessionStorageFeature = (v) => {
-  const r = parseReactiveJson(v);
+export const isGetSessionStoragePlaceholder = (v) => {
+  const r = parseReactiveJsonPlaceholder(v);
   return !!r && r.root === 'sessionStorage';
 };
 
-export const getLocalStorageValue = (v) => {
-  let key = getReactiveJsonReactFeatureKey(v);
+export const getLocalStorageValueFromPlaceholder = (v) => {
+  let key = getReactiveJsonPlaceholderKey(v);
   if (key.startsWith('.')) {
     key = key.slice(1);
   }
   return localStorage.getItem(key);
 };
 
-export const getSessionStorageValue = (v) => {
-  let key = getReactiveJsonReactFeatureKey(v);
+export const getSessionStorageValueFromPlaceholder = (v) => {
+  let key = getReactiveJsonPlaceholderKey(v);
   if (key.startsWith('.')) {
     key = key.slice(1);
   }
@@ -117,31 +98,31 @@ export const getSessionStorageValue = (v) => {
 
 
 // URL family
-export const isUrlFeature = (v) => {
-  const r = parseReactiveJson(v);
+export const isUrlPlaceholder = (v) => {
+  const r = parseReactiveJsonPlaceholder(v);
   return !!r && r.root === 'url';
 };
 
-export const isGetGlobalUrlFeature = (v) => {
-  const r = parseReactiveJson(v);
+export const isGetGlobalUrlPlaceholder = (v) => {
+  const r = parseReactiveJsonPlaceholder(v);
   // must be <reactive-json:url> with nothing after '>'
   return !!r && r.root === 'url' && !r.section && r.tail === '';
 };
 
-export const isGetUrlPathFeature = (v) => {
-  const r = parseReactiveJson(v);
+export const isGetUrlPathPlaceholder = (v) => {
+  const r = parseReactiveJsonPlaceholder(v);
   // must be <reactive-json:url:path> with nothing after '>'
   return !!r && r.root === 'url' && r.section === 'path' && r.tail === '';
 };
 
-export const isGetUrlQueryParamsFeature = (v) => {
-  const r = parseReactiveJson(v);
+export const isGetUrlQueryParamsPlaceholder = (v) => {
+  const r = parseReactiveJsonPlaceholder(v);
   // must be <reactive-json:url:queryParams> with nothing after '>'
   return !!r && r.root === 'url' && r.section === 'queryParams' && r.tail === '';
 };
 
-export const isGetUrlQueryParamFeature = (v) => {
-  const r = parseReactiveJson(v);
+export const isGetUrlQueryParamPlaceholder = (v) => {
+  const r = parseReactiveJsonPlaceholder(v);
   return !!r && r.root === 'url' && r.section === 'queryParam';
 };
 
@@ -157,10 +138,10 @@ export const getUrlQueryParams = () => {
   return window.location.search;
 };
 
-export const getUrlQueryParam = (v) => {
-  const r = parseReactiveJson(v);
+export const getUrlQueryParamFromPlaceholder = (v) => {
+  const r = parseReactiveJsonPlaceholder(v);
   if (r.tail.startsWith('.')) {
     r.tail = r.tail.slice(1);
   }
-  return window.location.search.split('?')[1].split('&').find(param => param.split('=')[0] === r.tail)?.split('=')[1];
+  return window.location.search.split('?')[1]?.split('&').find(param => param.split('=')[0] === r.tail)?.split('=')[1];
 };

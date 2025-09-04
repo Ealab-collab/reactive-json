@@ -3,30 +3,30 @@ import { GlobalDataContext } from "./GlobalDataContext.jsx";
 import { TemplateContext } from "./TemplateContext.jsx";
 import { normalizeAttributesForReactJsx } from "./utility/reactJsxHelpers.jsx";
 import {
-    getEnvironmentVariable,
-    getGlobalPathReferenceKey,
+    getEnvironmentVariableFromPlaceholder,
     getGlobalUrl,
-    getLocalStorageValue,
-    getSessionStorageValue,
-    getTemplatePathReferenceKey,
+    getLocalStorageValueFromPlaceholder,
+    getSessionStorageValueFromPlaceholder,
     getUrlPath,
-    getUrlQueryParam,
+    getUrlQueryParamFromPlaceholder,
     getUrlQueryParams,
-    isDataLocation,
-    isGetEnvironmentVariableReactFeature,
-    isGetGlobalUrlFeature,
-    isGetLocalAndSessionStorageFeature,
-    isGetLocalStorageFeature,
-    isGetUrlPathFeature,
-    isGetUrlQueryParamFeature,
-    isGetUrlQueryParamsFeature,
+    isGetEnvironmentVariablePlaceholder,
+    isGetGlobalUrlPlaceholder,
+    isGetLocalAndSessionStoragePlaceholder,
+    isGetLocalStoragePlaceholder,
+    isGetUrlPathPlaceholder,
+    isGetUrlQueryParamPlaceholder,
+    isGetUrlQueryParamsPlaceholder,
+    isReactiveJsonPlaceholderPattern,
+    isUrlPlaceholder,
+} from "./utility/placeholderPatternValidations/placeholderPatternUtils.jsx";
+import {
+    isDataLocationPattern,
     isGlobalContextReference,
     isGlobalPathReference,
-    isReactiveJsonReactFeature,
     isTemplateContextReference,
     isTemplatePathReference,
-    isUrlFeature,
-} from "./utility/utilsRegex.jsx";
+} from "./utility/placeholderPatternValidations/dataLocationPatternUtils.js";
 
 /**
  * Transforms a data location string to a path to be used in the UI components.
@@ -40,7 +40,7 @@ import {
  * @throws {Error} The path cannot be determined.
  */
 export const dataLocationToPath = ({ dataLocation, currentPath, globalDataContext, templateContext }) => {
-    if (!(typeof dataLocation === "string") || !isDataLocation(dataLocation)) {
+    if (!(typeof dataLocation === "string") || !isDataLocationPattern(dataLocation)) {
         if ("~" === dataLocation) {
             // The data location is the template root.
             return templateContext.templatePath;
@@ -99,7 +99,7 @@ export const dataLocationToPath = ({ dataLocation, currentPath, globalDataContex
     // Remove the template value detection character.
     locationRemainder.shift();
 
-    return locationRemainder.length ? pathBase + "." + locationRemainder.join(".") : pathBase;
+    return locationRemainder.length ? `${pathBase}.${locationRemainder.join(".")}` : pathBase;
 };
 
 /**
@@ -168,7 +168,7 @@ export const evaluateAttributes = ({ attrs, globalDataContext, templateContext, 
  * @returns {undefined|*}
  */
 export const evaluateTemplateValue = ({ valueToEvaluate, globalDataContext, templateContext }) => {
-    if (!isDataLocation(valueToEvaluate) && !isReactiveJsonReactFeature(valueToEvaluate)) {
+    if (!isDataLocationPattern(valueToEvaluate) && !isReactiveJsonPlaceholderPattern(valueToEvaluate)) {
         // This value does not use the template context data.
         // Render what is given as is.
         return valueToEvaluate;
@@ -211,36 +211,32 @@ export const evaluateTemplateValue = ({ valueToEvaluate, globalDataContext, temp
         });
 
         currentNode = globalDataContext?.templateData;
-    } else if (isReactiveJsonReactFeature(valueToEvaluate)) {
-        if (isGetEnvironmentVariableReactFeature(valueToEvaluate)) {
-            const envValue = getEnvironmentVariable(valueToEvaluate);
+    } else if (isReactiveJsonPlaceholderPattern(valueToEvaluate)) {
+        if (isGetEnvironmentVariablePlaceholder(valueToEvaluate)) {
+            const envValue = getEnvironmentVariableFromPlaceholder(valueToEvaluate);
             currentNode = envValue;
         }
-        if (isGetLocalAndSessionStorageFeature(valueToEvaluate)) {
-            const storageValue = isGetLocalStorageFeature(valueToEvaluate)
-                ? getLocalStorageValue(valueToEvaluate)
-                : getSessionStorageValue(valueToEvaluate);
+        if (isGetLocalAndSessionStoragePlaceholder(valueToEvaluate)) {
+            const storageValue = isGetLocalStoragePlaceholder(valueToEvaluate)
+                ? getLocalStorageValueFromPlaceholder(valueToEvaluate)
+                : getSessionStorageValueFromPlaceholder (valueToEvaluate);
             currentNode = storageValue;
         }
-        if (isUrlFeature(valueToEvaluate)) {
-            if (isGetGlobalUrlFeature(valueToEvaluate)) {
+        if (isUrlPlaceholder(valueToEvaluate)) {
+            if (isGetGlobalUrlPlaceholder(valueToEvaluate)) {
                 const urlValue = getGlobalUrl(valueToEvaluate);
                 currentNode = urlValue;
-            }
-            else if (isGetUrlPathFeature(valueToEvaluate)) {
+            } else if (isGetUrlPathPlaceholder(valueToEvaluate)) {
                 const urlValue = getUrlPath(valueToEvaluate);
                 currentNode = urlValue;
-            }
-            else if (isGetUrlQueryParamsFeature(valueToEvaluate)) {
+            } else if (isGetUrlQueryParamsPlaceholder(valueToEvaluate)) {
                 const urlValue = getUrlQueryParams(valueToEvaluate);
                 currentNode = urlValue;
-            }
-            else if (isGetUrlQueryParamFeature(valueToEvaluate)) {
-                const urlValue = getUrlQueryParam(valueToEvaluate);
+            } else if (isGetUrlQueryParamPlaceholder(valueToEvaluate)) {
+                const urlValue = getUrlQueryParamFromPlaceholder(valueToEvaluate);
                 currentNode = urlValue;
-            }
-            else {
-                console.error('Invalid URL feature:', valueToEvaluate);
+            } else {
+                console.error("Invalid URL feature:", valueToEvaluate);
                 return undefined;
             }
         }

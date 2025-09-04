@@ -1,4 +1,5 @@
-import { isDataLocation } from "./utilsRegex.jsx";
+import { isDataLocationPattern } from "./placeholderPatternValidations/dataLocationPatternUtils.js";
+
 
 /**
  * Recursively analyze the dataOverride to detect references to parent data.
@@ -17,7 +18,7 @@ export const analyzeDataOverrideReferences = (dataOverride, currentPath = "", op
         return references;
     }
 
-    if (typeof dataOverride === "string" && isDataLocation(dataOverride)) {
+    if (typeof dataOverride === "string" && isDataLocationPattern(dataOverride)) {
         // The reference is the value itself, for example: "~~.value".
         // Map it to the empty (root) path.
         references.set("", dataOverride);
@@ -49,7 +50,7 @@ export const analyzeDataOverrideReferences = (dataOverride, currentPath = "", op
 
         traversedObjects.add(obj);
 
-        if (typeof obj === "string" && isDataLocation(obj)) {
+        if (typeof obj === "string" && isDataLocationPattern(obj)) {
             references.set(path, obj);
             return;
         }
