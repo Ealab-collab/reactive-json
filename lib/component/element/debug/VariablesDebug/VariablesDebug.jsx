@@ -4,7 +4,9 @@ import { ActionDependant, TemplateContext } from "../../../../engine";
 import { DebugMode } from "./DebugMode.enum";
 import DebugList from "./ModeDisplay/DebugList/DebugList";
 import DebugJson from "./ModeDisplay/DebugJson/DebugJson";
-import "./reset.css";
+// TODO: https://github.com/Ealab-collab/reactive-json/issues/30
+// Move styles to the module file.
+//import "./reset.css";
 import { flattenObject } from "./utils";
 import styles from "./VariablesDebug.module.css";
 
