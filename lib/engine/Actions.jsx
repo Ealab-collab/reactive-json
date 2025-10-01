@@ -3,7 +3,7 @@ import { isEqual } from "lodash";
 import { useContext } from "react";
 import { GlobalDataContext } from "./GlobalDataContext.jsx";
 import { TemplateContext } from "./TemplateContext.jsx";
-import { evaluateTemplateValue, isTemplateValue } from "./TemplateSystem.jsx";
+import { evaluateTemplateValue } from "./TemplateSystem.jsx";
 import { reactEventProps } from "./utility/reactEventProps.js";
 import { isDataLocationPattern } from "./utility/placeholderPatternValidations/dataLocationPatternUtils.js";
 import { isReactiveJsonPlaceholderPattern } from "./utility/placeholderPatternValidations/placeholderPatternUtils.jsx";
