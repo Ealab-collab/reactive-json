@@ -379,7 +379,7 @@ export const evaluateTemplateValueCollection = ({
  *
  * @constructor
  */
-const templateValue = ({ valueToEvaluate }) => {
+const TemplateValue = ({ valueToEvaluate }) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
 
@@ -390,7 +390,7 @@ const templateValue = ({ valueToEvaluate }) => {
     });
 };
 
-export default templateValue;
+export default TemplateValue;
 
 /**
  * Evaluates the given attributes with the given contexts.
