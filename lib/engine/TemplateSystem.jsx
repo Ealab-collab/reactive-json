@@ -9,8 +9,8 @@ import {
     getSessionStorageValueFromPlaceholder,
     getUrlPath,
     getUrlQueryParamFromPlaceholder,
-    getUrlQueryParams,
-    isGetEnvironmentVariablePlaceholder,
+    getUrlQueryParams, isCookiesPlaceholder, isGetEnvironmentVariablePlaceholder,
+    isCookiesGet,
     isGetGlobalUrlPlaceholder,
     isGetLocalAndSessionStoragePlaceholder,
     isGetLocalStoragePlaceholder,
@@ -19,6 +19,7 @@ import {
     isGetUrlQueryParamsPlaceholder,
     isReactiveJsonPlaceholderPattern,
     isUrlPlaceholder,
+    manageCookies
 } from "./utility/placeholderPatternValidations/placeholderPatternUtils.jsx";
 import {
     isDataLocationPattern,
@@ -219,7 +220,7 @@ export const evaluateTemplateValue = ({ valueToEvaluate, globalDataContext, temp
         if (isGetLocalAndSessionStoragePlaceholder(valueToEvaluate)) {
             const storageValue = isGetLocalStoragePlaceholder(valueToEvaluate)
                 ? getLocalStorageValueFromPlaceholder(valueToEvaluate)
-                : getSessionStorageValueFromPlaceholder (valueToEvaluate);
+                : getSessionStorageValueFromPlaceholder(valueToEvaluate);
             currentNode = storageValue;
         }
         if (isUrlPlaceholder(valueToEvaluate)) {
@@ -239,6 +240,13 @@ export const evaluateTemplateValue = ({ valueToEvaluate, globalDataContext, temp
                 console.error("Invalid URL feature:", valueToEvaluate);
                 return undefined;
             }
+        }
+        if (isCookiesPlaceholder(valueToEvaluate)) {
+            if (isCookiesGet(valueToEvaluate))
+                return manageCookies(valueToEvaluate);
+            // For set/remove, perform side effect and render nothing
+            manageCookies(valueToEvaluate);
+            return undefined;
         }
         if (currentNode) {
             return currentNode;

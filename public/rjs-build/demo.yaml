@@ -37,6 +37,25 @@ renderView:
       - type: div
         content: "<reactive-json:url:queryParam>foo"
 
+      - type: h3
+        content: Cookies placeholders
+
+      - type: div
+        content:
+          - "Set cookie (on render): "
+          - "<reactive-json:cookies:set>.demoCookie=hello-world;path=/;SameSite=Lax"
+
+      - type: div
+        content:
+          - "Get cookie value: "
+          - "<reactive-json:cookies:get>.demoCookie"
+
+      - type: div
+        content:
+          - "Remove cookie (on render): "
+          - "<reactive-json:cookies:remove>.demoCookie"
+
+
       - type: div
         attributes:
           class: simple-accordion-item

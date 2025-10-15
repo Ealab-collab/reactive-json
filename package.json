@@ -93,6 +93,7 @@
     "purpose": "Component creation and reactive-json usage patterns for AI assistants"
   },
   "dependencies": {
-    "prop-types": "^15.8.1"
+    "prop-types": "^15.8.1",
+    "universal-cookie": "^8.0.1"
   }
 }

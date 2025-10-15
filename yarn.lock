@@ -1925,7 +1925,7 @@ convert-source-map@^2.0.0:
   resolved "https://registry.npmjs.org/convert-source-map/-/convert-source-map-2.0.0.tgz"
   integrity sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==
 
-cookie@^1.0.1:
+cookie@^1.0.1, cookie@^1.0.2:
   version "1.0.2"
   resolved "https://registry.npmjs.org/cookie/-/cookie-1.0.2.tgz"
   integrity sha512-9Kr/j4O16ISv8zBBhJoi4bXOYNTkFLOqSL3UDB0njXxCXNezjeyVrJyGOWtgfs/q2km1gwBcfH8q1yEGoMYunA==
@@ -4241,6 +4241,13 @@ undici-types@~6.21.0:
   version "6.21.0"
   resolved "https://registry.npmjs.org/undici-types/-/undici-types-6.21.0.tgz"
   integrity sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==
+
+universal-cookie@^8.0.1:
+  version "8.0.1"
+  resolved "https://registry.npmjs.org/universal-cookie/-/universal-cookie-8.0.1.tgz"
+  integrity sha512-B6ks9FLLnP1UbPPcveOidfvB9pHjP+wekP2uRYB9YDfKVpvcjKgy1W5Zj+cEXJ9KTPnqOKGfVDQBmn8/YCQfRg==
+  dependencies:
+    cookie "^1.0.2"
 
 universalify@^2.0.0:
   version "2.0.1"
