@@ -43,11 +43,25 @@ export const SelectField = ({ props, datafield, path, currentData }) => {
         globalDataContext.updateData(value, formDataPath);
     };
 
-    const options = evaluateTemplateValue({
-        valueToEvaluate: props.options,
-        globalDataContext,
-        templateContext,
-    }) || [];
+    // Handle options: dynamicOptions takes precedence over options.
+    let options;
+    if (props.dynamicOptions) {
+        // dynamicOptions is always a template reference string.
+        options = evaluateTemplateValue({
+            valueToEvaluate: props.dynamicOptions,
+            globalDataContext,
+            templateContext,
+        });
+    } else if (props.options) {
+        // options is a static array, use it directly.
+        options = props.options;
+    } else {
+        options = [];
+    }
+
+    if (!Array.isArray(options)) {
+        options = [];
+    }
 
     // Determine if wrapper should be used.
     const hasLabel = Boolean(props.label);
