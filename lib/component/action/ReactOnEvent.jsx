@@ -47,7 +47,27 @@ export const ReactOnEvent = (props) => {
                 const preparedArgs = replaceEventPlaceholders(singleReactionFunctionProps, event);
 
                 // Call the reaction function with the props, the event details, and context data.
-                reactionFunction({ args: preparedArgs, event, globalDataContext, templateContext });
+                reactionFunction({
+                    args: preparedArgs,
+                    event,
+                    eventData: {
+                        // We copy the event data to make them available
+                        // to asynchronous reaction functions.
+                        // This is needed because React will reset the event object data
+                        // to reuse it for other events (see pooling of events in React).
+                        currentTarget: event.currentTarget,
+                        bubbles: event.bubbles,
+                        cancelable: event.cancelable,
+                        composed: event.composed,
+                        defaultPrevented: event.defaultPrevented,
+                        isTrusted: event.isTrusted,
+                        target: event.target,
+                        timeStamp: event.timeStamp,
+                        type: event.type,
+                    },
+                    globalDataContext,
+                    templateContext
+                });
 
                 if (preparedArgs.stopPropagation === true) {
                     // Stop executing reaction functions of this event early.
