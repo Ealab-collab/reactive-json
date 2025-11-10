@@ -26,13 +26,27 @@ export const CheckBoxField = ({ props, datafield, path, currentData }) => {
         templateContext,
     });
 
-    const options = evaluateTemplateValue({
-        valueToEvaluate: props.options,
-        globalDataContext,
-        templateContext,
-    }) || [];
+    // Handle options: dynamicOptions takes precedence over options.
+    let options;
+    if (props.dynamicOptions) {
+        // dynamicOptions is always a template reference string.
+        options = evaluateTemplateValue({
+            valueToEvaluate: props.dynamicOptions,
+            globalDataContext,
+            templateContext,
+        });
+    } else if (props.options) {
+        // options is a static array, use it directly.
+        options = props.options;
+    } else {
+        return null;
+    }
 
-    if (!Array.isArray(options) || options.length === 0) {
+    if (!Array.isArray(options)) {
+        return null;
+    }
+
+    if (options.length === 0) {
         return null;
     }
 
@@ -58,7 +72,7 @@ export const CheckBoxField = ({ props, datafield, path, currentData }) => {
                 );
             }
         } else {
-            // Single checkbox: store boolean or value
+            // Single checkbox: store boolean or value.
             globalDataContext.updateData(e.target.checked ? optionValue : false, formDataPath);
         }
     };
@@ -78,7 +92,7 @@ export const CheckBoxField = ({ props, datafield, path, currentData }) => {
         return `checkbox-${Math.random().toString(36).substring(2, 9)}`;
     }, [inputAttributes.id]);
 
-    // Remove id from inputAttributes if present, since we'll set it per option
+    // Remove id from inputAttributes if present, since we'll set it per option.
     const { id: _removedId, ...inputAttributesWithoutId } = inputAttributes;
 
     const checkboxElements = options.map((option, index) => {
@@ -101,7 +115,7 @@ export const CheckBoxField = ({ props, datafield, path, currentData }) => {
 
         const optionAttributes = useEvaluatedAttributes(option.attributes);
 
-        // Merge inputAttributes (without id) with option-specific attributes
+        // Merge inputAttributes (without id) with option-specific attributes.
         const finalInputAttributes = {
             type: controlType,
             id: optionId,
