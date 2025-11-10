@@ -660,6 +660,215 @@ renderView:
 
   - type: hr
 
+  - type: h2
+    content: Form Field Components
+
+  - type: p
+    content: This section demonstrates the CheckBoxField, SelectField, and TextAreaField components with various configurations.
+
+  - type: div
+    attributes:
+      class: simple-row
+    content:
+      - type: div
+        attributes:
+          class: simple-col-6
+        content:
+          - type: h3
+            content: CheckBoxField
+          - type: div
+            attributes:
+              class: simple-card
+            content:
+              - type: div
+                attributes:
+                  class: simple-card-body
+                content:
+                  - type: h5
+                    attributes:
+                      class: mb-3
+                    content: Single Checkbox
+                  - type: CheckBoxField
+                    dataLocation: ~~.formFields.singleCheckbox
+                    label: "Accept terms and conditions"
+                    options:
+                      - label: "I agree"
+                        value: true
+
+                  - type: hr
+
+                  - type: h5
+                    attributes:
+                      class: mb-3
+                    content: Multiple Checkboxes
+                  - type: CheckBoxField
+                    dataLocation: ~~.formFields.multipleCheckboxes
+                    label: "Select your interests:"
+                    multiple: true
+                    options:
+                      - label: "Technology"
+                        value: "tech"
+                      - label: "Sports"
+                        value: "sports"
+                      - label: "Music"
+                        value: "music"
+                      - label: "Travel"
+                        value: "travel"
+
+                  - type: hr
+
+                  - type: h5
+                    attributes:
+                      class: mb-3
+                    content: Radio Buttons
+                  - type: CheckBoxField
+                    dataLocation: ~~.formFields.radioSelection
+                    label: "Choose your favorite color:"
+                    controlType: radio
+                    options:
+                      - label: "Red"
+                        value: "red"
+                      - label: "Blue"
+                        value: "blue"
+                      - label: "Green"
+                        value: "green"
+
+      - type: div
+        attributes:
+          class: simple-col-6
+        content:
+          - type: h3
+            content: SelectField
+          - type: div
+            attributes:
+              class: simple-card
+            content:
+              - type: div
+                attributes:
+                  class: simple-card-body
+                content:
+                  - type: h5
+                    attributes:
+                      class: mb-3
+                    content: Basic Select
+                  - type: SelectField
+                    dataLocation: ~~.formFields.basicSelect
+                    label: "Choose a country:"
+                    options:
+                      - label: "Select a country"
+                        value: ""
+                      - label: "France"
+                        value: "fr"
+                      - label: "United States"
+                        value: "us"
+                      - label: "Canada"
+                        value: "ca"
+                      - label: "Germany"
+                        value: "de"
+
+                  - type: hr
+
+                  - type: h5
+                    attributes:
+                      class: mb-3
+                    content: Select with Boolean Values
+                  - type: SelectField
+                    dataLocation: ~~.formFields.booleanSelect
+                    label: "Enable notifications:"
+                    options:
+                      - label: "Yes"
+                        value: true
+                      - label: "No"
+                        value: false
+
+                  - type: hr
+
+                  - type: h5
+                    attributes:
+                      class: mb-3
+                    content: Select with Custom Attributes
+                  - type: SelectField
+                    dataLocation: ~~.formFields.customSelect
+                    label: "Priority level:"
+                    options:
+                      - label: "Low"
+                        value: "low"
+                      - label: "Medium"
+                        value: "medium"
+                      - label: "High"
+                        value: "high"
+                    inputAttributes:
+                      class: simple-select
+                    attributes:
+                      class: mb-3
+
+  - type: div
+    attributes:
+      class: simple-row mt-4
+    content:
+      - type: div
+        attributes:
+          class: simple-col-12
+        content:
+          - type: h3
+            content: TextAreaField
+          - type: div
+            attributes:
+              class: simple-card
+            content:
+              - type: div
+                attributes:
+                  class: simple-card-body
+                content:
+                  - type: div
+                    attributes:
+                      class: simple-row
+                    content:
+                      - type: div
+                        attributes:
+                          class: simple-col-6
+                        content:
+                          - type: h5
+                            attributes:
+                              class: mb-3
+                            content: Basic TextArea
+                          - type: TextAreaField
+                            dataLocation: ~~.formFields.basicTextarea
+                            label: "Comments:"
+                            placeholder: "Enter your comments here..."
+                            rows: 4
+
+                      - type: div
+                        attributes:
+                          class: simple-col-6
+                        content:
+                          - type: h5
+                            attributes:
+                              class: mb-3
+                            content: TextArea with Default Value
+                          - type: TextAreaField
+                            dataLocation: ~~.formFields.textareaWithDefault
+                            label: "Description:"
+                            placeholder: "Enter a description..."
+                            rows: 5
+                            defaultFieldValue: "This is a default value that can be edited."
+
+  - type: div
+    attributes:
+      class: simple-row mt-4
+    content:
+      - type: div
+        attributes:
+          class: simple-col-12
+        content:
+          - type: h3
+            content: Debug Variables
+          - type: p
+            content: Use the VariablesDebug component to inspect the form field values in real-time.
+          - type: VariablesDebug
+
+  - type: hr
+
   - type: DataFilter
     context: global
     filters:
@@ -894,6 +1103,15 @@ data:
     config:
       theme: "not-set"
       language: "not-set"
+  formFields:
+    singleCheckbox: false
+    multipleCheckboxes: []
+    radioSelection: ""
+    basicSelect: ""
+    booleanSelect: null
+    customSelect: ""
+    basicTextarea: ""
+    textareaWithDefault: null
   defaultUser:
     name: "Fallback User"
   defaultTheme: "dark-mode"
