@@ -11,6 +11,7 @@ import { alterData, applyDataMapping } from "../../../engine/utility";
  * @param {Object} [props.args.data] - Data to send (for POST, PUT, etc.). Should be not provided for GET requests.
  * @param {Object} props.args.dataMapping - Configuration for selective data dispatch using mapping processors.
  * @param {Object} props.args.refreshAppOnResponse - Tells if the response content will replace the current app content.
+ * @param {boolean} [props.args.submitSilently] - Silent mode. When true, prevents CSS from visually disabling the fields.
  * @param {Object} props.args.updateOnlyData - When true, only update the data instead of replacing the entire RjBuild.
  * @param {Object} props.args.updateDataAtLocation - Specifies where to update the data (like additionalDataSource path).
  * @param {Object} props.args.url - The URL of the request.
@@ -20,7 +21,6 @@ import { alterData, applyDataMapping } from "../../../engine/utility";
  * @param {Object} requestConfig - Configuration specific to the request.
  * @param {string} requestConfig.method - HTTP method (get, post, etc.).
  * @param {Object} [requestConfig.data] - Data to send (for POST, PUT, etc.).
- * @param {boolean} [requestConfig.submitSilently] - Silent mode.
  * @param {string} errorPrefix - Will be used to identify the caller of this function.
  */
 export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequest") => {
@@ -45,11 +45,11 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
         body.dataset.htmlBuilderIsSubmitting = "true";
     }
 
-    const submitSilentlyEnabled = typeof requestConfig.submitSilently === "boolean";
+    const submitSilentlyEnabled = typeof props?.args?.submitSilently === "boolean";
 
     if (submitSilentlyEnabled) {
         // We only work on the submitting silently feature if the property is set and valid.
-        if (requestConfig.submitSilently) {
+        if (props?.args?.submitSilently) {
             // This will prevent CSS from visually disabling the fields if true.
             // TODO: rename the property to reactiveJsonIsSubmittingSilently.
             body.dataset.htmlBuilderIsSubmittingSilently = "true";

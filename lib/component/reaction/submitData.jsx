@@ -71,7 +71,6 @@ export const submitData = (props) => {
         {
             method: props?.args?.httpMethod ?? "post",
             data: payload,
-            submitSilently: props?.args?.submitSilently,
         },
         "submitData"
     );
