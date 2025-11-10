@@ -7,12 +7,13 @@ import { alterData, applyDataMapping } from "../../../engine/utility";
  *
  * @param {Object} props - The properties of the reaction.
  * @param {Object} props.args - The arguments of the reaction.
+ * @param {boolean} [props.args.allowConcurrent] - When true, allows concurrent requests (bypasses the global lock). Default: false.
+ * @param {Object} [props.args.data] - Data to send (for POST, PUT, etc.). Should be not provided for GET requests.
  * @param {Object} props.args.dataMapping - Configuration for selective data dispatch using mapping processors.
  * @param {Object} props.args.refreshAppOnResponse - Tells if the response content will replace the current app content.
  * @param {Object} props.args.updateOnlyData - When true, only update the data instead of replacing the entire RjBuild.
  * @param {Object} props.args.updateDataAtLocation - Specifies where to update the data (like additionalDataSource path).
  * @param {Object} props.args.url - The URL of the request.
- * @param {Object} props.args.data - The data of the request.
  * @param {Object} props.event - The event of the reaction.
  * @param {Object} props.globalDataContext - The global data context.
  * @param {Object} props.templateContext - The template context.
@@ -30,13 +31,19 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
     // With this system, only 1 submit can be made concurrently for all roots.
     const body = document.body;
 
-    // TODO: rename the property to reactiveJsonIsSubmitting.
-    if (body.dataset.htmlBuilderIsSubmitting === "true") {
-        return;
-    }
+    // Check if concurrent requests are allowed (default: false for backward compatibility)
+    const allowConcurrent = props?.args?.allowConcurrent === true;
 
-    // This will block any attempts to resubmit until receiving the response.
-    body.dataset.htmlBuilderIsSubmitting = "true";
+    // Only check and set the lock if concurrent requests are not allowed
+    if (!allowConcurrent) {
+        // TODO: rename the property to reactiveJsonIsSubmitting.
+        if (body.dataset.htmlBuilderIsSubmitting === "true") {
+            return;
+        }
+
+        // This will block any attempts to resubmit until receiving the response.
+        body.dataset.htmlBuilderIsSubmitting = "true";
+    }
 
     const submitSilentlyEnabled = typeof requestConfig.submitSilently === "boolean";
 
@@ -56,9 +63,13 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
      *
      * @param {HTMLElement} body - The body of the HTML element.
      * @param {HTMLElement} currentTarget - The target of the reaction.
+     * @param {boolean} allowConcurrent - Whether concurrent requests are allowed.
      */
-    const cleanupRequestState = (body, currentTarget) => {
-        delete body.dataset.htmlBuilderIsSubmitting;
+    const cleanupRequestState = (body, currentTarget, allowConcurrent) => {
+        // Only clean up the global lock if we set it (i.e., concurrent requests were not allowed)
+        if (!allowConcurrent) {
+            delete body.dataset.htmlBuilderIsSubmitting;
+        }
 
         if (submitSilentlyEnabled) {
             delete body.dataset.htmlBuilderIsSubmittingSilently;
@@ -120,7 +131,7 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
     });
 
     if (!url) {
-        cleanupRequestState(body, currentTarget);
+        cleanupRequestState(body, currentTarget, allowConcurrent);
         return;
     }
 
@@ -249,6 +260,6 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
             console.log(`reactionFunction:${errorPrefix} : Could not execute request. Reason: ${reason.message}`);
         })
         .finally(() => {
-            cleanupRequestState(body, currentTarget);
+            cleanupRequestState(body, currentTarget, allowConcurrent);
         });
 };
