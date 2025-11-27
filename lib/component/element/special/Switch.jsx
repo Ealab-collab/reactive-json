@@ -3,13 +3,9 @@ import { ActionDependant } from "../../../engine/Actions.jsx";
 import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
 import { PaginationContext } from "../../../engine/PaginationContext.jsx";
 import { TemplateContext } from "../../../engine/TemplateContext.jsx";
-import {
-    dataLocationToPath,
-    evaluateAttributes,
-    evaluateTemplateValue,
-    isTemplateValue,
-} from "../../../engine/TemplateSystem.jsx";
+import { dataLocationToPath, evaluateAttributes, evaluateTemplateValue } from "../../../engine/TemplateSystem.jsx";
 import { View } from "../../../engine/View.jsx";
+import { isDataLocationPattern } from "../../../engine/utility/placeholderPatternValidations/dataLocationPatternUtils.js";
 
 export const Switch = ({ props, currentData, path }) => {
     const globalDataContext = useContext(GlobalDataContext);
@@ -86,7 +82,7 @@ export const Switch = ({ props, currentData, path }) => {
         }
 
         let finalPath =
-            ((isTemplateValue(maybeContent) &&
+            ((isDataLocationPattern(maybeContent) &&
                 dataLocationToPath({
                     dataLocation: maybeContent,
                     currentPath: templateContext.templatePath,

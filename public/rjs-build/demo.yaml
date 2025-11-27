@@ -23,6 +23,40 @@ renderView:
       class: simple-accordion
     content:
       - type: div
+        content: "<reactive-json:env>.VITE_FOO"
+      - type: div
+        content: "<reactive-json:localStorage>key"
+      - type: div
+        content: "<reactive-json:sessionStorage>key"
+      - type: div
+        content: "<reactive-json:url>"
+      - type: div
+        content: "<reactive-json:url:path>"
+      - type: div
+        content: "<reactive-json:url:queryParams>"
+      - type: div
+        content: "<reactive-json:url:queryParam>foo"
+
+      - type: h3
+        content: Cookies placeholders
+
+      - type: div
+        content:
+          - "Set cookie (on render): "
+          - "<reactive-json:cookies:set>.demoCookie=hello-world;path=/;SameSite=Lax"
+
+      - type: div
+        content:
+          - "Get cookie value: "
+          - "<reactive-json:cookies:get>.demoCookie"
+
+      - type: div
+        content:
+          - "Remove cookie (on render): "
+          - "<reactive-json:cookies:remove>.demoCookie"
+
+
+      - type: div
         attributes:
           class: simple-accordion-item
         content:
