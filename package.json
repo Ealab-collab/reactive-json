@@ -35,7 +35,7 @@
     "lint": "eslint .",
     "prepublishOnly": "npm run build",
     "preview": "vite preview",
-    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js"
+    "test": "jest"
   },
   "peerDependencies": {
     "axios": "^1.8.4",
@@ -49,6 +49,9 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.28.5",
+    "@babel/preset-react": "^7.28.5",
+    "@babel/preset-typescript": "^7.28.5",
     "@ea-lab/reactive-json-docs": "^0.1.6",
     "@eslint/js": "^9.25.0",
     "@types/js-yaml": "^4.0.9",
@@ -58,14 +61,17 @@
     "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react": "^4.4.1",
     "axios": "^1.8.4",
+    "babel-jest": "^30.2.0",
     "clsx": "^2.1.1",
     "dnd-kit-sortable-tree": "^0.1.73",
+    "esbuild-jest": "^0.5.0",
     "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "glob": "^11.0.2",
     "globals": "^16.0.0",
     "html-react-parser": "^5.2.3",
+    "identity-obj-proxy": "^3.0.0",
     "jest": "^30.0.5",
     "js-yaml": "^4.1.0",
     "jsonpath": "^1.1.1",
