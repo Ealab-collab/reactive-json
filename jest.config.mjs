@@ -57,20 +57,14 @@ const config = {
     //   "node_modules"
     // ],
     // An array of file extensions your modules use
-    // moduleFileExtensions: [
-    //   "js",
-    //   "mjs",
-    //   "cjs",
-    //   "jsx",
-    //   "ts",
-    //   "mts",
-    //   "cts",
-    //   "tsx",
-    //   "json",
-    //   "node"
-    // ],
+    moduleFileExtensions: ["js", "jsx", "mjs", "cjs", "ts", "tsx", "json", "node"],
     // A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
-    // moduleNameMapper: {},
+    moduleNameMapper: {
+        "\\.(css|less|scss|sass)$": "identity-obj-proxy",
+        // Mock static assets to prevent test failures when importing images, fonts, etc.
+        "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$":
+            "<rootDir>/tests/__mocks__/fileMock.js",
+    },
     // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
     // modulePathIgnorePatterns: [],
     // Activates notifications for test results
@@ -125,13 +119,18 @@ const config = {
     // testResultsProcessor: undefined,
     // This option allows use of a custom test runner
     // testRunner: "jest-circus/runner",
+    // Tell Jest to treat .jsx files as ES modules
+    extensionsToTreatAsEsm: [".jsx"],
     // A map from regular expressions to paths to transformers
-    // transform: undefined,
+    // Transform JSX and TypeScript syntax to CommonJS
+    transform: {
+        "^.+\\.(js|jsx|ts|tsx)$": "babel-jest",
+    },
     // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
-    // transformIgnorePatterns: [
-    //   "/node_modules/",
-    //   "\\.pnp\\.[^\\/]+$"
-    // ],
+    transformIgnorePatterns: [
+        "/node_modules/",
+        "\\.pnp\\.[^\\/]+$",
+    ],
     // An array of regexp pattern strings that are matched against all modules before the module loader will automatically return a mock for them
     // unmockedModulePathPatterns: undefined,
     // Indicates whether each individual test should be reported during the run
