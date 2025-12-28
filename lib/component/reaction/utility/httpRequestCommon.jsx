@@ -24,9 +24,10 @@ import { alterData, applyDataMapping } from "../../../engine/utility";
  * @param {string} errorPrefix - Will be used to identify the caller of this function.
  */
 export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequest") => {
-    // Prevent multiple submits / fetches.
-    const reactionEvent = props?.event;
+    // .eventData is more reliable than .event because it's not reset by React even in async conditions.
+    const reactionEvent = props?.eventData;
 
+    // Prevent multiple submits / fetches.
     // Check in realtime if we are already submitting.
     // With this system, only 1 submit can be made concurrently for all roots.
     const body = document.body;
@@ -152,30 +153,35 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
     // Extract dataProcessors from plugins.
     const dataProcessors = globalDataContext.plugins?.dataProcessor || {};
 
+    // Request context for data processors.
+    let requestContext = {
+        url: config.url,
+        method: config.method,
+        headers: config.headers || {},
+        body: config.data,
+    };
+
+    // Response context for data processors.
+    let responseContext = null;
+
+    // Response that will be altered by data processors.
+    let alteredResponse = null;
+
+    // Determine if this is an RjBuild response.
+    // RjBuild when updateOnlyData is false (meaning we're processing a complete RjBuild).
+    // When updateOnlyData is true, we're only processing data.
+    const isRjBuild = updateOnlyData === false;
+
     axios(config)
         .then((value) => {
-            // Create request context for data processors.
-            const requestContext = {
-                url: config.url,
-                method: config.method,
-                headers: config.headers || {},
-                body: config.data,
-            };
-
             // Create response context for data processors.
-            const responseContext = {
+            responseContext = {
                 headers: value.headers || {},
                 status: value.status,
                 data: value.data,
             };
 
-            // Determine if this is an RjBuild response.
-            // RjBuild when updateOnlyData is false (meaning we're processing a complete RjBuild).
-            // When updateOnlyData is true, we're only processing data.
-            const isRjBuild = updateOnlyData === false;
-
-            // Apply data processors to alter the response.
-            const alteredResponse = alterData({
+            alteredResponse = alterData({
                 requestContext,
                 responseContext,
                 responseBody: value.data,
@@ -246,6 +252,26 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
                     setRawAppRjBuild(alteredResponse);
                 }
             }
+        })
+        .catch((reason) => {
+            console.log(`reactionFunction:${errorPrefix} : Could not execute request. Reason: ${reason.message}`);
+            
+            responseContext = {
+                headers: reason?.response?.headers || {},
+                status: reason?.response?.status || 500,
+                data: reason?.response?.data || null,
+            };
+
+            alteredResponse = alterData({
+                requestContext,
+                responseContext,
+                responseBody: reason?.response?.data || null,
+                isRjBuild,
+                dataProcessors,
+            });
+        })
+        .finally(() => {
+            cleanupRequestState(body, currentTarget, allowConcurrent);
 
             const event = new CustomEvent("response", {
                 bubbles: false,
@@ -254,12 +280,8 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
                 detail: { requestContext, value: alteredResponse, responseContext },
             });
 
+            console.log(`reactionFunction:${errorPrefix} : Dispatching event: response`, event);
+            console.log("currentTarget", currentTarget);
             currentTarget?.dispatchEvent(event);
-        })
-        .catch((reason) => {
-            console.log(`reactionFunction:${errorPrefix} : Could not execute request. Reason: ${reason.message}`);
-        })
-        .finally(() => {
-            cleanupRequestState(body, currentTarget, allowConcurrent);
         });
 };
