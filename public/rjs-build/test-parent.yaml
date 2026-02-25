@@ -1,0 +1,60 @@
+renderView:
+  - type: h1
+    content: Parent YAML
+  
+  - type: div
+    attributes:
+      class: simple-card mb-4
+    content:
+      - type: h3
+        content: Parent Data
+      - type: p
+        content: ["Current value in parent: ", ~~.sharedData.value]
+      - type: button
+        attributes:
+          class: simple-btn simple-btn-secondary
+        content: Update from Parent
+        actions:
+          - what: setData
+            on: click
+            path: ~~.sharedData.value
+            value: "Updated by Parent"
+
+  - type: div
+    attributes:
+      class: simple-card
+      style:
+        border: "2px dashed #666"
+        padding: "1rem"
+        backgroundColor: "#f9f9f9"
+    content:
+      - type: h4
+        content: Child Subroot (test-child.yaml)
+      - type: ReactiveJsonSubroot
+        sharedUpdates: true
+        rjOptions:
+          rjBuildUrl: /rjs-build/test-child.yaml
+          dataOverride:
+            childValue: ~~.sharedData.value
+
+  - type: div
+    attributes:
+      class: simple-card
+      style:
+        border: "2px dashed #666"
+        padding: "1rem"
+        backgroundColor: "#f9f9f9"
+        marginTop: "1rem"
+    content:
+      - type: h4
+        content: Isolated Child Subroot (test-child-isolated.yaml)
+      - type: ReactiveJsonSubroot
+        sharedUpdates: false
+        rjOptions:
+          rjBuildUrl: /rjs-build/test-child-isolated.yaml
+          dataOverride:
+            childValue: ~~.sharedData.value
+
+data:
+  sharedData:
+    value: "Initial Shared Value"

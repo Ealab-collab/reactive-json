@@ -1,0 +1,17 @@
+renderView:
+  - type: div
+    content:
+      - type: p
+        content: ["Value received from parent: ", ~~.childValue]
+      - type: button
+        attributes:
+          class: simple-btn simple-btn-primary
+        content: Update from Child
+        actions:
+          - what: setData
+            on: click
+            path: ~~.childValue
+            value: "Updated by Child"
+
+data:
+  childValue: "Default Child Value"

@@ -44,9 +44,16 @@ export const propsDataLocationToPathAndValue = ({
         // Use the template data.
         if ((templateContext.templateData[datafield] ?? undefined) === undefined) {
             // Initialize the data for this component.
-            templateContext.templateData =
-                typeof templateContext.templateData === "object" ? templateContext.templateData : {};
-            templateContext.templateData[datafield] = defaultValue;
+            if (typeof templateContext.templateData === "object" && templateContext.templateData !== null) {
+                templateContext.templateData[datafield] = defaultValue;
+            } else {
+                try {
+                    templateContext.templateData = {};
+                    templateContext.templateData[datafield] = defaultValue;
+                } catch (e) {
+                    // Ignore read-only errors.
+                }
+            }
         }
 
         // The data is located in the template context data,

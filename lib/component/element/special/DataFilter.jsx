@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect, useReducer } from "react";
 import { isValid } from "../../../engine/Actions.jsx";
 import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
 import { TemplateContext } from "../../../engine/TemplateContext.jsx";
@@ -18,7 +18,30 @@ export const DataFilter = (args) => {
     const templateContext = useContext(TemplateContext);
     const templateContexts = { globalDataContext, templateContext };
 
+    // Force re-render for reactive updates in experimental mode.
+    const [, forceUpdate] = useReducer(x => x + 1, 0);
+    const store = globalDataContext?.store;
+
     const { contextToFilter = "global", filters = [] } = args.props;
+
+    useEffect(() => {
+        if (store) {
+             // Subscribe to the source of data.
+             // If context="global", source is root.
+             // If context="template", source is templatePath.
+             const path = contextToFilter === "global" ? "" : templateContext.templatePath;
+             
+             const normalizePath = (p) => {
+                 if (!p) return "";
+                 if (p === "data") return "";
+                 if (p.startsWith("data.")) return p.substring(5);
+                 return p;
+             };
+             const normPath = normalizePath(path);
+             
+             return store.subscribe(normPath, () => forceUpdate());
+        }
+    }, [store, contextToFilter, templateContext.templatePath]);
 
     const filterData = (data) => {
         if (!data) {
@@ -72,11 +95,12 @@ export const DataFilter = (args) => {
 
     switch (contextToFilter) {
         case "template":
-            templateContext.templateData = cloneAndFilter(templateContext.templateData, filterData);
-            templateContext.templatePath = args.path;
+            const newTemplateContext = { ...templateContext };
+            newTemplateContext.templateData = cloneAndFilter(templateContext.templateData, filterData);
+            newTemplateContext.templatePath = args.path;
 
             return (
-                <TemplateContext.Provider value={templateContext}>
+                <TemplateContext.Provider value={newTemplateContext}>
                     <View
                         props={args.props.content}
                         path={args.path + ".content"}
@@ -89,10 +113,11 @@ export const DataFilter = (args) => {
         case "global":
         default:
             // We rewrite the template data.
-            globalDataContext.templateData = cloneAndFilter(globalDataContext.templateData, filterData);
+            const newGlobalDataContext = { ...globalDataContext };
+            newGlobalDataContext.templateData = cloneAndFilter(globalDataContext.templateData, filterData);
 
             return (
-                <GlobalDataContext.Provider value={globalDataContext}>
+                <GlobalDataContext.Provider value={newGlobalDataContext}>
                     <View
                         props={args.props.content}
                         path={args.path + ".content"}

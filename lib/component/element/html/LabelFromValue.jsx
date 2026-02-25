@@ -55,9 +55,16 @@ export const LabelFromValue = ({ currentData, datafield, path, props }) => {
         // Use the template data.
         if ((templateContext.templateData[datafield] ?? undefined) === undefined) {
             // Initialize the data for this component.
-            templateContext.templateData =
-                typeof templateContext.templateData === "object" ? templateContext.templateData : {};
-            templateContext.templateData[datafield] = defaultFieldValue;
+            if (typeof templateContext.templateData === "object" && templateContext.templateData !== null) {
+                templateContext.templateData[datafield] = defaultFieldValue;
+            } else {
+                try {
+                    templateContext.templateData = {};
+                    templateContext.templateData[datafield] = defaultFieldValue;
+                } catch (e) {
+                    // Ignore read-only errors.
+                }
+            }
         }
 
         // The "form" data is located in the template context data,

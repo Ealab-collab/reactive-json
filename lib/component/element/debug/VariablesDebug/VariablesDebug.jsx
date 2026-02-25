@@ -1,6 +1,6 @@
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { ActionDependant, TemplateContext } from "../../../../engine";
+import { ActionDependant, TemplateContext, GlobalDataContext } from "../../../../engine";
 import { DebugMode } from "./DebugMode.enum";
 import DebugList from "./ModeDisplay/DebugList/DebugList";
 import DebugJson from "./ModeDisplay/DebugJson/DebugJson";
@@ -30,10 +30,41 @@ export const VariablesDebug = ({ props }) => {
         setPortalContainer(container);
     }, []);
 
-    const data = useMemo(() => templateContext?.templateData ?? {}, [templateContext]);
+    const globalDataContext = useContext(GlobalDataContext);
+    const store = globalDataContext?.store;
 
-    const jsonString = useMemo(() => JSON.stringify(data, null, 2), [data, templateContext]);
-    const flatRows = useMemo(() => flattenObject(data), [data, templateContext]);
+    // Helper function for normalizing path
+    const normalizePath = (p) => {
+        if (!p) return "";
+        if (p === "data") return "";
+        if (p.startsWith("data.")) return p.substring(5);
+        return p;
+    };
+
+    // Memoize subscribe for performance
+    const subscribe = useCallback((callback) => {
+        if (store) {
+            const path = normalizePath(templateContext?.templatePath);
+            return store.subscribe(path, callback);
+        }
+        return () => {};
+    }, [store, templateContext?.templatePath]);
+
+    // Memoize getSnapshot
+    const getSnapshot = useCallback(() => {
+        if (store) {
+            const path = normalizePath(templateContext?.templatePath);
+            return store.get(path);
+        }
+        return templateContext?.templateData;
+    }, [store, templateContext?.templateData, templateContext?.templatePath]);
+
+    const storeData = useSyncExternalStore(subscribe, getSnapshot);
+
+    const data = useMemo(() => storeData ?? {}, [storeData]);
+
+    const jsonString = useMemo(() => JSON.stringify(data, null, 2), [data]);
+    const flatRows = useMemo(() => flattenObject(data), [data]);
 
     const handleCopy = async () => {
         const copyButton = copyButtonRef.current;

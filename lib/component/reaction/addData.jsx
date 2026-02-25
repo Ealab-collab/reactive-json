@@ -30,6 +30,9 @@ export const addData = (props) => {
         templateContext,
     });
 
+    // In Experimental Mode, we need to pass the "add" mode to the store.
+    // ReactiveJsonRootExperimental.updateData handles the path prefix removal.
+    
     // We clone the value to have distinct instances when the value is an object.
     globalDataContext?.updateData(
         typeof evaluatedValue !== "object" ? evaluatedValue : cloneDeep(evaluatedValue),
