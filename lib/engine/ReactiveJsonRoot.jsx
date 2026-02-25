@@ -10,7 +10,7 @@ import ParsingDebugDisplay from "./ParsingDebugDisplay/ParsingDebugDisplay.jsx";
 import { StoreContext } from "./StoreContext.jsx";
 import { TemplateContext } from "./TemplateContext.jsx";
 import { dataLocationToPath } from "./TemplateSystem.jsx";
-import { useReactiveData } from "./useReactiveData.js";
+import { useReactiveData } from "./hook/useReactiveData.js";
 import { alterData, applyDataMapping, parseRjBuild } from "./utility";
 import { stringToBoolean } from "./utility/stringToBoolean.jsx";
 import { View } from "./View.jsx";
