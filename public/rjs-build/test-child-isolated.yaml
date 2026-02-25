@@ -1,0 +1,17 @@
+renderView:
+  - type: div
+    content:
+      - type: p
+        content: ["Isolated Child Value: ", ~~.childValue]
+      - type: button
+        attributes:
+          class: simple-btn simple-btn-warning
+        content: Update Isolated Child (Should NOT update parent)
+        actions:
+          - what: setData
+            on: click
+            path: ~~.childValue
+            value: "Updated by Isolated Child"
+
+data:
+  childValue: "Default Isolated Value"

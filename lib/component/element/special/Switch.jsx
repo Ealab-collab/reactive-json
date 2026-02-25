@@ -10,16 +10,11 @@ import {
     isTemplateValue,
 } from "../../../engine/TemplateSystem.jsx";
 import { View } from "../../../engine/View.jsx";
-import { ViewExperimental } from "../../../engine/experimental/ViewExperimental.jsx";
 
 export const Switch = ({ props, currentData, path }) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
-    const store = globalDataContext?.store;
     
-    // Use ViewExperimental if store is present.
-    const ViewComponent = store ? ViewExperimental : View;
-
     const { usePagination } = globalDataContext.plugins?.hook ?? {};
 
     if (!usePagination) {
@@ -107,7 +102,7 @@ export const Switch = ({ props, currentData, path }) => {
         }
 
         return (
-            <ViewComponent
+            <View
                 currentData={dataValue}
                 datafield={realIndex}
                 key={realIndex}
@@ -144,7 +139,7 @@ export const Switch = ({ props, currentData, path }) => {
     const toRender = (
         <>
             {props?.before && (
-                <ViewComponent
+                <View
                     currentData={currentData?.["before"] ?? undefined}
                     path={path + ".before"}
                     datafield={"before"}
@@ -153,7 +148,7 @@ export const Switch = ({ props, currentData, path }) => {
             )}
             {maybeWrappedContent}
             {props?.after && (
-                <ViewComponent
+                <View
                     currentData={currentData?.["after"] ?? undefined}
                     path={path + ".after"}
                     datafield={"after"}

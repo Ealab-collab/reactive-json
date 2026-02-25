@@ -1,16 +1,31 @@
 import axios from "axios";
-import { isEqual } from "lodash";
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { coreComponentsPlugin } from "../coreComponentsPlugin.jsx";
 import { mergeComponentCollections } from "./ComponentCollector.jsx";
+import { DataStore } from "./DataStore.js";
 import { EventDispatcherProvider } from "./EventDispatcherProvider.jsx";
-import { GlobalDataContextProvider } from "./GlobalDataContextProvider.jsx";
+import { GlobalDataContext } from "./GlobalDataContext.jsx";
 import ParsingDebugDisplay from "./ParsingDebugDisplay/ParsingDebugDisplay.jsx";
+import { StoreContext } from "./StoreContext.jsx";
 import { TemplateContext } from "./TemplateContext.jsx";
 import { dataLocationToPath } from "./TemplateSystem.jsx";
-import { alterData, applyDataMapping, parseRjBuild, stringToBoolean } from "./utility";
+import { useReactiveData } from "./useReactiveData.js";
+import { alterData, applyDataMapping, parseRjBuild } from "./utility";
+import { stringToBoolean } from "./utility/stringToBoolean.jsx";
 import { View } from "./View.jsx";
+
+/**
+ * Internal component to display reactive debug data.
+ */
+const DebugDataDisplay = ({ Wrapper }) => {
+    const data = useReactiveData("");
+    return (
+        <Wrapper>
+            {JSON.stringify(data, null, "  ")}
+        </Wrapper>
+    );
+};
 
 /**
  * Production ready app root.
@@ -99,40 +114,19 @@ export const ReactiveJsonRoot = ({
 
     // End of deprecated properties.
 
-    // Dev note: on PhpStorm, disregard the Function signatures inspection errors of reducers.
-    // See: https://youtrack.jetbrains.com/issue/WEB-53963.
-    // noinspection JSCheckFunctionSignatures
-    const [currentData, dispatchCurrentData] = useReducer(
-        (prevState, dispatched) => {
-            switch (dispatched.type) {
-                case "setData":
-                    return { updateId: 0, realCurrentData: dispatched.data };
-
-                case "updateData":
-                    return updateDataObject(prevState, dispatched.path, dispatched.value, dispatched.updateMode);
-
-                default:
-                    // Unknown type.
-                    return prevState;
-            }
-        },
-        { updateId: 0, realCurrentData: {} }
-    );
-    const [templates, setTemplates] = useState({});
-    const [renderView, setRenderView] = useState({});
-    const [items, setItems] = useState([]);
-    const [rawAppRjBuild, setRawAppRjBuild] = useState(() => {
-        if (!maybeRawAppRjBuild) {
-            return undefined;
-        }
-
-        if (typeof maybeRawAppRjBuild === "string") {
-            return maybeRawAppRjBuild;
-        }
-
-        // Serialize it.
-        return JSON.stringify(maybeRawAppRjBuild);
+    // Initialize Store once.
+    // We use a ref to hold the store instance.
+    const store = useRef(new DataStore({})).current;
+    
+    // We still need some state to trigger render when the *structure* (RjBuild) changes,
+    // but NOT when the *data* changes.
+    const [structure, setStructure] = useState({
+        templates: {},
+        renderView: {},
+        items: [],
+        rawAppRjBuild: null,
     });
+
     const [errorPortal, setErrorPortal] = useState(null);
     const errorContainerRef = useRef(null);
 
@@ -147,43 +141,51 @@ export const ReactiveJsonRoot = ({
     }, []);
 
     // Merge core plugins with user-provided plugins.
-    const mergedPlugins = plugins ? mergeComponentCollections([coreComponentsPlugin, plugins]) : coreComponentsPlugin;
+    const mergedPlugins = useMemo(() => 
+        plugins ? mergeComponentCollections([coreComponentsPlugin, plugins]) : coreComponentsPlugin,
+    [plugins]);
 
+    // Initialize rawAppRjBuild state.
     useEffect(() => {
-        if (!rjBuildUrl) {
-            return;
+        let rawBuild = maybeRawAppRjBuild;
+        if (typeof rawBuild === "string") {
+            // It's a string, already good.
+        } else if (rawBuild) {
+            rawBuild = JSON.stringify(rawBuild);
         }
 
-        if (typeof rjBuildFetchMethod === "string" && rjBuildFetchMethod.toLowerCase() === "post") {
-            // TODO: support form data.
-            axios
-                .post(rjBuildUrl, {
-                    headers: headersForRjBuild,
-                })
-                .then((res) => {
-                    // Note: the data may be already deserialized by axios. It happens when data is JSON.
-                    setRawAppRjBuild(res.data);
-                });
+        if (rawBuild) {
+            setStructure(prev => ({ ...prev, rawAppRjBuild: rawBuild }));
+        }
+    }, [maybeRawAppRjBuild]);
+
+    // Fetch RjBuild if URL provided.
+    useEffect(() => {
+        if (!rjBuildUrl) return;
+
+        const config = {
+            method: rjBuildFetchMethod || "GET",
+            url: rjBuildUrl,
+            headers: headersForRjBuild,
+        };
+        
+        if (config.method.toLowerCase() === "post") {
+             axios.post(config.url, {}, { headers: config.headers }).then(res => {
+                 setStructure(prev => ({ ...prev, rawAppRjBuild: res.data }));
+             });
         } else {
-            axios
-                .get(rjBuildUrl, {
-                    headers: headersForRjBuild,
-                })
-                .then((res) => {
-                    // Note: the data may be already deserialized by axios. It happens when data is JSON.
-                    setRawAppRjBuild(res.data);
-                });
+             axios.get(config.url, { headers: config.headers }).then(res => {
+                 setStructure(prev => ({ ...prev, rawAppRjBuild: res.data }));
+             });
         }
-    }, [rjBuildUrl, headersForRjBuild]);
+    }, [rjBuildUrl, headersForRjBuild, rjBuildFetchMethod]);
 
+    // Parse RjBuild and initialize Store data.
     useEffect(() => {
-        if (!rawAppRjBuild) {
-            // Not yet initialized.
-            return;
-        }
+        if (!structure.rawAppRjBuild) return;
 
-        const processedRjBuild = parseRjBuild(rawAppRjBuild);
-
+        const processedRjBuild = parseRjBuild(structure.rawAppRjBuild);
+        
         if (!processedRjBuild.success) {
             // Failed to parse the RjBuild for this instance.
             console.group(
@@ -253,51 +255,41 @@ export const ReactiveJsonRoot = ({
         }
 
         const parsedData = processedRjBuild.data;
-        // Dev note: listForms is deprecated; will be removed later.
-        setTemplates(parsedData.templates ?? parsedData.listForms);
+        
+        // Initialize or update Store data.
+        // If dataOverride is present, use it.
+        const finalData = dataOverride !== undefined ? dataOverride : parsedData.data;
+        
+        // We set the data in the store. This does NOT trigger a re-render of this component
+        // because we are not subscribing to the store here.
+        store.set("", finalData); // Root update.
 
-        if (!parsedData.templates && parsedData.listForms) {
-            console.log(
-                "'listForms' needs to be renamed to 'templates'. The support for 'listForms' will be removed in the next releases of reactive-json."
-            );
-        }
-
-        // Apply dataOverride if provided.
-        let finalData = dataOverride === undefined ? parsedData.data : dataOverride;
+        const newStructure = {
+            templates: parsedData.templates ?? parsedData.listForms ?? {},
+            renderView: parsedData.renderView ?? {},
+            items: Object.keys(parsedData.renderView ?? {}),
+            rawAppRjBuild: structure.rawAppRjBuild
+        };
 
         // Process additionalDataSource if present.
         const additionalDataSource = parsedData.additionalDataSource;
 
         if (!Array.isArray(additionalDataSource) || additionalDataSource.length === 0) {
-            // No additionalDataSource, use data as-is.
-            // noinspection JSCheckFunctionSignatures
-            dispatchCurrentData({ type: "setData", data: finalData });
-            setRenderView(parsedData.renderView);
-            setItems(Object.keys(parsedData.renderView));
+            setStructure(prev => ({ ...prev, ...newStructure }));
             return;
         }
-
-        // There are additional data sources to fetch.
-        // Create fake temporary contexts for template evaluation.
-        // Do not worry too much about these contexts, because each source will use the
-        // dispatcher that works with the real final data.
-        const globalDataContext = {
-            headersForRjBuild,
-            plugins: mergedPlugins,
-            templateData: finalData,
-            templatePath: "data",
-            setData,
-            updateData,
-        };
-
-        const templateContext = {
-            templateData: finalData,
-            templatePath: "data",
-        };
 
         // Separate blocking and non-blocking sources.
         const blockingSources = additionalDataSource.filter((source) => source.blocking === true);
         const nonBlockingSources = additionalDataSource.filter((source) => source.blocking !== true);
+
+        // Helper to strip "data." prefix from path
+        const normalizePath = (p) => {
+            if (!p) return "";
+            if (p === "data") return "";
+            if (p.startsWith("data.")) return p.substring(5);
+            return p;
+        };
 
         // Fetches a single data source and merges it into the current data.
         const fetchDataSource = async (source, index) => {
@@ -347,8 +339,28 @@ export const ReactiveJsonRoot = ({
                 });
 
                 if (source.dataMapping) {
+                    // Creating fake temporary contexts for template evaluation.
+                    // We use the store getter for templateData
+                    // Do not worry too much about these contexts, because each source will use the
+                    // dispatcher that works with the real final data.
+                    const globalDataContext = {
+                        headersForRjBuild,
+                        plugins: mergedPlugins,
+                        get templateData() { return store.get(""); },
+                        templatePath: "data",
+                        setData: (newData) => store.set("", newData),
+                        updateData: (val, path, mode) => {
+                            const cleanPath = normalizePath(path);
+                            store.set(cleanPath, val, mode);
+                        },
+                    };
+
+                    const templateContext = {
+                        get templateData() { return store.get(""); },
+                        templatePath: "data",
+                    };
+
                     try {
-                        // Apply dataMapping.
                         applyDataMapping({
                             dataMapping: source.dataMapping,
                             responseData: fetchedData,
@@ -379,18 +391,23 @@ export const ReactiveJsonRoot = ({
                     // For root level merge, we need to update each property individually
                     // as updateObject does not allow replacing the root object itself.
                     Object.entries(fetchedData).forEach(([key, value]) => {
-                        // noinspection JSCheckFunctionSignatures
-                        dispatchCurrentData({
-                            type: "updateData",
-                            path: key,
-                            value: value,
-                        });
+                        store.set(key, value);
                     });
 
                     return;
                 }
 
                 try {
+                    // Create contexts for evaluation
+                    const globalDataContext = {
+                        templateData: store.get(""), // use current snapshot
+                        templatePath: "data"
+                    };
+                    const templateContext = {
+                        templateData: store.get(""), // use current snapshot
+                        templatePath: "data"
+                    };
+
                     // Evaluate the path using template system.
                     const evaluatedPath = dataLocationToPath({
                         dataLocation: source.path,
@@ -409,16 +426,10 @@ export const ReactiveJsonRoot = ({
                         return;
                     }
 
-                    // Use existing updateObject via updateData.
-                    // Remove the "data." prefix from the evaluated path.
-                    const dataPath = evaluatedPath.substring("data.".length);
+                    // Remove the "data." prefix.
+                    const dataPath = normalizePath(evaluatedPath);
 
-                    // noinspection JSCheckFunctionSignatures
-                    dispatchCurrentData({
-                        type: "updateData",
-                        path: dataPath,
-                        value: fetchedData,
-                    });
+                    store.set(dataPath, fetchedData);
                 } catch (error) {
                     console.error("Error evaluating additionalDataSource path:", source.path, error);
                 }
@@ -428,25 +439,14 @@ export const ReactiveJsonRoot = ({
             }
         };
 
-        // Dispatch initial data immediately.
-        // Subsequent fetches using the additionalDataSource will update the data with updateData.
-        // noinspection JSCheckFunctionSignatures
-        dispatchCurrentData({ type: "setData", data: finalData });
-
         const processSources = async () => {
             if (blockingSources.length > 0) {
                 // Process blocking sources first - use allSettled for robustness.
                 const blockingPromises = blockingSources.map((source, index) => fetchDataSource(source, index));
-
-                await Promise.allSettled(blockingPromises).catch((error) => {
-                    // Even if some blocking sources fail, we should still render the view.
-                    console.error("Error processing blocking additionalDataSource:", error);
-                });
+                await Promise.allSettled(blockingPromises);
             }
 
-            // Now that blocking sources are processed, we can render the view.
-            setRenderView(parsedData.renderView);
-            setItems(Object.keys(parsedData.renderView));
+            setStructure(prev => ({ ...prev, ...newStructure }));
 
             if (nonBlockingSources.length > 0) {
                 // Process non-blocking sources in background.
@@ -458,10 +458,14 @@ export const ReactiveJsonRoot = ({
                 Promise.allSettled(nonBlockingPromises);
             }
         };
-
+        
         processSources();
-    }, [rawAppRjBuild, dataOverride, headersForRjBuild]);
 
+    }, [structure.rawAppRjBuild, dataOverride, store]);
+
+    // Functions to expose in Context.
+    // These are stable references.
+    
     /**
      * Handles upstream update callbacks and returns true if an upstream callback was used.
      *
@@ -500,237 +504,80 @@ export const ReactiveJsonRoot = ({
         return false;
     }
 
-    function updateData(newValue, pathInData, updateMode = undefined) {
-        let path = pathInData.replace("data.", "");
-
-        // Try upstream update first
-        if (tryUpstreamUpdate(path, newValue, updateMode)) {
-            return; // Upstream callback handled it
-        }
-
-        // Standard local update if no upstream callback applies.
-        // noinspection JSCheckFunctionSignatures
-        dispatchCurrentData({
-            type: "updateData",
-            path: path,
-            value: newValue,
-            updateMode: updateMode,
-        });
-    }
-
-    /**
-     * Replaces the entire data object.
-     *
-     * This provides a way to completely replace the root data, unlike updateData
-     * which can only merge properties at the root level.
-     *
-     * This is not related to the setData reaction.
-     *
-     * @param {any} newData The new data to set. Will completely replace the current data.
-     */
-    function setData(newData) {
+    const setData = (newData) => {
         // Try upstream update first (for root data replacement)
         if (tryUpstreamUpdate("", newData, undefined)) {
             return; // Upstream callback handled it
         }
+        store.set("", newData);
+    };
 
-        // Standard local update if no upstream callback applies.
-        // noinspection JSCheckFunctionSignatures
-        dispatchCurrentData({
-            type: "setData",
-            data: newData,
-        });
-    }
-
-    /**
-     * Updates the given data object.
-     *
-     * This must be a function to be used in the currentData's reducer.
-     *
-     * Dev note: previously named "updateObject".
-     *
-     * @param {{updateId: Number, realCurrentData: {}}} data The current data to edit. It will be mutated.
-     *     updateId will increment when a re-render is needed.
-     * @param {string} path The path where to put (or remove) the data.
-     * @param {any} value The value to set. If undefined, the value will be removed at the given path.
-     * @param {string} updateMode The update mode, either "add", "move", "remove", or leave empty for replace.
-     *
-     * @returns {{updateId: Number, realCurrentData: {}}} Data with update ID changed if a render is needed.
-     */
-    function updateDataObject(data, path, value, updateMode = undefined) {
-        const splitPath = path.split(".");
-
-        // Ensure realCurrentData is a valid object before proceeding.
-        // The data may be undefined if the data has not been initialized.
-        // This happens when there is no data (yet) appended to this root.
-        if (
-            typeof data.realCurrentData !== "object" ||
-            data.realCurrentData === null ||
-            Array.isArray(data.realCurrentData)
-        ) {
-            data.realCurrentData = {};
+    const updateData = (val, path, mode) => {
+        const cleanPath = path.startsWith("data.") ? path.substring(5) : (path === "data" ? "" : path);
+        
+        // Try upstream update first
+        if (tryUpstreamUpdate(cleanPath, val, mode)) {
+            return; // Upstream callback handled it
         }
 
-        // This will point to the current nested object.
-        let pointer = data.realCurrentData;
+        store.set(cleanPath, val, mode);
+    };
 
-        for (let i = 0, len = splitPath.length; i < len; i++) {
-            const currentNodeKey = splitPath[i];
+    // Context Value for GlobalDataContext.
+    // IMPORTANT: We do NOT include 'templateData' here to prevent re-renders.
+    // Components must use useReactiveData or store.get() to access data.
+    const globalContextValue = {
+        element: structure.templates,
+        headersForRjBuild,
+        plugins: mergedPlugins,
+        ReactiveJsonRoot: ReactiveJsonRoot,
+        setData,
+        updateData,
+        // experimental: expose store for advanced usage
+        store, 
+        // fallback: get data from store directly (non-reactive access)
+        get templateData() { return store.get(""); },
+        templatePath: "data",
+    };
 
-            if (i === len - 1) {
-                // This is the last key from the path.
-                if (updateMode === "remove" && Array.isArray(pointer)) {
-                    // Remove the entry from the array.
-                    pointer.splice(currentNodeKey, 1);
-                } else if (updateMode === "move") {
-                    // "value" contains the info about how to move.
-                    if (value.increment) {
-                        // Towards the start of the array.
-                        if (!Array.isArray(pointer)) {
-                            // Not a valid "up" value. Do nothing.
-                            return data;
-                        }
-
-                        const newIndex = Math.min(
-                            pointer.length,
-                            Math.max(0, parseInt(currentNodeKey) + parseInt(value.increment))
-                        );
-
-                        if (newIndex === parseInt(currentNodeKey)) {
-                            // No changes.
-                            return data;
-                        }
-
-                        const itemToMove = pointer.splice(currentNodeKey, 1);
-
-                        if (itemToMove.length < 1) {
-                            // Nothing to move.
-                            return data;
-                        }
-
-                        pointer.splice(newIndex, 0, itemToMove[0]);
-                    } else {
-                        // Nothing to move.
-                        return data;
-                    }
-                } else {
-                    if (value === undefined) {
-                        // Unset the key.
-                        delete pointer[currentNodeKey];
-                    } else if (isEqual(value, pointer[currentNodeKey])) {
-                        // The value doesn't change.
-                        return data;
-                    } else {
-                        if (updateMode === "add") {
-                            // Add the value on the property.
-                            if (pointer[currentNodeKey] === undefined) {
-                                pointer[currentNodeKey] = [];
-                            }
-
-                            pointer[currentNodeKey].push(value);
-                        } else {
-                            // Set the value on the property.
-                            pointer[currentNodeKey] = value;
-                        }
-                    }
-                }
-
-                return {
-                    // Using modulo in case of massive update counts in long frontend sessions.
-                    updateId: ((data.updateId ?? 0) % (Number.MAX_SAFE_INTEGER - 1)) + 1,
-                    realCurrentData: data.realCurrentData,
-                };
-            }
-
-            if (pointer.hasOwnProperty(currentNodeKey)) {
-                // The pointer already has the specified key.
-
-                // Dig deeper.
-                if (typeof pointer[currentNodeKey] !== "object" || pointer[currentNodeKey] === null) {
-                    // Ensure the data is writable.
-                    pointer[currentNodeKey] = {};
-                }
-
-                // Move the pointer.
-                pointer = pointer[currentNodeKey];
-                continue;
-            }
-
-            // This is a new property.
-            pointer[currentNodeKey] = {};
-            pointer = pointer[currentNodeKey];
-        }
-
-        // This should never happen.
-        throw new Error("Could not update data.");
-    }
-
-    if (!rawAppRjBuild) {
-        return null;
-    }
-
-    const rootViews = items.map((view) => {
-        return (
-            <View
-                datafield={view}
-                key={view}
-                props={renderView[view]}
-                path={"data." + view}
-                currentData={currentData.realCurrentData?.[view]}
-            />
-        );
-    });
+    const rootViews = structure.items.map((view) => (
+        <View
+            key={view}
+            datafield={view}
+            path={"data." + view}
+            props={structure.renderView[view]}
+            // No currentData passed! View fetches it.
+        />
+    ));
 
     const debugMode_bool = stringToBoolean(debugMode);
 
-    const mainBuild = (
-        <EventDispatcherProvider>
-            <GlobalDataContextProvider
-                value={{
-                    element: templates,
-                    headersForRjBuild,
-                    plugins: mergedPlugins,
-                    // Expose the root component to avoid import cycles in core plugins.
-                    ReactiveJsonRoot,
-                    setData,
-                    setRawAppRjBuild,
-                    templateData: currentData.realCurrentData,
-                    templatePath: "data",
-                    updateData,
-                }}
-            >
-                <TemplateContext.Provider
-                    value={{
-                        templateData: currentData.realCurrentData,
-                        templatePath: "data",
-                    }}
-                >
-                    {debugMode_bool && DebugModeContentWrapper ? (
-                        <DebugModeContentWrapper>{rootViews}</DebugModeContentWrapper>
-                    ) : (
-                        rootViews
-                    )}
-                </TemplateContext.Provider>
-                {debugMode_bool
-                    ? DebugModeDataWrapper && (
-                          <DebugModeDataWrapper>
-                              {JSON.stringify(currentData.realCurrentData, null, "  ")}
-                          </DebugModeDataWrapper>
-                      )
-                    : null}
-            </GlobalDataContextProvider>
-        </EventDispatcherProvider>
-    );
-
-    return debugMode_bool && DebugModeContentWrapper ? (
-        <DebugModeRootWrapper>
-            {mainBuild}
-            {errorPortal}
-        </DebugModeRootWrapper>
-    ) : (
-        <>
-            {mainBuild}
-            {errorPortal}
-        </>
+    return (
+        <StoreContext.Provider value={store}>
+            <EventDispatcherProvider>
+                <GlobalDataContext.Provider value={globalContextValue}>
+                     <TemplateContext.Provider value={{
+                         // Same here, getter for compatibility, but won't trigger updates
+                         get templateData() { return store.get(""); },
+                         templatePath: "data"
+                     }}>
+                        {debugMode_bool && DebugModeContentWrapper ? (
+                            <DebugModeRootWrapper>
+                                <DebugModeContentWrapper>{rootViews}</DebugModeContentWrapper>
+                                {DebugModeDataWrapper && (
+                                    <DebugDataDisplay Wrapper={DebugModeDataWrapper} />
+                                )}
+                                {errorPortal}
+                            </DebugModeRootWrapper>
+                        ) : (
+                            <>
+                                {rootViews}
+                                {errorPortal}
+                            </>
+                        )}
+                    </TemplateContext.Provider>
+                </GlobalDataContext.Provider>
+            </EventDispatcherProvider>
+        </StoreContext.Provider>
     );
 };

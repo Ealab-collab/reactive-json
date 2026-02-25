@@ -1,6 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Page } from "./Page.tsx";
-import { PageExperimental } from "./PageExperimental.tsx";
 
 function App() {
     return (
@@ -10,7 +9,6 @@ function App() {
                     <Route path={"/"}>
                         <Route index element={<Page />} />
                         <Route path={"demo"} element={<Page buildSourcePath={"/rjs-build/demo.yaml"} />} />
-                        <Route path={"experimental"} element={<PageExperimental />} />
                     </Route>
                     <Route path={"/src-web/rjs-build"}></Route>
                 </Routes>

@@ -1,12 +1,84 @@
-import { useContext } from "react";
+import { useContext, useEffect, useReducer, useSyncExternalStore, useMemo, useCallback } from "react";
 import { GlobalDataContext } from "./GlobalDataContext.jsx";
 import { TemplateContext } from "./TemplateContext.jsx";
-import TemplateValue, { dataLocationToPath, evaluateTemplateValue } from "./TemplateSystem.jsx";
+import { useStore } from "./StoreContext.jsx";
+import TemplateValue, { dataLocationToPath } from "./TemplateSystem.jsx";
 
-export function View({ props, currentData, datafield, path }) {
+const normalizePath = (p) => {
+    if (!p) return "";
+    if (p === "data") return "";
+    if (p.startsWith("data.")) return p.substring(5);
+    return p;
+};
+
+export const View = ({ props, datafield, path }) => {
+    const store = useStore();
     const globalDataContext = useContext(GlobalDataContext);
+    // Note: TemplateContext might be needed for path resolution, even if data is stale.
     const templateContext = useContext(TemplateContext);
+    
+    // Force update reducer.
+    const [, forceUpdate] = useReducer(x => x + 1, 0);
 
+    const normalizedPath = normalizePath(path);
+    // 1. Reactive Data Subscription for the View's own data (path).
+    // Use useSyncExternalStore to avoid tearing and race conditions.
+    const currentData = useSyncExternalStore(
+        (callback) => store.subscribe(normalizedPath, callback),
+        () => store.get(normalizedPath)
+    );
+
+    // 2. Scan props for other dependencies (e.g. ~~.config.theme) and subscribe to them.
+    // This is a naive implementation that only checks direct string properties.
+    // A full implementation would traverse the object.
+    const dependencyPaths = useMemo(() => {
+        if (!props || typeof props !== 'object') return [];
+
+        const dependencies = [];
+        
+        const scan = (obj) => {
+            if (!obj) return;
+            if (typeof obj === 'string') {
+                if (obj.startsWith("~.") || obj.startsWith("~~.") || obj.startsWith("~>") || obj.startsWith("~~>")) {
+                    try {
+                        const depPath = dataLocationToPath({
+                            dataLocation: obj,
+                            currentPath: path,
+                            globalDataContext: { templatePath: "data" }, // minimal context
+                            templateContext: { templatePath: path } // minimal context
+                        });
+                        if (depPath && depPath !== path) {
+                             dependencies.push(normalizePath(depPath));
+                        }
+                    } catch (e) {
+                        // ignore resolution errors
+                    }
+                }
+            } else if (typeof obj === 'object') {
+                Object.values(obj).forEach(val => scan(val));
+            }
+        };
+        
+        scan(props);
+        return [...new Set(dependencies)];
+    }, [props, path]);
+
+    const subscribeDeps = useCallback((callback) => {
+        const unsubscribes = dependencyPaths.map(depPath => 
+            store.subscribe(depPath, callback)
+        );
+        return () => unsubscribes.forEach(u => u());
+    }, [dependencyPaths, store]);
+
+    const getDepsSnapshot = useCallback(() => {
+        const values = dependencyPaths.map(depPath => store.get(depPath));
+        return JSON.stringify(values);
+    }, [dependencyPaths, store]);
+
+    useSyncExternalStore(subscribeDeps, getDepsSnapshot);
+
+    // ... Standard View Logic ...
+    
     // Get available elements from merged plugins.
     const plugins = globalDataContext.plugins ?? {};
     const components = plugins?.element ?? {};
@@ -17,10 +89,9 @@ export function View({ props, currentData, datafield, path }) {
     }
 
     const { element } = globalDataContext;
-
-    if (currentData === undefined) {
-        currentData = "";
-    }
+    
+    // Fallback for undefined data
+    const safeCurrentData = currentData === undefined ? "" : currentData;
 
     if (props?.type) {
         // A type is specified.
@@ -43,10 +114,10 @@ export function View({ props, currentData, datafield, path }) {
             // Either the user has specifically asked for a Html component,
             // or this is a fallback for an unknown type.
             // Make sure the tag is set.
-            props.tag = props.tag ?? props.type;
+            if (!props.tag) props.tag = props.type;
         }
 
-        return <ComponentToRender path={path} props={props} currentData={currentData} datafield={datafield} />;
+        return <ComponentToRender path={path} props={props} currentData={safeCurrentData} datafield={datafield} />;
     }
 
     if (props?.load) {
@@ -55,33 +126,34 @@ export function View({ props, currentData, datafield, path }) {
 
         const _customDataLocation = props?.customDataLocation ?? undefined;
 
-        // Determine which data to use.
-        const finalCurrentData = _customDataLocation
-            ? // The data is located somewhere in the current data.
-              evaluateTemplateValue({
-                  globalDataContext: globalDataContext,
-                  templateContext: templateContext,
-                  valueToEvaluate: _customDataLocation,
-              })
-            : // The data is the current data.
-              currentData;
+        // Note: For evaluation, we use the store getter for templateData,
+        // but we rely on the reactive nature of this component for updates.
+        // If _customDataLocation depends on data, this component should have already subscribed to it via dependency scanning.
 
-        // The data path must be set accordingly.
-        const finalDataPath = _customDataLocation
-            ? dataLocationToPath({
+        // Determine which data path to use.
+        let finalDataPath;
+        if (_customDataLocation) {
+             try {
+                finalDataPath = dataLocationToPath({
                   dataLocation: _customDataLocation,
                   currentPath: path,
-                  globalDataContext,
-                  templateContext,
-              })
-            : path;
+                  globalDataContext: { templatePath: "data", get templateData() { return store.get(""); } },
+                  templateContext: { templatePath: path, get templateData() { return store.get(""); } },
+                });
+             } catch (e) {
+                console.error("View: Error evaluating customDataLocation", e);
+                finalDataPath = path;
+             }
+        } else {
+            finalDataPath = path;
+        }
 
         // This external source can return a single component to render,
         // or a collection of components.
         if (typeof props.load === "function") {
             // A JS function has been defined. Execute it with the currentData.
             // The function must return a render array.
-            loadedRenderArray = props.load(finalCurrentData);
+            loadedRenderArray = props.load(safeCurrentData);
         } else {
             // Load the render array from the registry.
             loadedRenderArray = element[props.load];
@@ -92,28 +164,31 @@ export function View({ props, currentData, datafield, path }) {
         const { load, customDataLocation, ...propsWithoutLoadKey } = props;
         loadedRenderArray = { ...loadedRenderArray, ...propsWithoutLoadKey };
 
-        // Now that we have our render array, recurse on the View component.
+        const viewToRender = (
+            <View
+                datafield={datafield}
+                path={finalDataPath}
+                props={loadedRenderArray}
+            />
+        );
+
         if (props.keepTemplateContext) {
-            // Keep the current template context.
-            return (
-                <View
-                    currentData={finalCurrentData}
-                    datafield={datafield}
-                    path={finalDataPath}
-                    props={loadedRenderArray}
-                />
-            );
+            return viewToRender;
         }
 
-        // We open a new template context in the process.
+        // For the child view, we need to provide a new TemplateContext because the path might have changed (customDataLocation).
+        // Also, for non-reactive components (like ActionDependant isValid), we provide the getter-based templateData.
+        const childTemplateContext = {
+            templatePath: finalDataPath,
+            get templateData() { 
+                const normalized = normalizePath(finalDataPath);
+                return store.get(normalized); 
+            }
+        };
+
         return (
-            <TemplateContext.Provider value={{ templateData: finalCurrentData, templatePath: finalDataPath }}>
-                <View
-                    currentData={finalCurrentData}
-                    datafield={datafield}
-                    path={finalDataPath}
-                    props={loadedRenderArray}
-                />
+            <TemplateContext.Provider value={childTemplateContext}>
+                {viewToRender}
             </TemplateContext.Provider>
         );
     }
@@ -122,10 +197,9 @@ export function View({ props, currentData, datafield, path }) {
     if (Array.isArray(props)) {
         return props.map((item, index) => (
             <View
-                currentData={currentData[index] ?? undefined}
-                datafield={index}
                 key={path + "." + index}
                 path={path + "." + index}
+                datafield={index}
                 props={item ?? undefined}
             />
         ));
@@ -135,10 +209,9 @@ export function View({ props, currentData, datafield, path }) {
         return Object.entries(props).map(([itemKey, item]) => {
             return (
                 <View
-                    currentData={currentData[itemKey] ?? undefined}
-                    datafield={itemKey ?? undefined}
                     key={path + "." + itemKey}
                     path={path + "." + itemKey}
+                    datafield={itemKey ?? undefined}
                     props={item}
                 />
             );
@@ -146,9 +219,9 @@ export function View({ props, currentData, datafield, path }) {
     }
 
     // Display the content directly.
-    // The content tries to use the currentData in case the data wants to rewrite the output.
+    // The content tries to use the safeCurrentData in case the data wants to rewrite the output.
     // If not available, we simply use the given props, which is usually a string, which can
     // also be a reference to a template context data.
     // If no props is available, do not render anything.
-    return <TemplateValue valueToEvaluate={currentData || (props ?? null)} />;
+    return <TemplateValue valueToEvaluate={safeCurrentData || (props ?? null)} />;
 }
