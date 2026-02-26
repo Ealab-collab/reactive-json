@@ -21,6 +21,9 @@ export const View = ({ props, datafield, path }) => {
     const [, forceUpdate] = useReducer(x => x + 1, 0);
 
     const normalizedPath = normalizePath(path);
+    const contextTemplatePath = templateContext?.templatePath || "data";
+    const globalTemplatePath = globalDataContext?.templatePath || "data";
+
     // 1. Reactive Data Subscription for the View's own data (path).
     // Use useSyncExternalStore to avoid tearing and race conditions.
     const currentData = useSyncExternalStore(
@@ -44,8 +47,8 @@ export const View = ({ props, datafield, path }) => {
                         const depPath = dataLocationToPath({
                             dataLocation: obj,
                             currentPath: path,
-                            globalDataContext: { templatePath: "data" }, // minimal context
-                            templateContext: { templatePath: path } // minimal context
+                            globalDataContext: { templatePath: globalTemplatePath },
+                            templateContext: { templatePath: contextTemplatePath }
                         });
                         if (depPath && depPath !== path) {
                              dependencies.push(normalizePath(depPath));
@@ -61,7 +64,7 @@ export const View = ({ props, datafield, path }) => {
         
         scan(props);
         return [...new Set(dependencies)];
-    }, [props, path]);
+    }, [props, path, contextTemplatePath, globalTemplatePath]);
 
     const subscribeDeps = useCallback((callback) => {
         const unsubscribes = dependencyPaths.map(depPath => 
