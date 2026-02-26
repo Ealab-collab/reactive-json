@@ -1,0 +1,80 @@
+# DataSync component test.
+#
+# Requires a fake backend server:
+#   1. npm install --no-save express cors
+#   2. node test-datasync-server.mjs
+#
+# The server runs on http://localhost:3099 and echoes back
+# the submitted Object X with an updated status.
+
+data:
+  userProfile:
+    submission_url: "http://localhost:3099/api/save"
+    data:
+      name: "John Doe"
+      email: "john@example.com"
+    status:
+      type: "info"
+      message: "Prêt"
+  syncTrigger: false
+  unrelated: "This field is not inside an Object X"
+
+renderView:
+  - type: div
+    attributes:
+      class: "container mt-4"
+    content:
+      - type: h2
+        content: "Data Sync Demo"
+
+      # Status Message
+      - type: div
+        content: ~.userProfile.status.message
+        attributes: 
+          class: "alert alert-info"
+        actions:
+          - what: hide
+            when: ~.userProfile.status
+            is: undefined
+
+      # --- Form fields (auto-save onIdle + manual trigger) ---
+      - type: h4
+        content: "onIdle mode + manual trigger"
+
+      - type: TextField
+        label: "Name"
+        dataLocation: ~.userProfile.data.name
+      
+      - type: TextField
+        label: "Email"
+        dataLocation: ~.userProfile.data.email
+
+      - type: button
+        content: "Force Save Now"
+        attributes:
+          class: "btn btn-primary"
+          style:
+            marginTop: "0.5rem"
+        actions:
+          - what: setData
+            on: click
+            path: ~.syncTrigger
+            value: true
+
+      # Single DataSync: auto-saves onIdle, also responds to manual trigger
+      - type: DataSync
+        path: ~.userProfile
+        mode: onIdle
+        idleDelay: 2000
+        trigger: ~.syncTrigger
+
+      # --- Unrelated field (should NOT trigger sync) ---
+      - type: h4
+        content: "Unrelated field (should NOT trigger sync)"
+        attributes:
+          style:
+            marginTop: "2rem"
+
+      - type: TextField
+        label: "Unrelated value"
+        dataLocation: ~.unrelated
