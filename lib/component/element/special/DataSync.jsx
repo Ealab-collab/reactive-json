@@ -86,6 +86,7 @@ export const DataSync = ({ props }) => {
 
         store.set(`${resolvedPath}.status`, {
             type: "info",
+            // TODO: translate this.
             message: "Synchronisation en cours..."
         });
 
@@ -102,9 +103,19 @@ export const DataSync = ({ props }) => {
         } catch (error) {
             console.error("DataSync error:", error);
 
+            const serverBody = error.response?.data;
+
+            if (serverBody && typeof serverBody === "object" && serverBody.status) {
+                lastServerResponseRef.current = serverBody;
+                retryCountRef.current = 0;
+                store.set(resolvedPath, serverBody);
+                isSyncingRef.current = false;
+                return;
+            }
+
             const errorStatus = {
                 type: "error",
-                message: error.response?.data?.message || error.message || "Erreur inconnue"
+                message: error.message || "Unknown error"
             };
 
             store.set(`${resolvedPath}.status`, errorStatus);
