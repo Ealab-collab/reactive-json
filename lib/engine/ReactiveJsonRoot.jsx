@@ -11,7 +11,7 @@ import { StoreContext } from "./StoreContext.jsx";
 import { TemplateContext } from "./TemplateContext.jsx";
 import { dataLocationToPath } from "./TemplateSystem.jsx";
 import { useReactiveData } from "./hook/useReactiveData.js";
-import { alterData, applyDataMapping, parseRjBuild } from "./utility";
+import { alterData, applyDataMapping, interpolateSegments, parseRjBuild } from "./utility";
 import { stringToBoolean } from "./utility/stringToBoolean.jsx";
 import { View } from "./View.jsx";
 
@@ -294,16 +294,17 @@ export const ReactiveJsonRoot = ({
         // Fetches a single data source and merges it into the current data.
         const fetchDataSource = async (source, index) => {
             try {
-                if (!source.src) {
-                    // Ignore this source.
-                    console.warn("additionalDataSource item number " + index + " missing 'src' property.", source);
+                const resolvedUrl = interpolateSegments(source.src, (path) => store.get(path));
+
+                if (!resolvedUrl) {
+                    console.warn("additionalDataSource item number " + index + ": could not resolve 'src'.", source);
                     return;
                 }
 
                 const method = source.method?.toUpperCase() || "GET";
                 const config = {
                     method,
-                    url: source.src,
+                    url: resolvedUrl,
                 };
 
                 // Add headers if available.

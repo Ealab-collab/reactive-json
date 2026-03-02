@@ -50,9 +50,22 @@ app.post("/api/crash", (req, res) => {
     res.status(500).send("Internal Server Error");
 });
 
+app.get("/api/items", (req, res) => {
+    const id = req.query.id || "unknown";
+    console.log(`[/api/items] GET id=${id}`);
+
+    res.json({
+        id,
+        name: `Item #${id}`,
+        description: `This is a test item fetched with id=${id}`,
+        fetchedAt: new Date().toISOString(),
+    });
+});
+
 app.listen(3099, () => {
     console.log("Fake DataSync backend running on http://localhost:3099");
     console.log("  POST /api/save  → 200 success");
     console.log("  POST /api/fail  → 422 structured error (fires syncError with body)");
     console.log("  POST /api/crash → 500 plain error  (fires syncError, no body)");
+    console.log("  GET  /api/items → 200 item by ?id=  (interpolateSegments test)");
 });

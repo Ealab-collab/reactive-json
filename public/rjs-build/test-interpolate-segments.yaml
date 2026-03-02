@@ -1,0 +1,105 @@
+# interpolateSegments test: additionalDataSource with src as array
+#
+# Requires the fake backend:
+#   node test-datasync-server.mjs
+#
+# Open at:
+#   http://localhost:5173/?file_path=/rjs-build/test-interpolate-segments.yaml
+#
+# This test verifies that additionalDataSource can use src as an array
+# of segments, where ~~. references are resolved from the store data.
+# The URL is built by concatenating literal strings with resolved values.
+
+additionalDataSource:
+  # src as array: segments are resolved and concatenated
+  - src:
+      - "http://localhost:3099/api/items?id="
+      - ~~.apiId
+    path: ~~.fetchedItem
+    blocking: true
+
+data:
+  apiId: "42"
+  fetchedItem: null
+
+renderView:
+  - type: div
+    attributes:
+      class: "max-w-2xl mx-auto p-8 font-sans"
+    content:
+      - type: h1
+        attributes:
+          class: "text-2xl font-bold mb-6"
+        content: "interpolateSegments — additionalDataSource test"
+
+      - type: div
+        attributes:
+          class: "space-y-4"
+        content:
+          - type: div
+            attributes:
+              class: "bg-gray-50 p-4 rounded-lg border"
+            content:
+              - type: h2
+                attributes:
+                  class: "text-sm font-bold text-gray-600 uppercase mb-2"
+                content: "Configuration"
+              - type: p
+                attributes:
+                  class: "text-sm text-gray-700"
+                content: "apiId in store:"
+              - type: p
+                attributes:
+                  class: "text-lg font-mono font-bold text-purple-700"
+                content: ~~.apiId
+
+          - type: div
+            attributes:
+              class: "bg-blue-50 p-4 rounded-lg border border-blue-200"
+            content:
+              - type: h2
+                attributes:
+                  class: "text-sm font-bold text-blue-600 uppercase mb-2"
+                content: "Fetched result (~~.fetchedItem)"
+              - type: div
+                attributes:
+                  class: "text-sm bg-white p-3 rounded border space-y-1"
+                content:
+                  - type: p
+                    content:
+                      - type: span
+                        attributes:
+                          class: "font-bold text-gray-600"
+                        content: "id: "
+                      - type: span
+                        attributes:
+                          class: "text-purple-700 font-mono"
+                        content: ~~.fetchedItem.id
+                  - type: p
+                    content:
+                      - type: span
+                        attributes:
+                          class: "font-bold text-gray-600"
+                        content: "name: "
+                      - type: span
+                        attributes:
+                          class: "text-purple-700 font-mono"
+                        content: ~~.fetchedItem.name
+                  - type: p
+                    content:
+                      - type: span
+                        attributes:
+                          class: "font-bold text-gray-600"
+                        content: "description: "
+                      - type: span
+                        content: ~~.fetchedItem.description
+                  - type: p
+                    content:
+                      - type: span
+                        attributes:
+                          class: "font-bold text-gray-600"
+                        content: "fetchedAt: "
+                      - type: span
+                        attributes:
+                          class: "text-gray-500 text-xs"
+                        content: ~~.fetchedItem.fetchedAt
