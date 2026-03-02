@@ -28,6 +28,7 @@ export const DataSync = ({ props }) => {
     const retryTimeoutRef = useRef(null);
     const isSyncingRef = useRef(false);
     const retryCountRef = useRef(0);
+    const eventTargetRef = useRef(null);
 
     const mode = props.mode || 'onIdle';
     const idleDelay = props.idleDelay || 1000;
@@ -100,6 +101,11 @@ export const DataSync = ({ props }) => {
             retryCountRef.current = 0;
 
             store.set(resolvedPath, responseData);
+
+            eventTargetRef.current?.dispatchEvent(new CustomEvent("syncSuccess", {
+                bubbles: true,
+                detail: { value: responseData, responseContext: { status: response.status } }
+            }));
         } catch (error) {
             console.error("DataSync error:", error);
 
@@ -109,6 +115,12 @@ export const DataSync = ({ props }) => {
                 lastServerResponseRef.current = serverBody;
                 retryCountRef.current = 0;
                 store.set(resolvedPath, serverBody);
+
+                eventTargetRef.current?.dispatchEvent(new CustomEvent("syncError", {
+                    bubbles: true,
+                    detail: { value: serverBody, responseContext: { status: error.response?.status } }
+                }));
+
                 isSyncingRef.current = false;
                 return;
             }
@@ -119,6 +131,11 @@ export const DataSync = ({ props }) => {
             };
 
             store.set(`${resolvedPath}.status`, errorStatus);
+
+            eventTargetRef.current?.dispatchEvent(new CustomEvent("syncError", {
+                bubbles: true,
+                detail: { value: serverBody, responseContext: { status: error.response?.status } }
+            }));
 
             // Only retry on genuine network outages or server errors (5xx).
             // CORS failures also produce no error.response, but the browser is online,
@@ -215,8 +232,8 @@ export const DataSync = ({ props }) => {
     }, [store, triggerPath, resolvedPath, performSync]);
 
     return (
-        <ActionDependant {...props}>
-            {/* DataSync is a phantom component */}
+        <ActionDependant {...props} attributesHolderRef={eventTargetRef}>
+            <span ref={eventTargetRef} style={{display: 'none'}} />
         </ActionDependant>
     );
 };

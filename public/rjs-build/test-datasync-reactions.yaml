@@ -1,0 +1,187 @@
+# DataSync reaction test: on: syncSuccess / on: syncError
+#
+# Requires the fake backend:
+#   node test-datasync-server.mjs
+#
+# Open at:
+#   http://localhost:5173/?file_path=/rjs-build/test-datasync-reactions.yaml
+
+data:
+  # ── Success scenario ─────────────────────────────────────────────────────
+  successCase:
+    submission_url: "http://localhost:3099/api/save"
+    data:
+      name: "Jane Doe"
+      email: "jane@example.com"
+    status: null
+
+  # ── Error scenario (dedicated failing endpoint) ───────────────────────────
+  # /api/fail returns 422 with a structured body   → syncError fires
+  # /api/crash returns 500 with no body            → syncError fires (network/server err)
+  errorCase:
+    submission_url: "http://localhost:3099/api/fail"
+    data:
+      name: "Error Test"
+    status: null
+
+  # ── Captured via reactions ────────────────────────────────────────────────
+  successEvent:
+    fired: false
+    httpStatus: null
+    responseData: null
+
+  errorEvent:
+    fired: false
+    httpStatus: null
+    responseData: null
+
+  triggerSuccess: false
+  triggerError: false
+
+renderView:
+  - type: div
+    attributes:
+      class: "container mt-4"
+    content:
+      - type: h2
+        content: "DataSync – Reaction Tests"
+
+      - type: p
+        content: >
+          Tests the on: syncSuccess and on: syncError reactions.
+          Requires the test server: node test-datasync-server.mjs
+
+      # ═══════════════════════════════════════════════════════════════════════
+      # SUCCESS SCENARIO
+      # ═══════════════════════════════════════════════════════════════════════
+      - type: h3
+        content: "Success scenario (POST → /api/save)"
+        attributes:
+          style:
+            marginTop: "2rem"
+
+      - type: TextField
+        label: "Name (auto-sync onIdle)"
+        dataLocation: ~.successCase.data.name
+
+      - type: TextField
+        label: "Email (auto-sync onIdle)"
+        dataLocation: ~.successCase.data.email
+
+      - type: button
+        content: "Force sync now"
+        attributes:
+          style:
+            marginTop: "0.5rem"
+        actions:
+          - what: setData
+            on: click
+            path: ~.triggerSuccess
+            value: true
+
+      # DataSync – success reactions
+      - type: DataSync
+        path: ~.successCase
+        mode: onIdle
+        idleDelay: 1500
+        trigger: ~.triggerSuccess
+        actions:
+          # on: syncSuccess — fires when the server returns a 2xx response
+          - what: setData
+            on: syncSuccess
+            path: ~.successEvent.fired
+            value: true
+          - what: setData
+            on: syncSuccess
+            path: ~.successEvent.httpStatus
+            # Access event.detail.responseContext.status
+            value: "<reactive-json:event>.detail.responseContext.status"
+          - what: setData
+            on: syncSuccess
+            path: ~.successEvent.responseData
+            # For CustomEvents: <reactive-json:event-new-value> = event.detail.value
+            value: "<reactive-json:event-new-value>"
+
+      - type: div
+        attributes:
+          style:
+            marginTop: "1rem"
+            padding: "1rem"
+            background: "#f0fff0"
+            border: "1px solid #4caf50"
+            borderRadius: "4px"
+            fontFamily: "monospace"
+        content:
+          - type: div
+            content: ["syncSuccess fired: ", ~.successEvent.fired]
+          - type: div
+            content: ["HTTP status captured: ", ~.successEvent.httpStatus]
+          - type: div
+            content: ["Sync status message: ", ~.successCase.status.message]
+
+      # ═══════════════════════════════════════════════════════════════════════
+      # ERROR SCENARIO
+      # ═══════════════════════════════════════════════════════════════════════
+      - type: h3
+        content: "Error scenario (POST → /api/fail → 422)"
+        attributes:
+          style:
+            marginTop: "2rem"
+
+      - type: p
+        attributes:
+          style:
+            color: "#666"
+        content: >
+          The /api/fail endpoint returns HTTP 422 with a structured body
+          { status: { type: "error", message: "..." } }.
+          DataSync detects it as a handled error and fires syncError.
+
+      - type: button
+        content: "Trigger error sync"
+        attributes:
+          style:
+            marginTop: "0.5rem"
+        actions:
+          - what: setData
+            on: click
+            path: ~.triggerError
+            value: true
+
+      # DataSync – error reactions
+      - type: DataSync
+        path: ~.errorCase
+        mode: onIdle
+        trigger: ~.triggerError
+        actions:
+          # on: syncError — fires on any HTTP error (4xx, 5xx, network failure)
+          - what: setData
+            on: syncError
+            path: ~.errorEvent.fired
+            value: true
+          - what: setData
+            on: syncError
+            path: ~.errorEvent.httpStatus
+            value: "<reactive-json:event>.detail.responseContext.status"
+          - what: setData
+            on: syncError
+            path: ~.errorEvent.responseData
+            # For a structured error body, event.detail.value = serverBody
+            value: "<reactive-json:event-new-value>"
+
+      - type: div
+        attributes:
+          style:
+            marginTop: "1rem"
+            padding: "1rem"
+            background: "#fff0f0"
+            border: "1px solid #f44336"
+            borderRadius: "4px"
+            fontFamily: "monospace"
+        content:
+          - type: div
+            content: ["syncError fired: ", ~.errorEvent.fired]
+          - type: div
+            content: ["HTTP status captured: ", ~.errorEvent.httpStatus]
+          - type: div
+            content: ["Error status message: ", ~.errorCase.status.message]
