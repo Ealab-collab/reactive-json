@@ -1,0 +1,341 @@
+# test-url-builder.yaml
+# Tests the new URL builder features for additionalDataSource src:
+#
+#   { param, value }         — query param objects
+#   { segment, required? }   — dynamic path segment objects
+#   ~. references            — treated same as ~~. (root store) in this context
+#   required flag            — aborts URL resolution → triggers fallbackDataSource
+#   fallbackDataSource       — tried on null URL or HTTP error
+#
+# Requires the fake backend:
+#   node test-datasync-server.mjs
+#
+# Open at:
+#   http://localhost:5173/?file_path=/rjs-build/test-url-builder.yaml
+
+additionalDataSource:
+
+  # --- Test A: { segment } + { param } with dynamic key ---
+  # URL built: http://localhost:3099/api/catalog/electronics?id=42&q=hello
+  - src:
+      - "http://localhost:3099/api/catalog/"
+      - segment: ~~.category    # dynamic path segment
+      - param: id
+        value: ~~.apiId         # static key, store value
+      - param: ~~.extraParamName
+        value: ~~.extraParamValue  # both key and value from store
+    path: ~~.resultA
+    blocking: true
+
+  # --- Test B: optional param silently omitted when null ---
+  # URL built: http://localhost:3099/api/items?id=42
+  # (filter is null → omitted without warning)
+  - src:
+      - "http://localhost:3099/api/items"
+      - param: id
+        value: ~~.apiId         # present → included
+      - param: filter
+        value: ~~.emptyFilter   # null → silently omitted
+    path: ~~.resultB
+    blocking: true
+
+  # --- Test C: required param is null → fallbackDataSource ---
+  # missingId is null → required aborts URL → fallback fetches a safe default
+  - src:
+      - "http://localhost:3099/api/items"
+      - param: id
+        value: ~~.missingId
+        required: true
+    fallbackDataSource:
+      src: "http://localhost:3099/api/items?id=fallback"
+      path: ~~.resultC
+    blocking: true
+
+  # --- Test D: HTTP 500 error → fallbackDataSource ---
+  # /api/crash returns 500 → fallback recovers with a working URL
+  - src: "http://localhost:3099/api/crash"
+    fallbackDataSource:
+      src: "http://localhost:3099/api/items?id=recovered"
+      path: ~~.resultD
+    blocking: true
+
+data:
+  apiId: "42"
+  category: "electronics"
+  extraParamName: "q"
+  extraParamValue: "hello"
+  emptyFilter: null
+  missingId: null
+  resultA: null
+  resultB: null
+  resultC: null
+  resultD: null
+
+renderView:
+  - type: div
+    attributes:
+      class: "max-w-5xl mx-auto p-8 font-sans space-y-6"
+    content:
+      - type: h1
+        attributes:
+          class: "text-2xl font-bold mb-1"
+        content: "URL Builder — additionalDataSource tests"
+      - type: p
+        attributes:
+          class: "text-sm text-gray-500 mb-4"
+        content: "All sources are blocking. Compare Expected primary call with the Network inspector."
+
+      # ── Overview table ──────────────────────────────────────────────────
+      - type: div
+        attributes:
+          class: "overflow-x-auto rounded-lg border border-gray-200 shadow-sm"
+        content:
+          - type: table
+            attributes:
+              class: "w-full text-sm border-collapse"
+            content:
+              - type: thead
+                content:
+                  - type: tr
+                    attributes:
+                      class: "bg-gray-100 text-left"
+                    content:
+                      - type: th
+                        attributes:
+                          class: "px-4 py-3 font-semibold text-gray-600 w-16"
+                        content: "Test"
+                      - type: th
+                        attributes:
+                          class: "px-4 py-3 font-semibold text-gray-600"
+                        content: "Scenario"
+                      - type: th
+                        attributes:
+                          class: "px-4 py-3 font-semibold text-gray-600"
+                        content: "Expected primary call"
+                      - type: th
+                        attributes:
+                          class: "px-4 py-3 font-semibold text-gray-600"
+                        content: "Expected fallback call"
+                      - type: th
+                        attributes:
+                          class: "px-4 py-3 font-semibold text-gray-600"
+                        content: "Result"
+              - type: tbody
+                content:
+                  # Row A
+                  - type: tr
+                    attributes:
+                      class: "border-t border-gray-200 bg-purple-50 align-top"
+                    content:
+                      - type: td
+                        attributes:
+                          class: "px-4 py-3 font-bold text-purple-700"
+                        content: "A"
+                      - type: td
+                        attributes:
+                          class: "px-4 py-3 text-gray-700"
+                        content: "{ segment } + { param } with dynamic key"
+                      - type: td
+                        attributes:
+                          class: "px-4 py-3 font-mono text-xs text-gray-800 break-all"
+                        content: "GET /api/catalog/electronics?id=42&q=hello"
+                      - type: td
+                        attributes:
+                          class: "px-4 py-3 text-gray-400 text-xs italic"
+                        content: "—"
+                      - type: td
+                        attributes:
+                          class: "px-4 py-3 font-mono text-xs space-y-1"
+                        content:
+                          - type: div
+                            content:
+                              - type: span
+                                attributes:
+                                  class: "text-gray-500"
+                                content: "type: "
+                              - type: span
+                                attributes:
+                                  class: "text-purple-700"
+                                content: ~~.resultA.type
+                          - type: div
+                            content:
+                              - type: span
+                                attributes:
+                                  class: "text-gray-500"
+                                content: "id: "
+                              - type: span
+                                attributes:
+                                  class: "text-purple-700"
+                                content: ~~.resultA.query.id
+                          - type: div
+                            content:
+                              - type: span
+                                attributes:
+                                  class: "text-gray-500"
+                                content: "q: "
+                              - type: span
+                                attributes:
+                                  class: "text-purple-700"
+                                content: ~~.resultA.query.q
+
+                  # Row B
+                  - type: tr
+                    attributes:
+                      class: "border-t border-gray-200 bg-blue-50 align-top"
+                    content:
+                      - type: td
+                        attributes:
+                          class: "px-4 py-3 font-bold text-blue-700"
+                        content: "B"
+                      - type: td
+                        attributes:
+                          class: "px-4 py-3 text-gray-700"
+                        content: "Optional param omitted when null"
+                      - type: td
+                        attributes:
+                          class: "px-4 py-3 font-mono text-xs text-gray-800 break-all"
+                        content:
+                          - "GET /api/items?id=42"
+                          - type: br
+                          - type: span
+                            attributes:
+                              class: "text-gray-400 not-italic text-xs"
+                            content: "(no filter — emptyFilter=null omitted)"
+                      - type: td
+                        attributes:
+                          class: "px-4 py-3 text-gray-400 text-xs italic"
+                        content: "—"
+                      - type: td
+                        attributes:
+                          class: "px-4 py-3 font-mono text-xs space-y-1"
+                        content:
+                          - type: div
+                            content:
+                              - type: span
+                                attributes:
+                                  class: "text-gray-500"
+                                content: "id: "
+                              - type: span
+                                attributes:
+                                  class: "text-blue-700"
+                                content: ~~.resultB.id
+                          - type: div
+                            content:
+                              - type: span
+                                attributes:
+                                  class: "text-gray-500"
+                                content: "name: "
+                              - type: span
+                                attributes:
+                                  class: "text-blue-700"
+                                content: ~~.resultB.name
+
+                  # Row C
+                  - type: tr
+                    attributes:
+                      class: "border-t border-gray-200 bg-amber-50 align-top"
+                    content:
+                      - type: td
+                        attributes:
+                          class: "px-4 py-3 font-bold text-amber-700"
+                        content: "C"
+                      - type: td
+                        attributes:
+                          class: "px-4 py-3 text-gray-700"
+                        content: "Required param null → fallback"
+                      - type: td
+                        attributes:
+                          class: "px-4 py-3 font-mono text-xs break-all"
+                        content:
+                          - type: span
+                            attributes:
+                              class: "text-red-400 line-through"
+                            content: "GET /api/items?id="
+                          - type: br
+                          - type: span
+                            attributes:
+                              class: "text-gray-400 not-italic text-xs"
+                            content: "(aborted before sending — missingId=null + required)"
+                      - type: td
+                        attributes:
+                          class: "px-4 py-3 font-mono text-xs text-gray-800 break-all"
+                        content: "GET /api/items?id=fallback"
+                      - type: td
+                        attributes:
+                          class: "px-4 py-3 font-mono text-xs space-y-1"
+                        content:
+                          - type: div
+                            content:
+                              - type: span
+                                attributes:
+                                  class: "text-gray-500"
+                                content: "id: "
+                              - type: span
+                                attributes:
+                                  class: "text-amber-700"
+                                content: ~~.resultC.id
+                          - type: div
+                            content:
+                              - type: span
+                                attributes:
+                                  class: "text-gray-500"
+                                content: "name: "
+                              - type: span
+                                attributes:
+                                  class: "text-amber-700"
+                                content: ~~.resultC.name
+
+                  # Row D
+                  - type: tr
+                    attributes:
+                      class: "border-t border-gray-200 bg-green-50 align-top"
+                    content:
+                      - type: td
+                        attributes:
+                          class: "px-4 py-3 font-bold text-green-700"
+                        content: "D"
+                      - type: td
+                        attributes:
+                          class: "px-4 py-3 text-gray-700"
+                        content: "HTTP 500 error → fallback"
+                      - type: td
+                        attributes:
+                          class: "px-4 py-3 font-mono text-xs break-all"
+                        content:
+                          - type: span
+                            attributes:
+                              class: "text-red-500"
+                            content: "GET /api/crash"
+                          - type: br
+                          - type: span
+                            attributes:
+                              class: "text-gray-400 not-italic text-xs"
+                            content: "(→ 500 Internal Server Error)"
+                      - type: td
+                        attributes:
+                          class: "px-4 py-3 font-mono text-xs text-gray-800 break-all"
+                        content: "GET /api/items?id=recovered"
+                      - type: td
+                        attributes:
+                          class: "px-4 py-3 font-mono text-xs space-y-1"
+                        content:
+                          - type: div
+                            content:
+                              - type: span
+                                attributes:
+                                  class: "text-gray-500"
+                                content: "id: "
+                              - type: span
+                                attributes:
+                                  class: "text-green-700"
+                                content: ~~.resultD.id
+                          - type: div
+                            content:
+                              - type: span
+                                attributes:
+                                  class: "text-gray-500"
+                                content: "name: "
+                              - type: span
+                                attributes:
+                                  class: "text-green-700"
+                                content: ~~.resultD.name

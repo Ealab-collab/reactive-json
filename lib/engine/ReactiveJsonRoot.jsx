@@ -292,28 +292,50 @@ export const ReactiveJsonRoot = ({
         };
 
         // Fetches a single data source and merges it into the current data.
+        // If the source defines a fallbackDataSource, it is tried when the URL cannot
+        // be resolved or when the HTTP request fails.
         const fetchDataSource = async (source, index) => {
+            const { fallbackDataSource, ...sourceConfig } = source;
+
+            const tryFallback = async (reason) => {
+                if (fallbackDataSource) {
+                    console.warn(`additionalDataSource item ${index}: ${reason} — trying fallbackDataSource.`);
+                    await fetchDataSource(fallbackDataSource, index);
+                } else {
+                    console.warn(`additionalDataSource item ${index}: ${reason}.`, sourceConfig);
+                }
+            };
+
+            // 1. Resolve URL — returns null when a required segment/param is missing.
+            const resolvedUrl = interpolateSegments(sourceConfig.src, (path) => store.get(path));
+
+            if (!resolvedUrl) {
+                await tryFallback("could not resolve 'src'");
+                return;
+            }
+
+            // 2. Make HTTP request.
+            const method = sourceConfig.method?.toUpperCase() || "GET";
+            const config = {
+                method,
+                url: resolvedUrl,
+            };
+
+            // Add headers if available.
+            if (headersForRjBuild && Object.keys(headersForRjBuild).length > 0) {
+                config.headers = headersForRjBuild;
+            }
+
+            let response;
             try {
-                const resolvedUrl = interpolateSegments(source.src, (path) => store.get(path));
+                response = await axios(config);
+            } catch (error) {
+                await tryFallback(`HTTP request failed (${error.message})`);
+                return;
+            }
 
-                if (!resolvedUrl) {
-                    console.warn("additionalDataSource item number " + index + ": could not resolve 'src'.", source);
-                    return;
-                }
-
-                const method = source.method?.toUpperCase() || "GET";
-                const config = {
-                    method,
-                    url: resolvedUrl,
-                };
-
-                // Add headers if available.
-                if (headersForRjBuild && Object.keys(headersForRjBuild).length > 0) {
-                    config.headers = headersForRjBuild;
-                }
-
-                const response = await axios(config);
-
+            // 3. Process response.
+            try {
                 // Create request context for data processors.
                 const requestContext = {
                     url: config.url,
@@ -339,7 +361,7 @@ export const ReactiveJsonRoot = ({
                     dataProcessors: mergedPlugins?.dataProcessor || {},
                 });
 
-                if (source.dataMapping) {
+                if (sourceConfig.dataMapping) {
                     // Creating fake temporary contexts for template evaluation.
                     // We use the store getter for templateData
                     // Do not worry too much about these contexts, because each source will use the
@@ -363,7 +385,7 @@ export const ReactiveJsonRoot = ({
 
                     try {
                         applyDataMapping({
-                            dataMapping: source.dataMapping,
+                            dataMapping: sourceConfig.dataMapping,
                             responseData: fetchedData,
                             globalDataContext,
                             templateContext,
@@ -379,7 +401,7 @@ export const ReactiveJsonRoot = ({
                 }
 
                 // Merge data immediately when this source completes.
-                if (!source.path) {
+                if (!sourceConfig.path) {
                     // No path specified, merge at root level.
                     if (typeof fetchedData !== "object" || Array.isArray(fetchedData)) {
                         console.warn(
@@ -411,7 +433,7 @@ export const ReactiveJsonRoot = ({
 
                     // Evaluate the path using template system.
                     const evaluatedPath = dataLocationToPath({
-                        dataLocation: source.path,
+                        dataLocation: sourceConfig.path,
                         currentPath: "data",
                         globalDataContext,
                         templateContext,
@@ -420,7 +442,7 @@ export const ReactiveJsonRoot = ({
                     if (typeof evaluatedPath !== "string") {
                         console.warn(
                             "additionalDataSource path evaluation did not result in a string:",
-                            source.path,
+                            sourceConfig.path,
                             "->",
                             evaluatedPath
                         );
@@ -432,11 +454,10 @@ export const ReactiveJsonRoot = ({
 
                     store.set(dataPath, fetchedData);
                 } catch (error) {
-                    console.error("Error evaluating additionalDataSource path:", source.path, error);
+                    console.error("Error evaluating additionalDataSource path:", sourceConfig.path, error);
                 }
             } catch (error) {
-                // Fail silently but log the error.
-                console.error("Error fetching additional data source:", source.src, error);
+                console.error("Error processing additionalDataSource response:", sourceConfig.src, error);
             }
         };
 
