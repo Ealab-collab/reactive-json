@@ -27,6 +27,7 @@ export const DelayedActions = ({ props, currentData, path }) => {
 
         const interval = setInterval(() => {
             const reactionFunctionsToExecute = getReactionFunctionsToExecute(delayedActions, templateContexts);
+            const reactionFunctions = globalDataContext.plugins?.reaction ?? {};
 
             // Execute the reaction functions.
             // They are supposed to be validated for execution by getReactionFunctionsToExecute.
