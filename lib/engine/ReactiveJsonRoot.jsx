@@ -556,11 +556,19 @@ export const ReactiveJsonRoot = ({
         setData,
         updateData,
         // experimental: expose store for advanced usage
-        store, 
+        store,
         // fallback: get data from store directly (non-reactive access)
         get templateData() { return store.get(""); },
         templatePath: "data",
     };
+    // Self-reference so nested contexts (DataFilter, Switch iteration items,
+    // and the `inContext: root` branches in Actions.jsx / Count.jsx) can
+    // resolve back to this root's value. ReactiveJsonRoot wraps its children
+    // with GlobalDataContext.Provider directly rather than via
+    // GlobalDataContextProvider, so the helper that normally injects this
+    // method is bypassed — without this assignment, `getRootContext` is
+    // undefined on the root context and `inContext: root` throws.
+    globalContextValue.getRootContext = () => globalContextValue;
 
     const rootViews = structure.items.map((view) => (
         <View
