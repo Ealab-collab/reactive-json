@@ -3,14 +3,35 @@ import { dataLocationToPath, evaluateTemplateValue } from "../../../engine/Templ
 import { alterData, applyDataMapping } from "../../../engine/utility";
 
 /**
+ * Per-key registry of in-flight AbortControllers. Shared across all
+ * reaction calls so a later request can cancel an earlier one that
+ * declared the same `requestKey`. Module-scoped on purpose — there's
+ * only one set of HTTP reactions per page.
+ */
+const inflightByKey = new Map();
+
+/**
+ * Detects an axios/fetch abort error (cancellation) regardless of the
+ * specific shape thrown by the runtime. Newer axios uses CanceledError
+ * with code ERR_CANCELED ; AbortController on the platform throws an
+ * AbortError. We accept all three.
+ */
+const isAbortError = (reason) =>
+    (typeof axios.isCancel === "function" && axios.isCancel(reason)) ||
+    reason?.name === "CanceledError" ||
+    reason?.name === "AbortError" ||
+    reason?.code === "ERR_CANCELED";
+
+/**
  * Handles the common logic of HTTP requests for fetchData and submitData.
  *
  * @param {Object} props - The properties of the reaction.
  * @param {Object} props.args - The arguments of the reaction.
- * @param {boolean} [props.args.allowConcurrent] - When true, allows concurrent requests (bypasses the global lock). Default: false.
+ * @param {boolean} [props.args.allowConcurrent] - When true, allows concurrent requests (bypasses the global lock). Default: false. Implicitly true when `requestKey` is set, since per-key cancel-on-new already provides single-flight within a key.
  * @param {Object} [props.args.data] - Data to send (for POST, PUT, etc.). Should be not provided for GET requests.
  * @param {Object} props.args.dataMapping - Configuration for selective data dispatch using mapping processors.
  * @param {Object} props.args.refreshAppOnResponse - Tells if the response content will replace the current app content.
+ * @param {string} [props.args.requestKey] - Identifier used to group requests that should cancel each other. When set, firing a new request with the same key aborts the previous one client-side (axios AbortController). Different keys are independent. Absent → upstream behavior (global lock applies unless allowConcurrent is set).
  * @param {boolean} [props.args.submitSilently] - Silent mode. When true, prevents CSS from visually disabling the fields.
  * @param {Object} props.args.updateOnlyData - When true, only update the data instead of replacing the entire RjBuild.
  * @param {Object} props.args.updateDataAtLocation - Specifies where to update the data (like additionalDataSource path).
@@ -32,8 +53,19 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
     // With this system, only 1 submit can be made concurrently for all roots.
     const body = document.body;
 
-    // Check if concurrent requests are allowed (default: false for backward compatibility)
-    const allowConcurrent = props?.args?.allowConcurrent === true;
+    // A non-empty requestKey opts the call into per-key cancel-on-new
+    // semantics. It's mutually exclusive with the global lock — a key'd
+    // request is allowed to coexist with other key'd requests AND with
+    // non-key'd ones, because the per-key registry is what enforces
+    // single-flight within a key.
+    const requestKey = typeof props?.args?.requestKey === "string" && props.args.requestKey.length > 0
+        ? props.args.requestKey
+        : null;
+
+    // Check if concurrent requests are allowed (default: false for backward compatibility).
+    // `requestKey` implies concurrency because per-key cancel-on-new
+    // already provides single-flight within the key.
+    const allowConcurrent = props?.args?.allowConcurrent === true || requestKey !== null;
 
     // Only check and set the lock if concurrent requests are not allowed
     if (!allowConcurrent) {
@@ -150,6 +182,21 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
         config.headers = headers;
     }
 
+    // Per-key cancel-on-new : abort any in-flight request sharing this
+    // key, register ours, and pass its signal to axios. The previous
+    // request's .catch will fire with AbortError and silently exit ;
+    // its .finally will skip the `response` event dispatch.
+    let controller = null;
+    if (requestKey) {
+        const previous = inflightByKey.get(requestKey);
+        if (previous) {
+            previous.abort();
+        }
+        controller = new AbortController();
+        inflightByKey.set(requestKey, controller);
+        config.signal = controller.signal;
+    }
+
     // Extract dataProcessors from plugins.
     const dataProcessors = globalDataContext.plugins?.dataProcessor || {};
 
@@ -171,6 +218,11 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
     // RjBuild when updateOnlyData is false (meaning we're processing a complete RjBuild).
     // When updateOnlyData is true, we're only processing data.
     const isRjBuild = updateOnlyData === false;
+
+    // Tracks whether THIS call ended with an abort. Set in .catch so
+    // .finally can skip the `response` event dispatch — the successor
+    // request that aborted us will fire its own event.
+    let wasAborted = false;
 
     axios(config)
         .then((value) => {
@@ -254,8 +306,16 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
             }
         })
         .catch((reason) => {
+            if (isAbortError(reason)) {
+                // Intentional cancel by a successor request sharing the
+                // same `requestKey`. Don't surface as an error and don't
+                // dispatch a response event — the successor will.
+                wasAborted = true;
+                return;
+            }
+
             console.log(`reactionFunction:${errorPrefix} : Could not execute request. Reason: ${reason.message}`);
-            
+
             responseContext = {
                 headers: reason?.response?.headers || {},
                 status: reason?.response?.status || 500,
@@ -271,7 +331,18 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
             });
         })
         .finally(() => {
+            // Release the registry slot only if we still own it. A new
+            // request with the same key may have already replaced us.
+            if (requestKey && inflightByKey.get(requestKey) === controller) {
+                inflightByKey.delete(requestKey);
+            }
+
             cleanupRequestState(body, currentTarget, allowConcurrent);
+
+            if (wasAborted) {
+                // Skip dispatch — see comment in .catch above.
+                return;
+            }
 
             const event = new CustomEvent("response", {
                 bubbles: false,
