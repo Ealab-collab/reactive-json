@@ -24,6 +24,11 @@ export const DataSync = ({ props }) => {
 
     const lastAttemptedDataRef = useRef(undefined);
     const lastServerResponseRef = useRef(null);
+    // Identity (item_url) of the syncable last seen. When it appears or changes,
+    // the object arrived FROM the server (initial async load, refetch, or a
+    // re-seed bringing the management URLs) — its data is a baseline, not a user
+    // edit, so it must not be POSTed straight back.
+    const lastItemUrlRef = useRef(undefined);
     const timeoutRef = useRef(null);
     const retryTimeoutRef = useRef(null);
     const isSyncingRef = useRef(false);
@@ -159,6 +164,16 @@ export const DataSync = ({ props }) => {
     useEffect(() => {
         if (!store || resolvedPath === null) return;
 
+        // Baseline the identity AND data already present at subscribe time, so a
+        // syncable whose data is set synchronously at mount isn't mistaken for a
+        // server reload on its first genuine user edit, and an equal re-seed
+        // (parent re-render re-evaluating a subroot's dataOverride) is ignored.
+        const initialObject = store.get(resolvedPath);
+        if (initialObject) {
+            lastItemUrlRef.current = initialObject.item_url ?? initialObject.submission_url;
+            lastAttemptedDataRef.current = initialObject.data;
+        }
+
         const handleDataChange = () => {
             const currentObject = store.get(resolvedPath);
             if (!currentObject) return;
@@ -168,10 +183,23 @@ export const DataSync = ({ props }) => {
                 return;
             }
 
-            // Ignore if only non-data fields changed (e.g. status update)
-            // by comparing the .data field with what we last attempted or received
             const currentData = currentObject.data;
 
+            // Server-origin (re)load: when the syncable's identity (item_url, or
+            // submission_url as a fallback) just appeared or changed, the data
+            // came FROM the server — not from a user edit. Baseline it without
+            // syncing. This prevents a freshly async-loaded syncable (e.g. one
+            // fetched into a subroot) from POSTing itself back on mount, which
+            // would otherwise fire during page load (often before CSRF is ready).
+            const currentItemUrl = currentObject.item_url ?? currentObject.submission_url;
+            if (currentItemUrl !== lastItemUrlRef.current) {
+                lastItemUrlRef.current = currentItemUrl;
+                lastAttemptedDataRef.current = currentData;
+                return;
+            }
+
+            // Ignore if only non-data fields changed (e.g. status update)
+            // by comparing the .data field with what we last attempted or received
             if (lastAttemptedDataRef.current !== undefined && isEqual(currentData, lastAttemptedDataRef.current)) {
                 return;
             }
