@@ -6,6 +6,7 @@ import { TemplateContext } from "../../../engine/TemplateContext.jsx";
 import { dataLocationToPath } from "../../../engine/TemplateSystem.jsx";
 import axios from "axios";
 import { isEqual } from "lodash";
+import { joinSyncGroup, broadcastToGroup, getOwner } from "./dataSyncGroups.js";
 
 /**
  * Strips the "data." prefix from a path resolved by dataLocationToPath,
@@ -34,6 +35,7 @@ export const DataSync = ({ props }) => {
     const isSyncingRef = useRef(false);
     const retryCountRef = useRef(0);
     const eventTargetRef = useRef(null);
+    const performSyncRef = useRef(null);
 
     const mode = props.mode || 'onIdle';
     const idleDelay = props.idleDelay || 1000;
@@ -67,6 +69,59 @@ export const DataSync = ({ props }) => {
             console.error("DataSync: Invalid trigger path", props.trigger, e);
         }
     }
+
+    // Shared-syncable ("merge") grouping. When `mergeKey` resolves to a stable
+    // identity (e.g. the submission_url), every DataSync yielding the same value
+    // forms a group with a single owner-writer: a real edit on one is broadcast
+    // to the others (mirrored into their store, echo-suppressed → live, no
+    // re-POST) and persistence is delegated to the owner — so concurrent edits
+    // on different members coalesce into one correct write. Unset = no grouping.
+    let mergeKeyValue = null;
+    if (props.mergeKey && store) {
+        try {
+            mergeKeyValue = store.get(toStorePath(dataLocationToPath({
+                dataLocation: props.mergeKey,
+                currentPath: templateContext.templatePath,
+                globalDataContext,
+                templateContext,
+            })));
+        } catch (e) { /* unresolved yet — joins once available */ }
+    }
+    const mergeKeyRef = useRef(null);
+    mergeKeyRef.current = mergeKeyValue;
+
+    const memberRef = useRef(null);
+    if (memberRef.current === null) {
+        memberRef.current = {
+            // Apply remote data into our store, suppressing our own change-watcher
+            // (no re-broadcast, no POST) — a live mirror of a sibling's edit.
+            applyRemote: (data) => {
+                if (resolvedPath === null) return;
+                lastAttemptedDataRef.current = data;
+                const cur = store.get(resolvedPath) || {};
+                store.set(resolvedPath, { ...cur, data });
+            },
+            // Owner-only: (re)schedule the single debounced POST, reading the
+            // LATEST shared data at fire time (never a stale captured object).
+            requestSync: () => {
+                if (resolvedPath === null) return;
+                if (mode === 'immediate') {
+                    performSyncRef.current?.(store.get(resolvedPath));
+                    return;
+                }
+                if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                timeoutRef.current = setTimeout(() => {
+                    performSyncRef.current?.(store.get(resolvedPath));
+                }, idleDelay);
+            },
+        };
+    }
+
+    // Join/leave the group when the resolved key appears or changes.
+    useEffect(() => {
+        if (!mergeKeyValue || resolvedPath === null) return;
+        return joinSyncGroup(mergeKeyValue, memberRef.current);
+    }, [mergeKeyValue, resolvedPath]);
 
     const performSync = useCallback(async (currentObject) => {
         if (!currentObject || !currentObject.submission_url) {
@@ -106,6 +161,11 @@ export const DataSync = ({ props }) => {
             retryCountRef.current = 0;
 
             store.set(resolvedPath, responseData);
+
+            // Mirror the authoritative server data (enriched) to sibling syncables.
+            if (mergeKeyRef.current) {
+                broadcastToGroup(mergeKeyRef.current, memberRef.current, responseData?.data);
+            }
 
             eventTargetRef.current?.dispatchEvent(new CustomEvent("syncSuccess", {
                 bubbles: true,
@@ -160,6 +220,9 @@ export const DataSync = ({ props }) => {
         }
     }, [store, resolvedPath, maxRetries]);
 
+    // Keep the member's requestSync() pointed at the latest performSync.
+    performSyncRef.current = performSync;
+
     // Watch for data changes
     useEffect(() => {
         if (!store || resolvedPath === null) return;
@@ -213,6 +276,18 @@ export const DataSync = ({ props }) => {
             if (retryTimeoutRef.current) {
                 clearTimeout(retryTimeoutRef.current);
                 retryTimeoutRef.current = null;
+            }
+
+            // Shared-syncable group: mirror the edit live to siblings (echo-
+            // suppressed), then delegate persistence to the single OWNER, which
+            // (re)schedules its one debounced POST reading the LATEST data. This
+            // makes rapid alternating edits on different members coalesce into a
+            // single correct write — no concurrent writers, no stale-data POST.
+            if (mergeKeyRef.current) {
+                broadcastToGroup(mergeKeyRef.current, memberRef.current, currentData);
+                const owner = getOwner(mergeKeyRef.current) || memberRef.current;
+                owner.requestSync();
+                return;
             }
 
             if (mode === 'immediate') {
