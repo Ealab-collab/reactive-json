@@ -4,9 +4,13 @@ import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
 import { useStore } from "../../../engine/StoreContext.jsx";
 import { TemplateContext } from "../../../engine/TemplateContext.jsx";
 import { dataLocationToPath } from "../../../engine/TemplateSystem.jsx";
+import {
+    joinSyncGroup as coreJoinSyncGroup,
+    broadcastToGroup as coreBroadcastToGroup,
+    getOwner as coreGetOwner,
+} from "../../utility/dataSyncGroups.js";
 import axios from "axios";
 import { isEqual } from "lodash";
-import { joinSyncGroup, broadcastToGroup, getOwner } from "./dataSyncGroups.js";
 
 /**
  * Strips the "data." prefix from a path resolved by dataLocationToPath,
@@ -22,6 +26,16 @@ export const DataSync = ({ props }) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
     const store = useStore();
+
+    // Shared-syncable coordination registry, resolved as a `utility` plugin so an
+    // app can substitute JUST the group management (its own registry) without
+    // overriding this whole component. Falls back to the core singleton.
+    const { joinSyncGroup, broadcastToGroup, getOwner } =
+        globalDataContext.plugins?.utility?.dataSyncGroups ?? {
+            joinSyncGroup: coreJoinSyncGroup,
+            broadcastToGroup: coreBroadcastToGroup,
+            getOwner: coreGetOwner,
+        };
 
     const lastAttemptedDataRef = useRef(undefined);
     const lastServerResponseRef = useRef(null);

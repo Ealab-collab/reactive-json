@@ -5,6 +5,7 @@ import { coreDataProcessorComponents } from "./component/dataProcessor";
 import { coreElementComponents } from "./component/element";
 import { coreHookComponents } from "./component/hook";
 import { coreReactionComponents } from "./component/reaction";
+import { coreUtilityComponents } from "./component/utility";
 
 /**
  * Reactive-JSON core components plugin.
@@ -17,4 +18,5 @@ export const coreComponentsPlugin = {
     element: coreElementComponents,
     hook: coreHookComponents,
     reaction: coreReactionComponents,
+    utility: coreUtilityComponents,
 };
