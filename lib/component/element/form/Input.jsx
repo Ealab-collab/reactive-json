@@ -6,7 +6,7 @@ import { TemplateContext } from "../../../engine/TemplateContext.jsx";
 import { propsDataLocationToPathAndValue } from "../../../engine/utility/formElementsCommon.jsx";
 import { View } from "../../../engine/View.jsx";
 
-export const Input = ({ props, datafield, path, currentData }) => {
+export const Input = ({ props, datafield, path, currentData, valueToDisplay, valueToStore }) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
     const mainAttributesHolderRef = useRef(null);
@@ -27,7 +27,10 @@ export const Input = ({ props, datafield, path, currentData }) => {
     });
 
     const onChange = (e) => {
-        globalDataContext.updateData(e.currentTarget.value, formDataPath);
+        const rawValue = e.currentTarget.value;
+        // Optional write transform (e.g. date/datetime storage format). Absent
+        // by default → the raw input value is stored, unchanged behavior.
+        globalDataContext.updateData(valueToStore ? valueToStore(rawValue) : rawValue, formDataPath);
     };
 
     const maybePlaceholder = evaluateTemplateValue({
@@ -52,7 +55,9 @@ export const Input = ({ props, datafield, path, currentData }) => {
         onChange,
         placeholder: maybePlaceholder,
         type: maybeInputType ?? "text",
-        value: formData ?? "",
+        // Optional read transform (e.g. show only the date part of a datetime
+        // storage value). Absent by default → the raw stored value is shown.
+        value: valueToDisplay ? valueToDisplay(formData) : (formData ?? ""),
         ...inputAttributes,
     };
 
