@@ -72,7 +72,17 @@ export const LabelFromValue = ({ currentData, datafield, path, props }) => {
         formData = templateContext.templateData[datafield];
     }
 
-    let finalValue = options.find((option) => option.value === formData);
+    // Loose matching is opt-in: by default, the option value must strictly
+    // equal the current value. Nullish values are never coerced (String(null)
+    // would match an option whose value is the "null" string).
+    const looseMatching = props.loose === true && formData !== null && formData !== undefined;
+
+    const matchesValue = looseMatching
+        ? (option) =>
+              option.value !== null && option.value !== undefined && String(option.value) === String(formData)
+        : (option) => option.value === formData;
+
+    let finalValue = options.find(matchesValue);
 
     if (!finalValue || !finalValue.label) {
         if (!formData) {
