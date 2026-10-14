@@ -1,7 +1,15 @@
 import { useContext } from "react";
 import { GlobalDataContext } from "./GlobalDataContext.jsx";
 import { TemplateContext } from "./TemplateContext.jsx";
+import { interpolateSegments } from "./utility/interpolateSegments.js";
 import { normalizeAttributesForReactJsx } from "./utility/reactJsxHelpers.jsx";
+
+/**
+ * The attributes holding a URL. They accept the segments of interpolateSegments.
+ *
+ * @type {Set<string>}
+ */
+const urlAttributeNames = new Set(["action", "formAction", "formaction", "href", "poster", "src"]);
 
 /**
  * Transforms a data location string to a path to be used in the UI components.
@@ -110,6 +118,21 @@ export const evaluateAttributes = ({ attrs, globalDataContext, templateContext, 
     const normalized = options.normalizeBeforeEvaluation ? normalizeAttributesForReactJsx(attrs) : attrs;
 
     for (const attrName of Object.keys(normalized)) {
+        if (urlAttributeNames.has(attrName) && Array.isArray(normalized[attrName])) {
+            // A URL built from segments. The attribute is omitted when the URL is aborted.
+            const url = interpolateSegmentsInContext({
+                segments: normalized[attrName],
+                globalDataContext,
+                templateContext,
+            });
+
+            if (url) {
+                evaluated[attrName] = url;
+            }
+
+            continue;
+        }
+
         // This will replace the value by the template value if it's a valid reference.
         // We call directly the TemplateValue component as a function to evaluate the attribute value.
         const evaluatedAttr = evaluateTemplateValueCollection({
@@ -232,6 +255,24 @@ export const evaluateTemplateValue = ({ valueToEvaluate, globalDataContext, temp
     }
 
     return currentNode;
+};
+
+/**
+ * Builds a string from segments, like interpolateSegments, with the template references
+ * evaluated in the given contexts: `~.` reads the current template data, `~~.` the global data,
+ * `~>key` an ancestor of the current template.
+ *
+ * @param {string|Array} segments A string (returned as is) or an array of segment descriptors
+ *     (strings, references, `{segment, required}`, `{param, value, required}`).
+ * @param {{}} globalDataContext The global data context.
+ * @param {{}} templateContext The template context.
+ *
+ * @returns {string|null} The built string, or null when a required segment is empty.
+ */
+export const interpolateSegmentsInContext = ({ segments, globalDataContext, templateContext }) => {
+    return interpolateSegments(segments, undefined, (reference) =>
+        evaluateTemplateValue({ valueToEvaluate: reference, globalDataContext, templateContext })
+    );
 };
 
 /**

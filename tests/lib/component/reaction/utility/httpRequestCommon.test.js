@@ -229,3 +229,32 @@ describe("executeHttpRequest — requestKey cancel-on-new", () => {
         expect(calls[1].signal.aborted).toBe(false);
     });
 });
+
+describe("executeHttpRequest — url built from segments", () => {
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
+    it("sends the request to the URL built in the template context", () => {
+        axios.mockImplementation(() => new Promise(() => { /* pending */ }));
+        const props = buildProps({ allowConcurrent: true });
+        props.args.url = ["/api/items/", "~.id", { param: "display", value: "~~.display" }];
+        props.globalDataContext.templateData = { display: "full" };
+        props.templateContext = { templatePath: "data.items.0", templateData: { id: 7 } };
+
+        executeHttpRequest(props, { method: "get" }, "fetchData");
+
+        expect(axios).toHaveBeenCalledWith(expect.objectContaining({ url: "/api/items/7?display=full" }));
+    });
+
+    it("sends nothing when a required segment is empty", () => {
+        jest.spyOn(console, "warn").mockImplementation(() => {});
+        axios.mockClear();
+        const props = buildProps({ allowConcurrent: true });
+        props.args.url = ["/api/items/", { segment: "~.id", required: true }];
+
+        executeHttpRequest(props, { method: "get" }, "fetchData");
+
+        expect(axios).not.toHaveBeenCalled();
+    });
+});

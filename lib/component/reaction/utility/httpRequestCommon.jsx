@@ -1,5 +1,9 @@
 import axios from "axios";
-import { dataLocationToPath, evaluateTemplateValue } from "../../../engine/TemplateSystem.jsx";
+import {
+    dataLocationToPath,
+    evaluateTemplateValue,
+    interpolateSegmentsInContext,
+} from "../../../engine/TemplateSystem.jsx";
 import { alterData, applyDataMapping } from "../../../engine/utility";
 
 /**
@@ -35,7 +39,7 @@ const isAbortError = (reason) =>
  * @param {boolean} [props.args.submitSilently] - Silent mode. When true, prevents CSS from visually disabling the fields.
  * @param {Object} props.args.updateOnlyData - When true, only update the data instead of replacing the entire RjBuild.
  * @param {Object} props.args.updateDataAtLocation - Specifies where to update the data (like additionalDataSource path).
- * @param {Object} props.args.url - The URL of the request.
+ * @param {string|Array} props.args.url - The URL of the request: a string, or an array of segments (see interpolateSegmentsInContext). No request is sent when the URL is empty or aborted.
  * @param {Object} props.event - The event of the reaction.
  * @param {Object} props.globalDataContext - The global data context.
  * @param {Object} props.templateContext - The template context.
@@ -157,11 +161,14 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
      */
     const updateDataAtLocation = props?.args?.updateDataAtLocation;
 
-    const url = evaluateTemplateValue({
-        valueToEvaluate: props?.args?.url,
-        globalDataContext,
-        templateContext,
-    });
+    // The URL is a string, or an array of segments built like the src of additionalDataSource.
+    const url = Array.isArray(props?.args?.url)
+        ? interpolateSegmentsInContext({ segments: props.args.url, globalDataContext, templateContext })
+        : evaluateTemplateValue({
+              valueToEvaluate: props?.args?.url,
+              globalDataContext,
+              templateContext,
+          });
 
     if (!url) {
         cleanupRequestState(body, currentTarget, allowConcurrent);
