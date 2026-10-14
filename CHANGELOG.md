@@ -2,6 +2,10 @@
 
 Notable changes of `@ea-lab/reactive-json`. Earlier versions are described in the git history.
 
+## 2.11.1 (2026-10-14)
+
+Development dependencies updated. No change to the library code.
+
 ## 2.11.0 (2026-10-14)
 
 Host-controlled saving for `DataSync`, array query params, and clearer segment warnings.
