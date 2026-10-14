@@ -44,8 +44,27 @@ export const usePagination = ({
     const PaginationNext = customComponents.Next ?? pluginComponents.Next ?? DefaultPaginationNext;
     const PaginationLast = customComponents.Last ?? pluginComponents.Last ?? DefaultPaginationLast;
 
-    // TODO: la pagination ne se met pas à jour quand les filtres sont changés (currentData).
-    const [activePageNumber0, setActivePageNumber0] = useState(0);
+    // The page chosen by the user. It is kept as is when the content changes,
+    // so that the user finds this page again when the content grows back.
+    const [rememberedPageNumber0, setActivePageNumber0] = useState(0);
+
+    /**
+     * Gets the expected page count for the given content.
+     *
+     * @param {Array} contentSource The content to paginate.
+     *
+     * @returns {number} The page count.
+     */
+    const getPageCountForContent = (contentSource) => {
+        // Use ceil to have one last page for remaining items.
+        return Math.ceil(contentSource.length / pageMaxItemCount);
+    };
+
+    const pageCount = getPageCountForContent(Array.isArray(dataToPaginate) ? dataToPaginate : []);
+
+    // The displayed page is derived from the content: when the content shrinks
+    // (e.g. a filter), the remembered page is capped to the last page.
+    const activePageNumber0 = Math.min(rememberedPageNumber0, Math.max(0, pageCount - 1));
 
     /**
      * Count of page buttons that shall appear before and after the current page.
@@ -85,18 +104,6 @@ export const usePagination = ({
     const maxShownItemIndexExcluded = firstShownItemIndex + pageMaxItemCount;
 
     /**
-     * Gets the expected page count for the given content.
-     *
-     * @param {Array} contentSource The content to paginate.
-     *
-     * @returns {number} The page count.
-     */
-    const getPageCountForContent = (contentSource) => {
-        // Use ceil to have one last page for remaining items.
-        return Math.ceil(contentSource.length / pageMaxItemCount);
-    };
-
-    /**
      * Slices the given content with the parameters of this pagination.
      *
      * Useful if the content array is complete.
@@ -123,8 +130,6 @@ export const usePagination = ({
      * @constructor
      */
     const PageControls = () => {
-        const pageCount = getPageCountForContent(dataToPaginate);
-
         if (!forcePaginationDisplay && pageCount <= 1) {
             return null;
         }
