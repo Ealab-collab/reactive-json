@@ -1,9 +1,12 @@
 import { useContext, useRef, useMemo } from "react";
 import { ActionDependant } from "../../../engine/Actions.jsx";
-import { evaluateTemplateValue, useEvaluatedAttributes } from "../../../engine/TemplateSystem.jsx";
+import { useEvaluatedAttributes } from "../../../engine/TemplateSystem.jsx";
 import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
 import { TemplateContext } from "../../../engine/TemplateContext.jsx";
-import { propsDataLocationToPathAndValue } from "../../../engine/utility/formElementsCommon.jsx";
+import {
+    evaluateFieldOptions,
+    propsDataLocationToPathAndValue,
+} from "../../../engine/utility/formElementsCommon.jsx";
 import { View } from "../../../engine/View.jsx";
 
 export const SelectField = ({ props, datafield, path, currentData }) => {
@@ -43,25 +46,8 @@ export const SelectField = ({ props, datafield, path, currentData }) => {
         globalDataContext.updateData(value, formDataPath);
     };
 
-    // Handle options: dynamicOptions takes precedence over options.
-    let options;
-    if (props.dynamicOptions) {
-        // dynamicOptions is always a template reference string.
-        options = evaluateTemplateValue({
-            valueToEvaluate: props.dynamicOptions,
-            globalDataContext,
-            templateContext,
-        });
-    } else if (props.options) {
-        // options is a static array, use it directly.
-        options = props.options;
-    } else {
-        options = [];
-    }
-
-    if (!Array.isArray(options)) {
-        options = [];
-    }
+    // dynamicOptions takes precedence over options.
+    const options = evaluateFieldOptions({ props, globalDataContext, templateContext });
 
     // Determine if wrapper should be used.
     const hasLabel = Boolean(props.label);
@@ -104,11 +90,7 @@ export const SelectField = ({ props, datafield, path, currentData }) => {
             {options.length > 0 ? (
                 options.map((option, index) => {
                     const optionValue = option.value ?? "";
-                    const optionLabel = evaluateTemplateValue({
-                        valueToEvaluate: option.label,
-                        globalDataContext,
-                        templateContext,
-                    }) ?? "";
+                    const optionLabel = option.label ?? "";
                     return (
                         <option key={index} value={optionValue}>
                             {optionLabel}

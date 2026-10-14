@@ -3,6 +3,7 @@ import { ActionDependant } from "../../../engine/Actions.jsx";
 import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
 import { TemplateContext } from "../../../engine/TemplateContext.jsx";
 import { evaluateTemplateValue } from "../../../engine/TemplateSystem.jsx";
+import { evaluateFieldOptions } from "../../../engine/utility/formElementsCommon.jsx";
 import { View } from "../../../engine/View.jsx";
 
 /**
@@ -24,16 +25,8 @@ export const LabelFromValue = ({ currentData, datafield, path, props }) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
 
-    const dynamicOptions = props.dynamicOptions ?? undefined;
-
-    let options;
-
-    if (dynamicOptions) {
-        // Build the options through the given data.
-        options = evaluateTemplateValue({ valueToEvaluate: dynamicOptions, globalDataContext, templateContext }) ?? [];
-    } else {
-        options = props.options ?? [];
-    }
+    // dynamicOptions takes precedence over options.
+    const options = evaluateFieldOptions({ props, globalDataContext, templateContext });
 
     // This is the data that contains the current value of this component.
     let formData;

@@ -6,6 +6,50 @@ import { TemplateContext } from "../../../engine/TemplateContext.jsx";
 import { evaluateAttributes, evaluateTemplateValue } from "../../../engine/TemplateSystem.jsx";
 import { View } from "../../../engine/View.jsx";
 
+// The actions lists for which the unbound toggle warning has already been shown.
+const warnedUnboundToggleActions = new WeakSet();
+
+/**
+ * Warns when a checkbox or radio input reacts to events but nothing sets its "checked" attribute.
+ *
+ * Such an input is rendered as a controlled input forced to unchecked,
+ * so a user click never shows as checked, whatever the reactions do to the data.
+ *
+ * @param {{}} props The Html element props.
+ * @param {{}} attrs The attributes of the element, before evaluation.
+ * @param {string} type The input type.
+ */
+const warnOnUnboundToggle = (props, attrs, type) => {
+    const actions = props.actions;
+
+    if (!Array.isArray(actions) || warnedUnboundToggleActions.has(actions)) {
+        return;
+    }
+
+    if (attrs.hasOwnProperty("checked")) {
+        // The checked attribute is bound, even when it evaluates to a falsy value.
+        return;
+    }
+
+    const transforms = Array.isArray(props.attributeTransforms) ? props.attributeTransforms : [];
+
+    if (transforms.some((transform) => transform?.name === "checked")) {
+        return;
+    }
+
+    if (!actions.some((action) => action?.on !== undefined)) {
+        return;
+    }
+
+    warnedUnboundToggleActions.add(actions);
+    console.warn(
+        `Html: an <input type="${type}"> has event reactions but no "checked" attribute nor "checked" ` +
+            "attribute transform, so it always stays unchecked. Bind checked to the data " +
+            '(e.g. "checked: ~.isSelected"), set it with an attributeTransforms entry, ' +
+            "or use a CheckBoxField to store a list of checked values."
+    );
+};
+
 export const Html = ({ props, currentData, datafield, path }) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
@@ -71,6 +115,7 @@ export const Html = ({ props, currentData, datafield, path }) => {
         // Special handling for checkbox/radio inputs - ensure 'checked' is always defined.
         if (props.tag === "input" && (evaluatedAttrs.type === "checkbox" || evaluatedAttrs.type === "radio")) {
             if (evaluatedAttrs.checked === undefined) {
+                warnOnUnboundToggle(props, attrs, evaluatedAttrs.type);
                 evaluatedAttrs.checked = false;
             }
         }

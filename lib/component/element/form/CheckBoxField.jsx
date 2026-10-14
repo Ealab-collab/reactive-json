@@ -1,10 +1,58 @@
-import { useContext, useRef, useMemo } from "react";
+import { useContext, useEffect, useRef, useMemo } from "react";
 import { ActionDependant } from "../../../engine/Actions.jsx";
-import { evaluateTemplateValue, useEvaluatedAttributes } from "../../../engine/TemplateSystem.jsx";
+import { evaluateAttributes, useEvaluatedAttributes } from "../../../engine/TemplateSystem.jsx";
 import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
 import { TemplateContext } from "../../../engine/TemplateContext.jsx";
-import { propsDataLocationToPathAndValue } from "../../../engine/utility/formElementsCommon.jsx";
+import {
+    evaluateFieldOptions,
+    propsDataLocationToPathAndValue,
+} from "../../../engine/utility/formElementsCommon.jsx";
 import { View } from "../../../engine/View.jsx";
+
+// The option values of the mounted single-value checkbox fields, per data path.
+const singleValueFieldsByPath = new Map();
+
+// The data paths for which the shared single-value warning has already been shown.
+const warnedSharedPaths = new Set();
+
+/**
+ * Warns when several single-value checkbox fields with different values share the same data path.
+ *
+ * Such fields overwrite each other's value, so they check and uncheck together.
+ * This is the typical outcome of one CheckBoxField per Switch item whose data is not an array.
+ *
+ * @param {string|undefined} formDataPath The data path of the field, or undefined when it is not single-value.
+ * @param {*} optionValue The value of the field's option.
+ */
+const useSharedSingleValueWarning = (formDataPath, optionValue) => {
+    useEffect(() => {
+        if (formDataPath === undefined) {
+            return undefined;
+        }
+
+        const registration = {};
+        const fields = singleValueFieldsByPath.get(formDataPath) ?? new Map();
+        fields.set(registration, optionValue);
+        singleValueFieldsByPath.set(formDataPath, fields);
+
+        if (new Set(fields.values()).size > 1 && !warnedSharedPaths.has(formDataPath)) {
+            warnedSharedPaths.add(formDataPath);
+            console.warn(
+                `CheckBoxField: several single-value checkbox fields share the data location "${formDataPath}", ` +
+                    "so they check and uncheck together. Initialize this data as an array (e.g. []) " +
+                    'or set "multiple: true" on the fields to store the list of checked values.'
+            );
+        }
+
+        return () => {
+            fields.delete(registration);
+
+            if (fields.size === 0) {
+                singleValueFieldsByPath.delete(formDataPath);
+            }
+        };
+    }, [formDataPath, optionValue]);
+};
 
 export const CheckBoxField = ({ props, datafield, path, currentData }) => {
     const globalDataContext = useContext(GlobalDataContext);
@@ -26,33 +74,31 @@ export const CheckBoxField = ({ props, datafield, path, currentData }) => {
         templateContext,
     });
 
-    // Handle options: dynamicOptions takes precedence over options.
-    let options;
-    if (props.dynamicOptions) {
-        // dynamicOptions is always a template reference string.
-        options = evaluateTemplateValue({
-            valueToEvaluate: props.dynamicOptions,
-            globalDataContext,
-            templateContext,
-        });
-    } else if (props.options) {
-        // options is a static array, use it directly.
-        options = props.options;
-    } else {
-        return null;
-    }
+    // dynamicOptions takes precedence over options.
+    const options = evaluateFieldOptions({ props, globalDataContext, templateContext });
 
-    if (!Array.isArray(options)) {
-        return null;
-    }
+    const controlType = props.controlType || "checkbox";
+    const isRadio = controlType === "radio";
+    // An array in the data is a list of checked values, even when the field shows a single option
+    // (e.g. one CheckBoxField per Switch item, all bound to the same array).
+    const multiple = props.multiple ?? (Array.isArray(formData) || options.length > 1);
+    const isSingleValue = !isRadio && !multiple && options.length === 1;
+
+    // Generate unique base ID for all options in this field.
+    const baseId = useMemo(() => {
+        // Check if there's an id in inputAttributes
+        if (inputAttributes.id) {
+            return inputAttributes.id;
+        }
+        // Generate a unique ID.
+        return `checkbox-${Math.random().toString(36).substring(2, 9)}`;
+    }, [inputAttributes.id]);
+
+    useSharedSingleValueWarning(isSingleValue ? formDataPath : undefined, options[0]?.value);
 
     if (options.length === 0) {
         return null;
     }
-
-    const controlType = props.controlType || "checkbox";
-    const multiple = props.multiple ?? (options.length > 1);
-    const isRadio = controlType === "radio";
 
     const onChange = (e, optionValue) => {
         if (isRadio) {
@@ -82,26 +128,21 @@ export const CheckBoxField = ({ props, datafield, path, currentData }) => {
     const forceWrapper = props.forceWrapper;
     const useWrapper = forceWrapper === true || (forceWrapper !== false && hasLabel);
 
-    // Generate unique base ID for all options in this field.
-    const baseId = useMemo(() => {
-        // Check if there's an id in inputAttributes
-        if (inputAttributes.id) {
-            return inputAttributes.id;
-        }
-        // Generate a unique ID.
-        return `checkbox-${Math.random().toString(36).substring(2, 9)}`;
-    }, [inputAttributes.id]);
-
     // Remove id from inputAttributes if present, since we'll set it per option.
     const { id: _removedId, ...inputAttributesWithoutId } = inputAttributes;
 
+    // The id of labelAttributes belongs to the field label only.
+    const { id: labelId, ...optionLabelAttributes } = labelAttributes;
+
+    // A single option without its own label is labelled by the field label.
+    // Otherwise, the field label names the group of options.
+    const labelsSingleControl = hasLabel && options.length === 1 && !options[0].label;
+    const labelsGroup = hasLabel && !labelsSingleControl;
+    const fieldLabelId = labelId ?? `${baseId}-label`;
+
     const checkboxElements = options.map((option, index) => {
         const optionValue = option.value;
-        const optionLabel = evaluateTemplateValue({
-            valueToEvaluate: option.label,
-            globalDataContext,
-            templateContext,
-        });
+        const optionLabel = option.label;
         const optionId = `${baseId}-${index}`;
 
         let isChecked = false;
@@ -113,12 +154,19 @@ export const CheckBoxField = ({ props, datafield, path, currentData }) => {
             isChecked = formData === optionValue || formData === true;
         }
 
-        const optionAttributes = useEvaluatedAttributes(option.attributes);
+        const optionAttributes = evaluateAttributes({
+            attrs: option.attributes,
+            globalDataContext,
+            templateContext,
+            options: { normalizeBeforeEvaluation: true },
+        });
 
         // Merge inputAttributes (without id) with option-specific attributes.
         const finalInputAttributes = {
             type: controlType,
             id: optionId,
+            // Radios of the same field form a native group (single tab stop, arrow keys navigation).
+            ...(isRadio ? { name: baseId } : {}),
             checked: isChecked,
             onChange: (e) => onChange(e, optionValue),
             value: optionValue,
@@ -127,7 +175,7 @@ export const CheckBoxField = ({ props, datafield, path, currentData }) => {
 
         const finalLabelAttributes = {
             htmlFor: optionId,
-            ...labelAttributes,
+            ...optionLabelAttributes,
         };
 
         return (
@@ -142,8 +190,15 @@ export const CheckBoxField = ({ props, datafield, path, currentData }) => {
         );
     });
 
+    const finalFieldLabelAttributes = labelsSingleControl
+        ? { htmlFor: `${baseId}-0`, ...labelAttributes }
+        : { ...labelAttributes, id: fieldLabelId };
+
+    // The element containing the options is exposed as a group named by the field label.
+    const groupAttributes = labelsGroup ? { role: "group", "aria-labelledby": fieldLabelId } : {};
+
     const labelElement = hasLabel && (
-        <label {...labelAttributes}>
+        <label {...finalFieldLabelAttributes}>
             <View
                 currentData={currentData?.["label"] ?? undefined}
                 datafield={"label"}
@@ -156,14 +211,14 @@ export const CheckBoxField = ({ props, datafield, path, currentData }) => {
     return (
         <ActionDependant {...props} attributesHolderRef={mainAttributesHolderRef}>
             {useWrapper ? (
-                <div {...attributes}>
+                <div {...groupAttributes} {...attributes}>
                     {labelElement}
                     {checkboxElements}
                 </div>
             ) : (
                 <>
                     {labelElement}
-                    <div {...attributes}>
+                    <div {...groupAttributes} {...attributes}>
                         {checkboxElements}
                     </div>
                 </>
@@ -171,4 +226,3 @@ export const CheckBoxField = ({ props, datafield, path, currentData }) => {
         </ActionDependant>
     );
 };
-
