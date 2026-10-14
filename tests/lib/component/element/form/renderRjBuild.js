@@ -14,10 +14,11 @@ const DebugData = ({ children }) => <pre data-testid="data">{children}</pre>;
  * Requires the jsdom test environment.
  *
  * @param {{}} rjBuild The RjBuild to render.
+ * @param {{plugins: {}}} [options] Options: the plugins given to the root.
  *
  * @returns {{container: HTMLElement, getData: function(): {}, click: function(Element): Promise<void>, selectValue: function(HTMLSelectElement, string): Promise<void>, unmount: function(): Promise<void>}}
  */
-export const renderRjBuild = async (rjBuild) => {
+export const renderRjBuild = async (rjBuild, { plugins } = {}) => {
     const container = document.createElement("div");
     document.body.appendChild(container);
     const root = createRoot(container);
@@ -30,6 +31,7 @@ export const renderRjBuild = async (rjBuild) => {
                 DebugModeDataWrapper={DebugData}
                 DebugModeRootWrapper={DebugRoot}
                 maybeRawAppRjBuild={rjBuild}
+                plugins={plugins}
             />
         );
     });

@@ -86,4 +86,79 @@ describe("ReactiveJsonSubroot with sharedUpdates", () => {
 
         expect(rendered.container.querySelector("input").value).toBe("reset");
     });
+
+    describe("with positional fields in a list", () => {
+        const listBuild = {
+            renderView: [
+                {
+                    type: "ReactiveJsonSubroot",
+                    sharedUpdates: true,
+                    rjOptions: {
+                        dataOverride: { rows: "~~.rows" },
+                        maybeRawAppRjBuild: {
+                            renderView: [{ type: "Switch", content: "~~.rows", singleOption: { load: "row" } }],
+                            templates: {
+                                row: {
+                                    type: "div",
+                                    content: [
+                                        { type: "TextField", dataLocation: "~.label" },
+                                        {
+                                            type: "button",
+                                            attributes: { class: "down" },
+                                            content: "Down",
+                                            actions: [
+                                                { what: "moveData", on: "click", target: "currentTemplateData", increment: 1 },
+                                            ],
+                                        },
+                                        {
+                                            type: "button",
+                                            attributes: { class: "remove" },
+                                            content: "Remove",
+                                            actions: [{ what: "removeData", on: "click", target: "currentTemplateData" }],
+                                        },
+                                    ],
+                                },
+                            },
+                            data: {},
+                        },
+                    },
+                },
+            ],
+            data: { rows: [{ label: "alpha" }, { label: "bravo" }, { label: "charlie" }] },
+        };
+
+        const inputs = () => [...rendered.container.querySelectorAll("input")];
+        const labels = () => rendered.getData().rows.map((row) => row.label);
+
+        it("keeps the caret and the values on their item after a move", async () => {
+            rendered = await renderRjBuild(listBuild);
+
+            await typeAt(inputs()[0], 2, "X");
+            expect(inputs()[0].selectionStart).toBe(3);
+            expect(labels()).toEqual(["alXpha", "bravo", "charlie"]);
+
+            await rendered.click(rendered.container.querySelectorAll(".down")[0]);
+            expect(inputs().map((input) => input.value)).toEqual(["bravo", "alXpha", "charlie"]);
+            expect(labels()).toEqual(["bravo", "alXpha", "charlie"]);
+
+            await typeAt(inputs()[1], 1, "Y");
+            expect(inputs()[1].value).toBe("aYlXpha");
+            expect(inputs()[1].selectionStart).toBe(2);
+            expect(labels()).toEqual(["bravo", "aYlXpha", "charlie"]);
+        });
+
+        it("keeps the caret and the values on their item after a removal", async () => {
+            rendered = await renderRjBuild(listBuild);
+
+            await typeAt(inputs()[1], 0, "X");
+            await rendered.click(rendered.container.querySelectorAll(".remove")[0]);
+            expect(inputs().map((input) => input.value)).toEqual(["Xbravo", "charlie"]);
+            expect(labels()).toEqual(["Xbravo", "charlie"]);
+
+            await typeAt(inputs()[0], 3, "Y");
+            expect(inputs()[0].value).toBe("XbrYavo");
+            expect(inputs()[0].selectionStart).toBe(4);
+            expect(labels()).toEqual(["XbrYavo", "charlie"]);
+        });
+    });
 });

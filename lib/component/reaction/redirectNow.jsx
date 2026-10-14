@@ -18,7 +18,7 @@ export const redirectNow = (props) => {
     let url;
 
     if (Array.isArray(to)) {
-        url = interpolateSegmentsInContext({ segments: to, globalDataContext, templateContext });
+        url = interpolateSegmentsInContext({ segments: to, globalDataContext, templateContext, label: "redirectNow" });
     } else if (to && typeof to === "string") {
         url = evaluateTemplateValue({ valueToEvaluate: to, globalDataContext, templateContext });
     }

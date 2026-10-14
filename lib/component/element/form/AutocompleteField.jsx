@@ -165,7 +165,7 @@ export const AutocompleteField = ({ props, path, datafield }) => {
         if (!props.src) return;
 
         const resolvedSegments = resolveTokenInSegments(props.src, text);
-        const url = interpolateSegments(resolvedSegments, makeGetter());
+        const url = interpolateSegments(resolvedSegments, makeGetter(), { label: "AutocompleteField" });
 
         if (!url) return;
 

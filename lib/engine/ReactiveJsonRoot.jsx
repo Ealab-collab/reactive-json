@@ -307,7 +307,9 @@ export const ReactiveJsonRoot = ({
             };
 
             // 1. Resolve URL — returns null when a required segment/param is missing.
-            const resolvedUrl = interpolateSegments(sourceConfig.src, (path) => store.get(path));
+            const resolvedUrl = interpolateSegments(sourceConfig.src, (path) => store.get(path), {
+                label: `additionalDataSource item ${index}`,
+            });
 
             if (!resolvedUrl) {
                 await tryFallback("could not resolve 'src'");

@@ -163,7 +163,12 @@ export const executeHttpRequest = (props, requestConfig, errorPrefix = "httpRequ
 
     // The URL is a string, or an array of segments built like the src of additionalDataSource.
     const url = Array.isArray(props?.args?.url)
-        ? interpolateSegmentsInContext({ segments: props.args.url, globalDataContext, templateContext })
+        ? interpolateSegmentsInContext({
+              segments: props.args.url,
+              globalDataContext,
+              templateContext,
+              label: errorPrefix,
+          })
         : evaluateTemplateValue({
               valueToEvaluate: props?.args?.url,
               globalDataContext,

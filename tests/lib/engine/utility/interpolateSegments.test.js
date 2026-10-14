@@ -34,6 +34,34 @@ describe("interpolateSegments", () => {
         expect(interpolateSegments(["/items", { param: "q", value: "~~.empty" }], getter)).toBe("/items");
     });
 
+    it("repeats a param for each item of an array value, skipping the empty items", () => {
+        const getArray = (path) => ({ ids: [3, "", null, 5, { x: 1 }], none: [] })[path];
+
+        expect(interpolateSegments(["/items", { param: "id", value: "~~.ids" }], getArray)).toBe("/items?id=3&id=5");
+        expect(interpolateSegments(["/items", { param: "id[]", value: "~~.ids" }], getArray)).toBe(
+            "/items?id%5B%5D=3&id%5B%5D=5"
+        );
+    });
+
+    it("treats an empty array as an empty value", () => {
+        const getArray = (path) => ({ none: [] })[path];
+
+        expect(interpolateSegments(["/items", { param: "id", value: "~~.none" }], getArray)).toBe("/items");
+        expect(interpolateSegments(["/items", { param: "id", value: "~~.none", required: true }], getArray)).toBeNull();
+    });
+
+    it("names the caller and the empty part in the warning", () => {
+        interpolateSegments(["/items/", { segment: "~~.missing", required: true }], getter, { label: "redirectNow" });
+
+        expect(console.warn).toHaveBeenCalledWith('redirectNow: required segment "~~.missing" (part 1) is empty — aborting URL.');
+    });
+
+    it("accepts the resolver as third argument, as in 2.10.0", () => {
+        expect(interpolateSegments(["/items/", "~.slug"], undefined, (ref) => (ref === "~.slug" ? "hello" : ref))).toBe(
+            "/items/hello"
+        );
+    });
+
     it("starts the query string, or continues the one of the path", () => {
         expect(interpolateSegments(["/items", { param: "id", value: "~~.id" }], getter)).toBe("/items?id=7");
         expect(interpolateSegments(["/items?sort=asc", { param: "id", value: "~~.id" }], getter)).toBe(

@@ -47,12 +47,12 @@ const copyWithSelection = (text) => {
 /**
  * Copies data to the clipboard.
  *
- * The value is a string or a number. Nothing happens when it is empty.
+ * The value is a string or a number. Any other value, or an empty value, is not copied.
  * Outside a secure context, where navigator.clipboard is not available,
  * the copy falls back to the deprecated "copy" command.
  *
  * With `statusPath`, the location receives "copied" or "failed" once the copy is done,
- * so that the page can react to the outcome.
+ * so that the page can react to the outcome. A value that cannot be copied reports "failed".
  *
  * @param {{}} props
  */
@@ -64,13 +64,29 @@ export const setClipboardData = async (props) => {
         templateContext,
     });
 
-    if (typeof evaluatedValue !== "string" && typeof evaluatedValue !== "number") {
-        return;
-    }
+    const reportStatus = (status) => {
+        const statusPath = props?.args?.statusPath;
 
-    const text = String(evaluatedValue);
+        if (typeof statusPath !== "string") {
+            return;
+        }
+
+        globalDataContext.updateData(
+            status,
+            dataLocationToPath({
+                currentPath: templateContext.templatePath,
+                dataLocation: statusPath,
+                globalDataContext,
+                templateContext,
+            })
+        );
+    };
+
+    const text =
+        typeof evaluatedValue === "string" || typeof evaluatedValue === "number" ? String(evaluatedValue) : "";
 
     if (text === "") {
+        reportStatus("failed");
         return;
     }
 
@@ -95,17 +111,5 @@ export const setClipboardData = async (props) => {
         }
     }
 
-    const statusPath = props?.args?.statusPath;
-
-    if (typeof statusPath === "string") {
-        globalDataContext.updateData(
-            copied ? "copied" : "failed",
-            dataLocationToPath({
-                currentPath: templateContext.templatePath,
-                dataLocation: statusPath,
-                globalDataContext,
-                templateContext,
-            })
-        );
-    }
+    reportStatus(copied ? "copied" : "failed");
 };

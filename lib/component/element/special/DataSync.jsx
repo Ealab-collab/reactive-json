@@ -22,10 +22,29 @@ const toStorePath = (rawPath) => {
     return rawPath;
 };
 
+/**
+ * The policy used when no `useDataSyncPolicy` hook is registered: automatic saving, no default group.
+ */
+const defaultSyncPolicy = {};
+
 export const DataSync = ({ props }) => {
     const globalDataContext = useContext(GlobalDataContext);
     const templateContext = useContext(TemplateContext);
     const store = useStore();
+
+    // The host application can decide how each syncable is saved, with a `useDataSyncPolicy`
+    // hook plugin (e.g. an editor that saves with a global Save button). It is called on every
+    // render, with the DataSync props and the resolved store path, and returns:
+    // - manual (boolean): hold the user edits instead of saving them (default: false).
+    //   The edits are still mirrored live to the other members of a mergeKey group.
+    // - flushSignal (any): in manual mode, a change of this value saves the held edits.
+    //   For a mergeKey group, only the owner writes, once, with the latest shared data.
+    // - onDirty (function): called on each held edit (e.g. to enable a Save button).
+    // - defaultMergeKey (function(syncable): string|null): the group identity used when the
+    //   DataSync has no mergeKey (e.g. the syncable's item_url).
+    // Limitation: in manual mode, the live mirror follows each store change. In a form updated
+    // on each keystroke, every keystroke is mirrored to the group members.
+    const useDataSyncPolicy = globalDataContext.plugins?.hook?.useDataSyncPolicy;
 
     // Shared-syncable coordination registry, resolved as a `utility` plugin so an
     // app can substitute JUST the group management (its own registry) without
@@ -84,6 +103,15 @@ export const DataSync = ({ props }) => {
         }
     }
 
+    // Called on every render: the plugins of a root do not change, so the hook order is stable.
+    const syncPolicy = (useDataSyncPolicy ? useDataSyncPolicy({ path: resolvedPath, props }) : null) ?? defaultSyncPolicy;
+    const flushSignal = syncPolicy.flushSignal;
+    // Read through refs by the store subscription, which is not re-created when they change.
+    const isManualRef = useRef(false);
+    isManualRef.current = syncPolicy.manual === true;
+    const onDirtyRef = useRef(undefined);
+    onDirtyRef.current = syncPolicy.onDirty;
+
     // Shared-syncable ("merge") grouping. When `mergeKey` resolves to a stable
     // identity (e.g. the submission_url), every DataSync yielding the same value
     // forms a group with a single owner-writer: a real edit on one is broadcast
@@ -100,6 +128,11 @@ export const DataSync = ({ props }) => {
                 templateContext,
             })));
         } catch (e) { /* unresolved yet — joins once available */ }
+    } else if (typeof syncPolicy.defaultMergeKey === "function" && store && resolvedPath !== null) {
+        // The host application groups the syncables that have no explicit mergeKey.
+        try {
+            mergeKeyValue = syncPolicy.defaultMergeKey(store.get(resolvedPath)) ?? null;
+        } catch (e) { /* unresolved yet — joins once available */ }
     }
     const mergeKeyRef = useRef(null);
     mergeKeyRef.current = mergeKeyValue;
@@ -107,6 +140,9 @@ export const DataSync = ({ props }) => {
     const memberRef = useRef(null);
     if (memberRef.current === null) {
         memberRef.current = {
+            // Manual mode: set on a held edit, cleared once saved. For a group,
+            // it is set on the owner (the single writer), so one flush gives one write.
+            pending: false,
             // Apply remote data into our store, suppressing our own change-watcher
             // (no re-broadcast, no POST) — a live mirror of a sibling's edit.
             applyRemote: (data) => {
@@ -292,6 +328,8 @@ export const DataSync = ({ props }) => {
                 retryTimeoutRef.current = null;
             }
 
+            // Manual mode: the edit is held until the flush signal changes.
+
             // Shared-syncable group: mirror the edit live to siblings (echo-
             // suppressed), then delegate persistence to the single OWNER, which
             // (re)schedules its one debounced POST reading the LATEST data. This
@@ -300,7 +338,18 @@ export const DataSync = ({ props }) => {
             if (mergeKeyRef.current) {
                 broadcastToGroup(mergeKeyRef.current, memberRef.current, currentData);
                 const owner = getOwner(mergeKeyRef.current) || memberRef.current;
-                owner.requestSync();
+                if (isManualRef.current) {
+                    owner.pending = true;
+                    onDirtyRef.current?.();
+                } else {
+                    owner.requestSync();
+                }
+                return;
+            }
+
+            if (isManualRef.current) {
+                memberRef.current.pending = true;
+                onDirtyRef.current?.();
                 return;
             }
 
@@ -321,6 +370,29 @@ export const DataSync = ({ props }) => {
             if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
         };
     }, [store, resolvedPath, mode, idleDelay, performSync]);
+
+    // Manual mode: save the held edits when the flush signal changes (not on mount).
+    // For a group, only the owner writes, with the latest shared data.
+    const lastFlushSignalRef = useRef(flushSignal);
+    useEffect(() => {
+        if (Object.is(lastFlushSignalRef.current, flushSignal)) return;
+        lastFlushSignalRef.current = flushSignal;
+        if (resolvedPath === null) return;
+
+        if (mergeKeyRef.current) {
+            const owner = getOwner(mergeKeyRef.current);
+            if (owner === memberRef.current && owner.pending) {
+                owner.pending = false;
+                performSync(store.get(resolvedPath));
+            }
+            return;
+        }
+
+        if (memberRef.current.pending) {
+            memberRef.current.pending = false;
+            performSync(store.get(resolvedPath));
+        }
+    }, [flushSignal, resolvedPath, performSync, store]);
 
     // Watch for manual trigger (works in any mode)
     useEffect(() => {

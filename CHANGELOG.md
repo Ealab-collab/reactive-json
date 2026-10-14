@@ -2,6 +2,34 @@
 
 Notable changes of `@ea-lab/reactive-json`. Earlier versions are described in the git history.
 
+## Unreleased (proposed: 2.11.0)
+
+Host-controlled saving for `DataSync`, array query params, and clearer segment warnings.
+
+### Added
+
+- `DataSync`: a `useDataSyncPolicy` hook plugin (`plugins.hook.useDataSyncPolicy`) lets the host application decide, for each syncable, how it is saved. It is called with the resolved path and the `DataSync` props, and returns:
+  - `manual`: hold the user edits instead of saving them (they are still mirrored live to the group);
+  - `flushSignal`: in manual mode, a change of this value saves the held edits, once, by the owner of a `mergeKey` group;
+  - `onDirty`: called on each held edit;
+  - `defaultMergeKey(syncable)`: the group identity of the syncables without `mergeKey` (e.g. their `item_url`).
+
+  Without the hook, nothing changes: each `DataSync` follows its `mode`, and only an explicit `mergeKey` groups syncables.
+- Segments: a `{param}` whose value is an array is repeated for each item (`id=1&id=2`); the empty items are skipped, and an empty array counts as an empty value.
+- `interpolateSegments` accepts an options object as third argument (`{ resolveTemplateValue, label }`). The function form of 2.10.0 still works.
+
+### Changed
+
+- The warnings of an aborted URL name the caller (`redirectNow`, `submitData`, `href attribute`, `additionalDataSource item 2`...), the empty part and its position.
+- `setClipboardData` reports `"failed"` in `statusPath` when the value cannot be copied (empty value, object, array), instead of leaving the status unchanged.
+
+### Migration notes
+
+Existing RjBuilds need no change. The following cases behave differently:
+
+- A `{param}` whose value is an array used to send the items joined by commas (`id=1%2C2`); it now repeats the param (`id=1&id=2`). Join the items in the data if the backend expects a single comma-separated value.
+- An application that overrides `DataSync` to control its saving can replace the override with a `useDataSyncPolicy` hook.
+
 ## 2.10.0 (2026-10-14)
 
 Option-based components (`CheckBoxField`, `SelectField`, `LabelFromValue`) can be fed by data-driven lists. Strings and URLs can be composed from data, and new reactions cover common list and serialization needs. Paginated lists that shrink and typing in shared subroot fields are fixed.

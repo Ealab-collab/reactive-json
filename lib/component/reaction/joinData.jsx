@@ -27,6 +27,7 @@ export const joinData = (props) => {
         segments: Array.isArray(parts) ? parts : [parts],
         globalDataContext,
         templateContext,
+        label: "joinData",
     });
 
     if (joined === null) {

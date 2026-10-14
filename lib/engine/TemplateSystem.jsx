@@ -124,6 +124,7 @@ export const evaluateAttributes = ({ attrs, globalDataContext, templateContext, 
                 segments: normalized[attrName],
                 globalDataContext,
                 templateContext,
+                label: `${attrName} attribute`,
             });
 
             if (url) {
@@ -266,13 +267,16 @@ export const evaluateTemplateValue = ({ valueToEvaluate, globalDataContext, temp
  *     (strings, references, `{segment, required}`, `{param, value, required}`).
  * @param {{}} globalDataContext The global data context.
  * @param {{}} templateContext The template context.
+ * @param {string} [label] Names the caller in the warnings (e.g. "redirectNow").
  *
  * @returns {string|null} The built string, or null when a required segment is empty.
  */
-export const interpolateSegmentsInContext = ({ segments, globalDataContext, templateContext }) => {
-    return interpolateSegments(segments, undefined, (reference) =>
-        evaluateTemplateValue({ valueToEvaluate: reference, globalDataContext, templateContext })
-    );
+export const interpolateSegmentsInContext = ({ segments, globalDataContext, templateContext, label }) => {
+    return interpolateSegments(segments, undefined, {
+        label,
+        resolveTemplateValue: (reference) =>
+            evaluateTemplateValue({ valueToEvaluate: reference, globalDataContext, templateContext }),
+    });
 };
 
 /**

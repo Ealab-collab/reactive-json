@@ -1,6 +1,7 @@
 /**
  * @jest-environment jsdom
  */
+import { act } from "react";
 import { renderRjBuild } from "../element/form/renderRjBuild.js";
 
 /**
@@ -200,6 +201,44 @@ describe("data reactions", () => {
             expect(rendered.getData().url).toBe("unchanged");
         });
 
+        it("cancels the write when a required segment from an event placeholder is empty", async () => {
+            rendered = await renderRjBuild({
+                renderView: [
+                    {
+                        type: "input",
+                        attributes: { type: "text", value: "~~.typed" },
+                        actions: [
+                            { what: "setData", on: "change", path: "~~.typed", value: "<reactive-json:event-new-value>" },
+                            {
+                                what: "joinData",
+                                on: "change",
+                                path: "~~.url",
+                                parts: [
+                                    "/items/",
+                                    { segment: "<reactive-json:event-new-value>", required: true },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+                data: { typed: "", url: "unchanged" },
+            });
+            const input = rendered.container.querySelector("input");
+            const type = async (value) => {
+                await act(async () => {
+                    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(input, value);
+                    input.dispatchEvent(new Event("input", { bubbles: true }));
+                });
+            };
+
+            await type("42");
+            expect(rendered.getData().url).toBe("/items/42");
+
+            await type("");
+            expect(rendered.getData().url).toBe("/items/42");
+            expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("joinData: required segment"));
+        });
+
         it("writes an empty string for an empty reference that is not required", async () => {
             rendered = await renderRjBuild(
                 withButtons({ join: [{ what: "joinData", path: "~~.label", parts: ["Session ", "~~.date"] }] }, {})
@@ -253,6 +292,27 @@ describe("data reactions", () => {
 
             expect(rendered.getData().copyStatus).toBe("failed");
             errorSpy.mockRestore();
+        });
+
+        it("reports a failure for a value that cannot be copied", async () => {
+            const writeText = jest.fn(() => Promise.resolve());
+            Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+
+            rendered = await renderRjBuild(
+                withButtons(
+                    {
+                        object: [{ what: "setClipboardData", value: "~~.object", statusPath: "~~.objectStatus" }],
+                        empty: [{ what: "setClipboardData", value: "~~.missing", statusPath: "~~.emptyStatus" }],
+                    },
+                    { object: { a: 1 } }
+                )
+            );
+            await press("object");
+            await press("empty");
+
+            expect(writeText).not.toHaveBeenCalled();
+            expect(rendered.getData().objectStatus).toBe("failed");
+            expect(rendered.getData().emptyStatus).toBe("failed");
         });
     });
 
@@ -323,5 +383,35 @@ describe("URL attributes built from segments", () => {
 
         expect(link.getAttribute("href")).toBe("/plain");
         expect(link.className).toBe("link");
+    });
+});
+
+describe("aria-current set from the data", () => {
+    it("marks the link of the current filter with an attribute transform", async () => {
+        const rendered = await renderRjBuild({
+            renderView: [{ type: "Switch", content: "~~.filters", singleOption: { load: "filterLink" } }],
+            templates: {
+                filterLink: {
+                    type: "a",
+                    attributes: { href: ["/sites", { param: "status", value: "~.value" }] },
+                    attributeTransforms: [
+                        { what: "setAttributeValue", name: "aria-current", value: "page", when: "~~.current", is: "~.value" },
+                    ],
+                    content: "~.label",
+                },
+            },
+            data: {
+                current: "open",
+                filters: [
+                    { label: "Open", value: "open" },
+                    { label: "Closed", value: "closed" },
+                ],
+            },
+        });
+        const links = [...rendered.container.querySelectorAll("a")];
+
+        expect(links.map((link) => link.getAttribute("href"))).toEqual(["/sites?status=open", "/sites?status=closed"]);
+        expect(links.map((link) => link.getAttribute("aria-current"))).toEqual(["page", null]);
+        await rendered.unmount();
     });
 });
