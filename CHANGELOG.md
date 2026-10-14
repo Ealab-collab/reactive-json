@@ -2,9 +2,9 @@
 
 Notable changes of `@ea-lab/reactive-json`. Earlier versions are described in the git history.
 
-## Unreleased (proposed: 2.10.0)
+## 2.10.0 (2026-10-14)
 
-Option-based components (`CheckBoxField`, `SelectField`, `LabelFromValue`) can be fed by data-driven lists. Strings and URLs can be composed from data, and new reactions cover common list and serialization needs.
+Option-based components (`CheckBoxField`, `SelectField`, `LabelFromValue`) can be fed by data-driven lists. Strings and URLs can be composed from data, and new reactions cover common list and serialization needs. Paginated lists that shrink and typing in shared subroot fields are fixed.
 
 ### Added
 
@@ -64,9 +64,11 @@ Option-based components (`CheckBoxField`, `SelectField`, `LabelFromValue`) can b
 
 ### Migration notes
 
+Existing RjBuilds need no change to upgrade. The following cases, rare in practice, behave differently:
+
 - Only literal option values that are template references change meaning: `~`, `~~`, and the strings starting with `~.`, `~~.`, `~>` or `~~>`. Such a value is now replaced by the referenced data. A literal value of that form must be moved to the data and referenced.
 - A single-option `CheckBoxField` bound to data that is already an array now adds / removes its value in that array, instead of replacing the array with the value / `false`. Set `multiple: false` to keep the previous behavior.
 - The `Html` behavior is unchanged: a raw checkbox or radio still needs a `checked` binding (`checked: ~.isSelected`, or an `attributeTransforms` entry on `checked`).
 - New core reactions (`toggleData`, `collectField`, `joinData`, `stringifyData`, `printPage`): an application that registers its own reaction under one of these names keeps its own version, since the application plugins are merged after the core ones. Remove the local version to use the core one; check the argument names first (the destination is `path`, the source is `from`).
-- In the segments of `url`, `to`, URL attributes and `joinData`, an empty reference that is not required produces an empty part (as in `additionalDataSource.src`). Mark as `required: true` every part whose absence would change the meaning of the URL, such as an entity id: `["/api/save?", { param: "id", value: ~.nid, required: true }]`.
+- In the segments of `url`, `to`, URL attributes and `joinData`, an empty reference that is not required produces an empty part (as in `additionalDataSource.src`). Mark as `required: true` every part whose absence would change the meaning of the URL, such as an entity id: `["/api/save", { param: "id", value: ~.nid, required: true }]`.
 - A `{param}` segment added to a path that already holds a query string now continues it with `&`: URLs that used to contain two `?` change, and become valid.
