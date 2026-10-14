@@ -36,6 +36,7 @@ Option-based components (`CheckBoxField`, `SelectField`, `LabelFromValue`) can b
 
 - `CheckBoxField` no longer crashes ("Rendered more hooks than during the previous render") when its `dynamicOptions` go from an empty list to a filled one.
 - Pagination (`usePagination`, used by a paginated `Switch`): the displayed page is capped to the last page of the current content. A paginated list that shrinks (e.g. filtered while on page 3) no longer shows an empty page without page buttons. The chosen page is remembered: when the content grows back, the list returns to it.
+- `ReactiveJsonSubroot` with `sharedUpdates`: typing in a controlled field (`TextField`, `TextAreaField`...) bound to shared data no longer moves the caret to the end of the field. An update sent to the parent is now also applied to the subroot's own data right away, instead of waiting for the parent to send it back through `dataOverride`.
 
 ### Migration notes
 

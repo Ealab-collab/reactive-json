@@ -526,22 +526,23 @@ export const ReactiveJsonRoot = ({
         return false;
     }
 
+    // When an upstream callback sends an update to the parent, the parent sends the data back
+    // later, through a new dataOverride. The update is also applied to the local store right away,
+    // so that the fields bound to this data render the new value in the same render. Otherwise,
+    // a controlled input is reset to the old value until the dataOverride comes back,
+    // and its caret jumps to the end.
+
     const setData = (newData) => {
-        // Try upstream update first (for root data replacement)
-        if (tryUpstreamUpdate("", newData, undefined)) {
-            return; // Upstream callback handled it
-        }
+        // Try upstream update first (for root data replacement).
+        tryUpstreamUpdate("", newData, undefined);
         store.set("", newData);
     };
 
     const updateData = (val, path, mode) => {
         const cleanPath = path.startsWith("data.") ? path.substring(5) : (path === "data" ? "" : path);
-        
-        // Try upstream update first
-        if (tryUpstreamUpdate(cleanPath, val, mode)) {
-            return; // Upstream callback handled it
-        }
 
+        // Try upstream update first.
+        tryUpstreamUpdate(cleanPath, val, mode);
         store.set(cleanPath, val, mode);
     };
 
