@@ -2,6 +2,18 @@
 
 Notable changes of `@ea-lab/reactive-json`. Earlier versions are described in the git history.
 
+## 2.12.0 (2026-10-15)
+
+The host application can wait for the saves of `DataSync`.
+
+### Added
+
+- `DataSync`: the `useDataSyncPolicy` hook can return `onSyncStart(promise)`. It is called each time a save starts, whatever starts it (an edit, the flush signal, a trigger, a retry), synchronously and before the request is sent. The promise settles once the save is over, successful or not: it never rejects. The outcome is still reported by `syncSuccess` / `syncError` and the status.
+
+  A host can thus wait for the saves of its flush, e.g. a Save button that reads the saved content back right after. Only the saves that start are reported: a held edit starts none, and while a save of the syncable is in flight, no other save of it starts.
+
+  Without `onSyncStart`, nothing changes.
+
 ## 2.11.1 (2026-10-14)
 
 Development dependencies updated. No change to the library code.

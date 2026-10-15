@@ -40,6 +40,10 @@ export const DataSync = ({ props }) => {
     // - flushSignal (any): in manual mode, a change of this value saves the held edits.
     //   For a mergeKey group, only the owner writes, once, with the latest shared data.
     // - onDirty (function): called on each held edit (e.g. to enable a Save button).
+    // - onSyncStart (function(promise)): called when a save starts, whatever starts it (an edit,
+    //   the flush signal, a trigger, a retry), synchronously and before the request is sent.
+    //   The promise settles once the save is over, successful or not: it never rejects. E.g. a
+    //   Save button waits for the saves of its flush before reading the saved content back.
     // - defaultMergeKey (function(syncable): string|null): the group identity used when the
     //   DataSync has no mergeKey (e.g. the syncable's item_url).
     // Limitation: in manual mode, the live mirror follows each store change. In a form updated
@@ -111,6 +115,8 @@ export const DataSync = ({ props }) => {
     isManualRef.current = syncPolicy.manual === true;
     const onDirtyRef = useRef(undefined);
     onDirtyRef.current = syncPolicy.onDirty;
+    const onSyncStartRef = useRef(undefined);
+    onSyncStartRef.current = syncPolicy.onSyncStart;
 
     // Shared-syncable ("merge") grouping. When `mergeKey` resolves to a stable
     // identity (e.g. the submission_url), every DataSync yielding the same value
@@ -192,6 +198,13 @@ export const DataSync = ({ props }) => {
         isSyncingRef.current = true;
         retryCountRef.current++;
 
+        // The save starts: report it to the policy, with a promise settled once it is over.
+        let settleSync;
+        const syncSettled = new Promise((resolve) => {
+            settleSync = resolve;
+        });
+        onSyncStartRef.current?.(syncSettled);
+
         // Remember the data we are attempting to sync
         lastAttemptedDataRef.current = currentObject.data;
 
@@ -267,6 +280,7 @@ export const DataSync = ({ props }) => {
             }
         } finally {
             isSyncingRef.current = false;
+            settleSync();
         }
     }, [store, resolvedPath, maxRetries]);
 
