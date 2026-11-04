@@ -478,6 +478,55 @@ describe("Html markup security", () => {
         });
     });
 
+    describe("Switch pagination", () => {
+        const paginatedSwitchOf = (paginationProps) => ({
+            renderView: [
+                {
+                    type: "Switch",
+                    content: "~~.rows",
+                    singleOption: { load: "row" },
+                    paginated: true,
+                    paginationProps: { pageMaxItemCount: 1, ...paginationProps },
+                    after: { type: "PageControls" },
+                },
+            ],
+            templates: { row: { type: "span", content: "~.label" } },
+            data: { rows: [{ label: "a" }, { label: "b" }, { label: "c" }] },
+        });
+
+        it("does not render a refused or raw text element given as a pagination component", async () => {
+            const content = await render(
+                paginatedSwitchOf({
+                    customComponents: { Container: "object", Item: "SCRIPT", Next: "style" },
+                    itemProps: { src: "/page.js" },
+                })
+            );
+
+            expect(content.querySelectorAll("object, script, style")).toHaveLength(0);
+            // The default components are rendered instead.
+            expect(content.querySelector("nav[aria-label='Pagination']")).not.toBeNull();
+            expect(content.querySelectorAll("button[src='/page.js']")).toHaveLength(3);
+        });
+
+        it("removes the refused attributes of the pagination props", async () => {
+            const content = await render(
+                paginatedSwitchOf({
+                    customComponents: { Container: "x-pager" },
+                    containerProps: { ONCLICK: pwn(1), className: "pager" },
+                    itemProps: { FORMACTION: "javascript:" + pwn(2), "data-page": "item" },
+                })
+            );
+
+            const pager = content.querySelector("x-pager.pager");
+            expect(pager).not.toBeNull();
+            expect(pager.getAttribute("onclick")).toBeNull();
+
+            const items = content.querySelectorAll("button[data-page='item']");
+            expect(items).toHaveLength(3);
+            items.forEach((item) => expect(item.getAttribute("formaction")).toBeNull());
+        });
+    });
+
     describe("actions writing the DOM", () => {
         it("setAttributeValue does not set a refused attribute", async () => {
             const content = await render({

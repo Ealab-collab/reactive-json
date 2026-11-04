@@ -419,7 +419,8 @@ export default TemplateValue;
  * Evaluates the given attributes with the given contexts.
  *
  * @param {{}} attrs
- * @param {{normalizeBeforeEvaluation : boolean}} options normalizeBeforeEvaluation = true if unset.
+ * @param {{normalizeBeforeEvaluation : boolean, tagName: string}} options normalizeBeforeEvaluation = true if unset.
+ *     tagName: see evaluateAttributes.
  *
  * @returns {{}} Evaluated attributes.
  */

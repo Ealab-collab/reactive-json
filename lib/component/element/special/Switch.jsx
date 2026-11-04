@@ -9,8 +9,67 @@ import {
     evaluateTemplateValue,
     isTemplateValue,
 } from "../../../engine/TemplateSystem.jsx";
-import { isAllowedTag, isRawTextTag, warnRefusedTag } from "../../../engine/utility/markupSecurity.js";
+import {
+    isAllowedTag,
+    isRawTextTag,
+    sanitizeAttributes,
+    warnRefusedTag,
+} from "../../../engine/utility/markupSecurity.js";
 import { View } from "../../../engine/View.jsx";
+
+/**
+ * Tells if an element can hold the content of a Switch: the refused elements and those holding raw text cannot.
+ *
+ * @param {string} tagName The element name.
+ *
+ * @returns {boolean} True if the element can hold the content.
+ */
+const isAllowedWrapperTag = (tagName) => isAllowedTag(tagName) && !isRawTextTag(tagName);
+
+/**
+ * Checks the pagination props given by the RjBuild with the rules of the evaluated attributes.
+ *
+ * The usePagination hook renders these props as is: containerProps and itemProps are attributes,
+ * and the customComponents given by name (a string) are elements.
+ *
+ * @param {{}} paginationProps The paginationProps of the Switch.
+ *
+ * @returns {{}} The props to give to usePagination.
+ */
+const sanitizePaginationProps = (paginationProps) => {
+    if (typeof paginationProps !== "object" || paginationProps === null) {
+        return {};
+    }
+
+    const { customComponents, containerProps, itemProps, ...options } = paginationProps;
+    const sanitized = { ...options };
+
+    if (typeof customComponents === "object" && customComponents !== null) {
+        sanitized.customComponents = Object.fromEntries(
+            Object.entries(customComponents).filter(([, component]) => {
+                if (typeof component !== "string" || isAllowedWrapperTag(component)) {
+                    return true;
+                }
+
+                warnRefusedTag(component);
+                return false;
+            })
+        );
+    }
+
+    // The element-dependent rules apply when the element is known, i.e. given by name.
+    const tagNameOf = (component) => (typeof component === "string" ? component : undefined);
+
+    if (containerProps !== undefined) {
+        sanitized.containerProps = sanitizeAttributes(containerProps, tagNameOf(sanitized.customComponents?.Container));
+    }
+
+    if (itemProps !== undefined) {
+        sanitized.itemProps = sanitizeAttributes(itemProps, tagNameOf(sanitized.customComponents?.Item));
+    }
+
+    return sanitized;
+};
 
 export const Switch = ({ props, currentData, path }) => {
     const globalDataContext = useContext(GlobalDataContext);
@@ -115,7 +174,7 @@ export const Switch = ({ props, currentData, path }) => {
 
     const pagination = usePagination({
         dataToPaginate: limitedContent,
-        ...(props?.paginationProps ?? {}),
+        ...sanitizePaginationProps(props?.paginationProps),
     });
 
     // Slice for the pagination if in effect.
@@ -126,7 +185,7 @@ export const Switch = ({ props, currentData, path }) => {
     // Wrap the content if specified.
     const wrapperTag = props?.contentWrapper?.tag ?? "div";
     // The refused elements, and those holding raw text (style, iframe), cannot wrap the content.
-    const isWrapperAllowed = isAllowedTag(wrapperTag) && !isRawTextTag(wrapperTag);
+    const isWrapperAllowed = isAllowedWrapperTag(wrapperTag);
 
     if (props?.contentWrapper && !isWrapperAllowed) {
         warnRefusedTag(wrapperTag);

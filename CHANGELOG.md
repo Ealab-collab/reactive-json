@@ -2,6 +2,24 @@
 
 Notable changes of `@ea-lab/reactive-json`. Earlier versions are described in the git history.
 
+## 2.13.1 (unreleased)
+
+The pagination props of `Switch` follow the rules of 2.13.0.
+
+### Security
+
+- `Switch`: the `paginationProps` given by the RjBuild are checked before they reach the pagination components. `containerProps` and `itemProps` follow the rules of the attributes. A `customComponents` entry given by name is an element: a refused one, `style` or `iframe` is dropped, and the default component is rendered instead. A RjBuild could render the page buttons as `script` elements.
+
+### Changed
+
+- Development dependencies updated, within their version ranges. The lockfile was out of sync: `npm ci` works again.
+
+### Migration notes
+
+Existing RjBuilds need no change, unless they rely on a refused element or attribute in `paginationProps`.
+
+The pagination components given by a plugin (`plugins.pagination`) receive `containerProps` and `itemProps` from the RjBuild. Like the other wrapped components, they should declare the props they interpret with `sanitizeComponentProps()` (e.g. the `as` of react-bootstrap `Pagination.Item`).
+
 ## 2.13.0 (2026-11-04)
 
 The core elements, reactions and actions no longer let a RjBuild or its data produce markup that runs code, whatever the casing or the way an attribute is set. The data can come from anyone, and the RjBuild from a less trusted author (e.g. a page builder).
