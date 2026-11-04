@@ -1,7 +1,11 @@
 /**
  * @jest-environment jsdom
  */
+import { useContext } from "react";
 import { ReactiveJsonBasicComponentWrapper } from "../../../../../lib/component/element/special/ReactiveJsonBasicComponentWrapper.jsx";
+import { GlobalDataContext } from "../../../../../lib/engine/GlobalDataContext.jsx";
+import { TemplateContext } from "../../../../../lib/engine/TemplateContext.jsx";
+import { evaluateAttributes, useEvaluatedAttributes } from "../../../../../lib/engine/TemplateSystem.jsx";
 import { renderRjBuild } from "../form/renderRjBuild.js";
 
 const pwn = (id) => `window.__pwn.push('${id}')`;
@@ -22,6 +26,38 @@ const polymorphicPlugins = {
                 componentPolicy={{ elementTypeProps: { as: "div", component: "div" } }}
             />
         ),
+    },
+};
+
+// Components of a plugin checking their attributes with the componentPolicy option of the evaluation.
+const optionPlugins = {
+    element: {
+        PolymorphicHook: ({ props }) => {
+            const attributes = useEvaluatedAttributes(props.attributes, {
+                componentPolicy: { elementTypeProps: { as: "div" } },
+            });
+
+            return <PolymorphicComponent {...attributes}>{props.content}</PolymorphicComponent>;
+        },
+        // Like the react-bootstrap Tab: tabAttrs hold the attributes of the tab button, whose "as" picks the element.
+        TabLike: ({ props }) => {
+            const globalDataContext = useContext(GlobalDataContext);
+            const templateContext = useContext(TemplateContext);
+            const { tabAttrs = {}, ...attributes } = evaluateAttributes({
+                attrs: props.attributes,
+                globalDataContext,
+                templateContext,
+                options: { componentPolicy: { attributeProps: { tabAttrs: { elementTypeProps: { as: "button" } } } } },
+            });
+
+            return (
+                <div {...attributes}>
+                    <PolymorphicComponent as="button" {...tabAttrs}>
+                        {props.content}
+                    </PolymorphicComponent>
+                </div>
+            );
+        },
     },
 };
 
@@ -378,6 +414,50 @@ describe("Html markup security", () => {
             );
 
             expect(content.querySelector("set").getAttribute("attributeName")).toBeNull();
+        });
+    });
+
+    describe("componentPolicy option of the evaluation", () => {
+        it("lets useEvaluatedAttributes check the props interpreted by a component", async () => {
+            const content = await render(
+                {
+                    renderView: [
+                        { type: "PolymorphicHook", attributes: { as: "SCRIPT" }, content: pwn("hook") },
+                        { type: "PolymorphicHook", attributes: { as: "~~.tag" }, content: pwn("from data") },
+                        { type: "PolymorphicHook", attributes: { as: "section", class: "card" }, content: "kept" },
+                    ],
+                    data: { tag: "object" },
+                },
+                { plugins: optionPlugins }
+            );
+
+            expect(content.querySelectorAll("script, object")).toHaveLength(0);
+            expect(window.__pwn).toEqual([]);
+            expect(content.querySelectorAll("div")).toHaveLength(2);
+            expect(content.querySelector("section.card").textContent).toBe("kept");
+        });
+
+        it("lets evaluateAttributes check the attributes of an inner element", async () => {
+            const content = await render(
+                {
+                    renderView: [
+                        {
+                            type: "TabLike",
+                            attributes: {
+                                className: "tab",
+                                tabAttrs: { as: "SCRIPT", type: "text/javascript", className: "tab-button" },
+                            },
+                            content: pwn("tab"),
+                        },
+                    ],
+                },
+                { plugins: optionPlugins }
+            );
+
+            expect(content.querySelectorAll("script")).toHaveLength(0);
+            expect(window.__pwn).toEqual([]);
+            // The other attributes of the inner element are kept.
+            expect(content.querySelector("div.tab > button.tab-button").textContent).toBe(pwn("tab"));
         });
     });
 

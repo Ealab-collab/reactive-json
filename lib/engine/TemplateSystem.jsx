@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { GlobalDataContext } from "./GlobalDataContext.jsx";
 import { TemplateContext } from "./TemplateContext.jsx";
 import { interpolateSegments } from "./utility/interpolateSegments.js";
-import { sanitizeAttributes } from "./utility/markupSecurity.js";
+import { sanitizeAttributes, sanitizeComponentProps } from "./utility/markupSecurity.js";
 import { normalizeAttributesForReactJsx } from "./utility/reactJsxHelpers.jsx";
 
 /**
@@ -102,14 +102,17 @@ export const dataLocationToPath = ({ dataLocation, currentPath, globalDataContex
 /**
  * Evaluates the given attributes with the given contexts.
  *
- * The attributes that could run code are removed (see sanitizeAttributes).
+ * The attributes that could run code are removed (see sanitizeAttributes and sanitizeComponentProps).
  *
  * @param {{}} attrs
  * @param {{}} globalDataContext
  * @param {{}} templateContext
- * @param {{normalizeBeforeEvaluation: boolean, tagName: string}} options normalizeBeforeEvaluation is
- *     false if unset. tagName is the element receiving the attributes, when known, for the rules that
- *     depend on the element.
+ * @param {{normalizeBeforeEvaluation: boolean, tagName: string, componentPolicy: {}}} options
+ *     normalizeBeforeEvaluation is false if unset.
+ *     tagName is the HTML element receiving the attributes, when known, for the rules that depend on the element.
+ *     componentPolicy declares the props interpreted by the component receiving the attributes, e.g. "as",
+ *     which picks the rendered element (see sanitizeComponentProps). It replaces tagName: the policy tells
+ *     which element is rendered.
  *
  * @returns {{}}
  */
@@ -171,6 +174,10 @@ export const evaluateAttributes = ({ attrs, globalDataContext, templateContext, 
         //         delete evaluated[attrName];
         //         break;
         // }
+    }
+
+    if (options.componentPolicy) {
+        return sanitizeComponentProps(evaluated, options.componentPolicy);
     }
 
     return sanitizeAttributes(evaluated, options.tagName);
@@ -419,8 +426,12 @@ export default TemplateValue;
  * Evaluates the given attributes with the given contexts.
  *
  * @param {{}} attrs
- * @param {{normalizeBeforeEvaluation : boolean, tagName: string}} options normalizeBeforeEvaluation = true if unset.
- *     tagName: see evaluateAttributes.
+ * @param {{normalizeBeforeEvaluation : boolean, tagName: string, componentPolicy: {}}} options
+ *     normalizeBeforeEvaluation = true if unset. tagName and componentPolicy: see evaluateAttributes.
+ *
+ * @example
+ * // The attributes of a component whose "as" prop picks the rendered element, a div by default.
+ * const attributes = useEvaluatedAttributes(props.attributes, { componentPolicy: { elementTypeProps: { as: "div" } } });
  *
  * @returns {{}} Evaluated attributes.
  */

@@ -1,6 +1,5 @@
 import { ActionDependant } from "../../../engine/Actions.jsx";
 import { useEvaluatedAttributes } from "../../../engine/TemplateSystem.jsx";
-import { sanitizeComponentProps } from "../../../engine/utility/markupSecurity.js";
 import { View } from "../../../engine/View.jsx";
 
 /**
@@ -23,7 +22,7 @@ import { View } from "../../../engine/View.jsx";
  * );
  */
 export function ReactiveJsonBasicComponentWrapper({ props, currentData, path, reactComponent, componentPolicy }) {
-    const attributes = sanitizeComponentProps(useEvaluatedAttributes(props.attributes), componentPolicy);
+    const attributes = useEvaluatedAttributes(props.attributes, { componentPolicy });
 
     if (!reactComponent) {
         return null;

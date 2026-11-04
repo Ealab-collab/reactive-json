@@ -2,6 +2,28 @@
 
 Notable changes of `@ea-lab/reactive-json`. Earlier versions are described in the git history.
 
+## 2.14.0 (unreleased)
+
+The evaluation of the attributes checks the props interpreted by a component.
+
+### Added
+
+- `evaluateAttributes()` and `useEvaluatedAttributes()`: the `componentPolicy` option declares the props interpreted by the component receiving the attributes, as `sanitizeComponentProps()` does. It replaces the nested call:
+
+  ```js
+  // Before.
+  const attributes = sanitizeComponentProps(useEvaluatedAttributes(props.attributes), { elementTypeProps: { as: "div" } });
+
+  // Now.
+  const attributes = useEvaluatedAttributes(props.attributes, { componentPolicy: { elementTypeProps: { as: "div" } } });
+  ```
+
+  `tagName` is for an HTML element, `componentPolicy` for a component: with both, `componentPolicy` applies, since it tells which element is rendered. `sanitizeComponentProps()` remains for the props that are not evaluated (e.g. those given to the pagination components).
+
+### Migration notes
+
+Nothing changes for the existing code. A plugin using the `componentPolicy` option requires this version: an earlier version ignores the option, and only checks the HTML attributes.
+
 ## 2.13.1 (2026-11-04)
 
 The pagination props of `Switch` follow the rules of 2.13.0.
