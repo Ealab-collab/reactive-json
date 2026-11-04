@@ -2,7 +2,7 @@
 
 Notable changes of `@ea-lab/reactive-json`. Earlier versions are described in the git history.
 
-## 2.14.0 (unreleased)
+## 2.14.0 (2026-11-04)
 
 The evaluation of the attributes checks the props interpreted by a component.
 
