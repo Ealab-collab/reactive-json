@@ -2,6 +2,7 @@ import { useEffect, useContext } from "react";
 import { GlobalDataContext } from "../../engine/GlobalDataContext.jsx";
 import { TemplateContext } from "../../engine/TemplateContext.jsx";
 import { evaluateTemplateValue } from "../../engine/TemplateSystem.jsx";
+import { setAttributeSafely } from "../../engine/utility/markupSecurity.js";
 
 export const ToggleAttributeValue = (props) => {
     const globalDataContext = useContext(GlobalDataContext);
@@ -142,14 +143,14 @@ export const ToggleAttributeValue = (props) => {
         if (finalAttributeValue.trim() === "") {
             if (keepAttributeWhenEmpty) {
                 // Keep empty attribute.
-                element.setAttribute(name, "");
+                setAttributeSafely(element, name, "");
             } else {
                 // Remove attribute completely.
                 element.removeAttribute(name);
             }
         } else {
             // Set new value.
-            element.setAttribute(name, finalAttributeValue);
+            setAttributeSafely(element, name, finalAttributeValue);
         }
     }, [name, value, separator, keepAttributeWhenEmpty, globalDataContext.data, templateContext, attributesHolderRef]);
 

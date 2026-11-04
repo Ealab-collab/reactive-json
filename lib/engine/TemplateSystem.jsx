@@ -2,6 +2,7 @@ import { useContext } from "react";
 import { GlobalDataContext } from "./GlobalDataContext.jsx";
 import { TemplateContext } from "./TemplateContext.jsx";
 import { interpolateSegments } from "./utility/interpolateSegments.js";
+import { sanitizeAttributes } from "./utility/markupSecurity.js";
 import { normalizeAttributesForReactJsx } from "./utility/reactJsxHelpers.jsx";
 
 /**
@@ -101,10 +102,14 @@ export const dataLocationToPath = ({ dataLocation, currentPath, globalDataContex
 /**
  * Evaluates the given attributes with the given contexts.
  *
+ * The attributes that could run code are removed (see sanitizeAttributes).
+ *
  * @param {{}} attrs
  * @param {{}} globalDataContext
  * @param {{}} templateContext
- * @param {{normalizeBeforeEvaluation : boolean}} options normalizeBeforeEvaluation is false if unset.
+ * @param {{normalizeBeforeEvaluation: boolean, tagName: string}} options normalizeBeforeEvaluation is
+ *     false if unset. tagName is the element receiving the attributes, when known, for the rules that
+ *     depend on the element.
  *
  * @returns {{}}
  */
@@ -168,7 +173,7 @@ export const evaluateAttributes = ({ attrs, globalDataContext, templateContext, 
         // }
     }
 
-    return evaluated;
+    return sanitizeAttributes(evaluated, options.tagName);
 };
 
 /**

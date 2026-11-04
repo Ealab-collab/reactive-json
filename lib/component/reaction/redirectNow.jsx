@@ -1,4 +1,5 @@
 import { evaluateTemplateValue, interpolateSegmentsInContext } from "../../engine/TemplateSystem.jsx";
+import { isSafeNavigationUrl, warnRefusedNavigation } from "../../engine/utility/markupSecurity.js";
 
 /**
  * Redirects to the specified URL.
@@ -6,6 +7,7 @@ import { evaluateTemplateValue, interpolateSegmentsInContext } from "../../engin
  * The `to` argument is a string (a URL or a template reference), or an array of segments
  * built like the `src` of additionalDataSource (see interpolateSegmentsInContext).
  * Nothing happens when the URL is empty, or aborted by a required segment.
+ * Only http(s) and relative URLs are followed: a javascript: URL would run in the page.
  *
  * With `replace: true`, the current history entry is replaced instead of adding a new one.
  *
@@ -24,6 +26,11 @@ export const redirectNow = (props) => {
     }
 
     if (url === undefined || url === null || url === "") {
+        return;
+    }
+
+    if (!isSafeNavigationUrl(url)) {
+        warnRefusedNavigation("redirectNow", url);
         return;
     }
 

@@ -2,6 +2,42 @@
 
 Notable changes of `@ea-lab/reactive-json`. Earlier versions are described in the git history.
 
+## 2.13.0 (unreleased)
+
+The core elements, reactions and actions no longer let a RjBuild or its data produce markup that runs code, whatever the casing or the way an attribute is set. The data can come from anyone, and the RjBuild from a less trusted author (e.g. a page builder).
+
+These rules have two limits:
+
+- They cover the HTML elements and attributes only. A component wrapped by a plugin or by the host application can give a meaning of its own to a prop: pick the element it renders (react-bootstrap `as`, MUI `component`...), or hold the attributes of an inner element (react-bootstrap `tabAttrs`...). Only the code wrapping the component knows these props: it declares them with `sanitizeComponentProps()`, so that the core rules apply to the element actually rendered.
+- They cover the markup only. A RjBuild can still send requests (`fetchData`, `submitData`, `additionalDataSource`...) with the session of the user. A host application rendering a RjBuild it does not trust must restrict them itself.
+
+### Security
+
+- `Html`, and any unknown `type` falling back to it, no longer renders `script`, `object`, `embed`, `applet`, `base`, `frame`, `frameset`, `noscript`, `noembed`, `noframes`, `plaintext` and `xmp`, in any casing. React only neutralizes a lowercase `script`: `type: SCRIPT` ran its content in the page.
+- The attributes that could run code are removed, in any casing, from the evaluated attributes of every element (`attributes`, `inputAttributes`, `labelAttributes`, `contentWrapper.attributes`...) and from the final attributes of `Html`, after its `attributeTransforms`:
+  - the `on...` attributes whose value is not a function. The reactions keep working, as well as the boolean and number props of the wrapped components. React ignored these strings on standard elements, but set them on custom elements (`x-card`) when not in lowercase;
+  - `srcdoc` and `dangerouslySetInnerHTML`;
+  - the URL attributes (`href`, `src`, `action`, `formAction`, `xlink:href`, `data`, `poster`...) holding a `javascript:`, `vbscript:` or HTML `data:` URL. React blocked them under their React name only: `HREF`, `SRC` or `FORMACTION` went through, and `<iframe SRC="javascript:...">` ran without a click;
+  - the `attributeName` of an `animate` or `set` targeting a link or an event handler, and the `http-equiv` of a `meta` (a refresh redirects the page).
+- The `setAttributeValue`, `toggleAttributeValue` and `unsetAttributeValue` actions, which write the DOM directly, follow the same rules.
+- `style`: the content must be text, and cannot close the element (`</style` is escaped). `iframe`: the content is not rendered (the browser never displays it). A prerendered page writes their content as is.
+- `Switch`: a `contentWrapper` whose `tag` is refused, `style` or `iframe` is not rendered; the content is rendered without it.
+- `PreformattedMarkup`: the tag allow list now applies to `script` and `style`, which were always rendered. A `script` is never rendered, even when listed. The attributes follow the same rules.
+- `redirectNow` and the `Redirect` action only navigate to http(s) and relative URLs.
+
+### Added
+
+- `isAllowedTag()`, `isRawTextTag()`, `isAllowedAttribute()`, `sanitizeAttributes()`, `setAttributeSafely()`, `isUnsafeUrl()`, `isSafeNavigationUrl()` and `escapeStyleText()` utilities (exported), for custom components that render markup.
+- `evaluateAttributes()` and `useEvaluatedAttributes()`: the `tagName` option names the element receiving the attributes, to check them with the rules of this element.
+- `sanitizeComponentProps()` utility (exported): checks the props given to a component, knowing which ones pick the rendered element (`elementTypeProps`) or hold the attributes of an inner element (`attributeProps`).
+- `ReactiveJsonBasicComponentWrapper`: the `componentPolicy` prop declares these props for the wrapped component (see `sanitizeComponentProps()`).
+
+### Migration notes
+
+The RjBuilds using none of the refused elements and attributes need no change. Nothing in a RjBuild can lift the rules: an application that relies on a refused element or attribute (e.g. a JSON-LD `script`, an `iframe` with `srcdoc`) registers its own element plugin for it. A redirection to another scheme (`mailto:`...) becomes a link.
+
+The plugins and host applications that give the evaluated attributes to a component should declare the props that this component interprets, with `sanitizeComponentProps()` or the `componentPolicy` of `ReactiveJsonBasicComponentWrapper`. Without it, a RjBuild can make, for example, a react-bootstrap component render a `script` through its `as` prop.
+
 ## 2.12.0 (2026-10-15)
 
 The host application can wait for the saves of `DataSync`.

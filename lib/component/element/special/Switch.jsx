@@ -9,6 +9,7 @@ import {
     evaluateTemplateValue,
     isTemplateValue,
 } from "../../../engine/TemplateSystem.jsx";
+import { isAllowedTag, isRawTextTag, warnRefusedTag } from "../../../engine/utility/markupSecurity.js";
 import { View } from "../../../engine/View.jsx";
 
 export const Switch = ({ props, currentData, path }) => {
@@ -123,18 +124,28 @@ export const Switch = ({ props, currentData, path }) => {
         : limitedContent;
 
     // Wrap the content if specified.
-    const maybeWrappedContent = props?.contentWrapper
-        ? createElement(
-              props.contentWrapper.tag ?? "div",
-              evaluateAttributes({
-                  attrs: props.contentWrapper.attributes ?? {},
-                  globalDataContext,
-                  options: { normalizeBeforeEvaluation: true },
-                  templateContext,
-              }),
-              contentAsViews
-          )
-        : contentAsViews;
+    const wrapperTag = props?.contentWrapper?.tag ?? "div";
+    // The refused elements, and those holding raw text (style, iframe), cannot wrap the content.
+    const isWrapperAllowed = isAllowedTag(wrapperTag) && !isRawTextTag(wrapperTag);
+
+    if (props?.contentWrapper && !isWrapperAllowed) {
+        warnRefusedTag(wrapperTag);
+    }
+
+    const maybeWrappedContent =
+        props?.contentWrapper && isWrapperAllowed
+            ? createElement(
+                  wrapperTag,
+                  evaluateAttributes({
+                      attrs: props.contentWrapper.attributes ?? {},
+                      globalDataContext,
+                      // With the tag, the attributes are checked with the rules of the element.
+                      options: { normalizeBeforeEvaluation: true, tagName: wrapperTag },
+                      templateContext,
+                  }),
+                  contentAsViews
+              )
+            : contentAsViews;
 
     const toRender = (
         <>

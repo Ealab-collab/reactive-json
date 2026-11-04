@@ -1,5 +1,6 @@
 import { ActionDependant } from "../../../engine/Actions.jsx";
 import { useEvaluatedAttributes } from "../../../engine/TemplateSystem.jsx";
+import { sanitizeComponentProps } from "../../../engine/utility/markupSecurity.js";
 import { View } from "../../../engine/View.jsx";
 
 /**
@@ -7,9 +8,22 @@ import { View } from "../../../engine/View.jsx";
  *
  * Adds the attributes evaluation and actions execution.
  * The "content" property is used to render a sub-element, if the component supports it.
+ *
+ * The attributes are given to the component as props. When the component interprets some of them
+ * in its own way (e.g. "as", which picks the rendered element), declare them in componentPolicy:
+ * see sanitizeComponentProps.
+ *
+ * @example
+ * const Card = (props) => (
+ *     <ReactiveJsonBasicComponentWrapper
+ *         {...props}
+ *         reactComponent={MyCard}
+ *         componentPolicy={{ elementTypeProps: { as: "div" } }}
+ *     />
+ * );
  */
-export function ReactiveJsonBasicComponentWrapper({ props, currentData, path, reactComponent }) {
-    const attributes = useEvaluatedAttributes(props.attributes);
+export function ReactiveJsonBasicComponentWrapper({ props, currentData, path, reactComponent, componentPolicy }) {
+    const attributes = sanitizeComponentProps(useEvaluatedAttributes(props.attributes), componentPolicy);
 
     if (!reactComponent) {
         return null;

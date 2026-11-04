@@ -2,6 +2,7 @@ import { useEffect, useContext } from "react";
 import { GlobalDataContext } from "../../engine/GlobalDataContext.jsx";
 import { TemplateContext } from "../../engine/TemplateContext.jsx";
 import { evaluateTemplateValue } from "../../engine/TemplateSystem.jsx";
+import { setAttributeSafely } from "../../engine/utility/markupSecurity.js";
 
 /**
  * Action that sets or modifies the value of an HTML attribute on the target element.
@@ -43,7 +44,7 @@ export const SetAttributeValue = (props) => {
 
         if (mode === "replace") {
             // Replace mode: completely overwrite the attribute value
-            element.setAttribute(name, evaluatedValue);
+            setAttributeSafely(element, name, evaluatedValue);
         } else {
             // Append mode: add the value to the existing attribute
             const currentValue = element.getAttribute(name) || "";
@@ -52,7 +53,7 @@ export const SetAttributeValue = (props) => {
             // Check if we should add the value (based on duplicate prevention)
             if (!preventDuplicateValues || !currentValues.includes(evaluatedValue)) {
                 const newValues = [...currentValues, evaluatedValue];
-                element.setAttribute(name, newValues.join(separator));
+                setAttributeSafely(element, name, newValues.join(separator));
             }
         }
     }, [

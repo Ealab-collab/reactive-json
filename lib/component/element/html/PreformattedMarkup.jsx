@@ -4,6 +4,7 @@ import { ActionDependant } from "../../../engine/Actions.jsx";
 import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
 import { TemplateContext } from "../../../engine/TemplateContext.jsx";
 import { evaluateTemplateValue } from "../../../engine/TemplateSystem.jsx";
+import { isAllowedTag, sanitizeAttributes } from "../../../engine/utility/markupSecurity.js";
 
 /**
  * List of tags that are allowed by default.
@@ -44,6 +45,13 @@ const defaultHtmlTagAllowList = [
 ];
 
 /**
+ * The parsed node types of the elements.
+ *
+ * @type {Set<string>}
+ */
+const elementNodeTypes = new Set(["script", "style", "tag"]);
+
+/**
  * Preformatted markup component that takes content and inserts it as HTML.
  */
 export const PreformattedMarkup = ({ props }) => {
@@ -69,14 +77,21 @@ export const PreformattedMarkup = ({ props }) => {
                 replace(domNode) {
                     /*
                      * Filter tags to remove any risk about rendering dangerous markup.
-                     * Attributes (e.g. onclick) do not need to be filtered because they are not parsed as code:
-                     * https://github.com/remarkablemark/html-react-parser/issues/73#issuecomment-426119592
+                     * The parser gives the script and style elements their own node type.
                      */
-                    if (domNode.type === "tag" && completeTagAllowList.indexOf(domNode.name) < 0) {
-                        // Not an allowed tag.
+                    if (!elementNodeTypes.has(domNode.type)) {
+                        return;
+                    }
+
+                    if (completeTagAllowList.indexOf(domNode.name) < 0 || !isAllowedTag(domNode.name)) {
+                        // Not an allowed tag. A script is never allowed, even when listed.
                         // Replace by a fragment which will effectively replace by nothing.
                         return <></>;
                     }
+
+                    // React ignores the string event handlers of the known elements only, and lets
+                    // srcdoc through: remove the attributes that could run code.
+                    domNode.attribs = sanitizeAttributes(domNode.attribs, domNode.name);
                 },
             })}
         </ActionDependant>

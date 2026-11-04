@@ -1,6 +1,12 @@
 import { useContext, useRef } from "react";
 import { ActionDependant } from "../../../engine/Actions.jsx";
 import { GlobalDataContext } from "../../../engine/GlobalDataContext.jsx";
+import {
+    escapeStyleText,
+    isAllowedTag,
+    sanitizeAttributes,
+    warnRefusedTag,
+} from "../../../engine/utility/markupSecurity.js";
 import { normalizeAttributesForReactJsx } from "../../../engine/utility/reactJsxHelpers.jsx";
 import { TemplateContext } from "../../../engine/TemplateContext.jsx";
 import { evaluateAttributes, evaluateTemplateValue } from "../../../engine/TemplateSystem.jsx";
@@ -8,6 +14,36 @@ import { View } from "../../../engine/View.jsx";
 
 // The actions lists for which the unbound toggle warning has already been shown.
 const warnedUnboundToggleActions = new WeakSet();
+
+/**
+ * Gets the text of a style element.
+ *
+ * The content is evaluated here instead of a View, to be escaped: the serialization
+ * of a prerendered page writes it as is, and a "</style" in it would end the element.
+ * Only text is accepted: a string, or an array of strings joined as a View renders them.
+ * Like in a View, each item of an array can be a template value, and an empty value adds nothing.
+ *
+ * @param {*} content The content of the style element.
+ * @param {{}} globalDataContext The global data context.
+ * @param {{}} templateContext The template context.
+ *
+ * @returns {string|null} The escaped style sheet, or null when there is no text.
+ */
+const getStyleText = (content, globalDataContext, templateContext) => {
+    const evaluate = (value) => evaluateTemplateValue({ valueToEvaluate: value, globalDataContext, templateContext });
+    // A template value giving an array is rendered as is, without evaluating its items.
+    const parts = (Array.isArray(content) ? content.map(evaluate) : [evaluate(content)]).flat();
+    const isEmpty = (part) => part === undefined || part === null || part === "";
+
+    if (!parts.every((part) => isEmpty(part) || typeof part === "string" || typeof part === "number")) {
+        console.warn("Html: the content of a <style> element must be text; it is not rendered.");
+        return null;
+    }
+
+    const text = parts.filter((part) => !isEmpty(part)).join("");
+
+    return text === "" ? null : escapeStyleText(text);
+};
 
 /**
  * Warns when a checkbox or radio input reacts to events but nothing sets its "checked" attribute.
@@ -81,7 +117,7 @@ export const Html = ({ props, currentData, datafield, path }) => {
         attrs[attrName] = attrsFromCurrentData[attrName];
     }
 
-    const evaluatedAttrs = evaluateAttributes({ attrs, globalDataContext, templateContext });
+    const evaluatedAttrs = evaluateAttributes({ attrs, globalDataContext, templateContext, options: { tagName: Tag } });
 
     if (props.tag === "option" && props.content && evaluatedAttrs.value === undefined) {
         // Special handling for option elements. Try to use the content as the value.
@@ -146,24 +182,46 @@ export const Html = ({ props, currentData, datafield, path }) => {
         return tag && voidTagList.indexOf(tag) !== -1;
     };
 
+    if (!isAllowedTag(Tag)) {
+        // E.g. script: the browser runs it when React creates it with another casing ("SCRIPT").
+        warnRefusedTag(Tag);
+        return null;
+    }
+
+    // The attribute transforms can set any attribute: check the final attributes, with the element rules.
+    const safeAttrs = sanitizeAttributes(transformedAttrs, Tag);
+    const lowerCaseTag = Tag.toLowerCase();
+
+    let content;
+
+    if (lowerCaseTag === "style") {
+        content =
+            props.content && getStyleText(currentData.content || props.content, globalDataContext, templateContext);
+    } else if (lowerCaseTag === "iframe") {
+        // The browser never displays the content of an iframe, and a prerendered page writes it as is.
+        content = null;
+    } else {
+        content = props.content && (
+            <View
+                currentData={currentData.content ?? undefined}
+                datafield={"content"}
+                path={path + ".content"}
+                props={props.content}
+            />
+        );
+    }
+
     return (
         <ActionDependant {...props} attributesHolderRef={mainAttributesHolderRef}>
             {isVoidTag(props.tag) ? (
                 <>
-                    <Tag ref={mainAttributesHolderRef} {...transformedAttrs} />
+                    <Tag ref={mainAttributesHolderRef} {...safeAttrs} />
                     {Object.keys(extra).length ? <View props={extra} /> : ""}
                 </>
             ) : (
                 <>
-                    <Tag ref={mainAttributesHolderRef} {...transformedAttrs}>
-                        {props.content && (
-                            <View
-                                currentData={currentData.content ?? undefined}
-                                datafield={"content"}
-                                path={path + ".content"}
-                                props={props.content}
-                            />
-                        )}
+                    <Tag ref={mainAttributesHolderRef} {...safeAttrs}>
+                        {content}
                     </Tag>
                     {Object.keys(extra).length ? <View props={extra} /> : ""}
                 </>

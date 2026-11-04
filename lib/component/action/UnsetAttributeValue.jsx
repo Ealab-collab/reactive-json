@@ -2,6 +2,7 @@ import { useEffect, useContext } from "react";
 import { GlobalDataContext } from "../../engine/GlobalDataContext.jsx";
 import { TemplateContext } from "../../engine/TemplateContext.jsx";
 import { evaluateTemplateValue } from "../../engine/TemplateSystem.jsx";
+import { setAttributeSafely } from "../../engine/utility/markupSecurity.js";
 
 export const UnsetAttributeValue = (props) => {
     const globalDataContext = useContext(GlobalDataContext);
@@ -100,10 +101,9 @@ export const UnsetAttributeValue = (props) => {
         // Update the attribute.
         const newAttributeValue = newValues.join(separator);
 
-        if (newAttributeValue.trim() === "") {
+        if (newAttributeValue.trim() === "" || !setAttributeSafely(element, name, newAttributeValue)) {
+            // Removing values must not leave a value that could run code (e.g. "javascript:..." left in a href).
             element.removeAttribute(name);
-        } else {
-            element.setAttribute(name, newAttributeValue);
         }
     }, [
         name,
