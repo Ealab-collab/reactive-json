@@ -2,7 +2,7 @@
 
 Notable changes of `@ea-lab/reactive-json`. Earlier versions are described in the git history.
 
-## 2.13.1 (unreleased)
+## 2.13.1 (2026-11-04)
 
 The pagination props of `Switch` follow the rules of 2.13.0.
 
