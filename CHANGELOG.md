@@ -2,7 +2,7 @@
 
 Notable changes of `@ea-lab/reactive-json`. Earlier versions are described in the git history.
 
-## 2.13.0 (unreleased)
+## 2.13.0 (2026-11-04)
 
 The core elements, reactions and actions no longer let a RjBuild or its data produce markup that runs code, whatever the casing or the way an attribute is set. The data can come from anyone, and the RjBuild from a less trusted author (e.g. a page builder).
 
